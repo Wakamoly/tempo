@@ -1,109 +1,136 @@
-package com.cappielloantonio.tempo;
+package com.cappielloantonio.tempo
 
-import android.app.Application;
-import android.content.Context;
-import android.content.SharedPreferences;
+import android.app.Application
+import android.content.Context
+import android.content.SharedPreferences
+import androidx.preference.PreferenceManager
+import com.cappielloantonio.tempo.github.Github
+import com.cappielloantonio.tempo.helper.ThemeHelper
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.SubsonicPreferences
+import com.cappielloantonio.tempo.util.Preferences.getInUseServerAddress
+import com.cappielloantonio.tempo.util.Preferences.getPassword
+import com.cappielloantonio.tempo.util.Preferences.getSalt
+import com.cappielloantonio.tempo.util.Preferences.getToken
+import com.cappielloantonio.tempo.util.Preferences.getUser
+import com.cappielloantonio.tempo.util.Preferences.isLowSecurity
+import com.cappielloantonio.tempo.util.Preferences.setPassword
+import com.cappielloantonio.tempo.util.Preferences.setSalt
+import com.cappielloantonio.tempo.util.Preferences.setToken
 
-import androidx.annotation.NonNull;
-import androidx.preference.PreferenceManager;
+class App : Application() {
+    override fun onCreate() {
+        super.onCreate()
 
-import com.cappielloantonio.tempo.github.Github;
-import com.cappielloantonio.tempo.helper.ThemeHelper;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.SubsonicPreferences;
-import com.cappielloantonio.tempo.util.Preferences;
+        val sharedPreferences =
+            PreferenceManager.getDefaultSharedPreferences(applicationContext)
+        val themePref: String = sharedPreferences.getString(
+            com.cappielloantonio.tempo.util.Preferences.THEME,
+            ThemeHelper.DEFAULT_MODE
+        )!!
+        ThemeHelper.applyTheme(themePref)
 
-public class App extends Application {
-    private static App instance;
-    private static Context context;
-    private static Subsonic subsonic;
-    private static Github github;
-    private static SharedPreferences preferences;
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        String themePref = sharedPreferences.getString(Preferences.THEME, ThemeHelper.DEFAULT_MODE);
-        ThemeHelper.applyTheme(themePref);
-
-        instance = new App();
-        context = getApplicationContext();
-        preferences = PreferenceManager.getDefaultSharedPreferences(context);
+        instance = App()
+        context = applicationContext
+        Companion.preferences = PreferenceManager.getDefaultSharedPreferences(context!!)
     }
 
-    public static App getInstance() {
-        if (instance == null) {
-            instance = new App();
+    val preferences: SharedPreferences
+        get() =
+            Companion.preferences ?: run {
+                val prefs = PreferenceManager.getDefaultSharedPreferences(context!!)
+                Companion.preferences = prefs
+                prefs
+            }
+
+
+    companion object {
+        private var instance: App? = null
+        private var context: Context? = null
+        private var subsonic: Subsonic? = null
+        private var github: Github? = null
+        private var preferences: SharedPreferences? = null
+
+        fun getInstance(): App =
+            instance ?: run {
+                val app = App()
+                instance = app
+                app
+            }
+
+        @JvmStatic
+        fun getContext(): Context =
+            context ?: run {
+                val instance = getInstance()
+                context = instance
+                instance
+            }
+
+        @JvmStatic
+        fun getSubsonicClientInstance(override: Boolean): Subsonic {
+            if (subsonic == null || override) {
+                subsonic =
+                    subsonicClient
+            }
+            return subsonic!!
         }
 
-        return instance;
-    }
+        @JvmStatic
+        val githubClientInstance: Github
+            get() {
+                if (github == null) {
+                    github = Github()
+                }
+                return github!!
+            }
 
-    public static Context getContext() {
-        if (context == null) {
-            context = getInstance();
+        @JvmStatic
+        fun refreshSubsonicClient() {
+            subsonic =
+                subsonicClient
         }
 
-        return context;
-    }
+        private val subsonicClient: Subsonic
+            get() {
+                val preferences: SubsonicPreferences =
+                    subsonicPreferences
 
-    public static Subsonic getSubsonicClientInstance(boolean override) {
-        if (subsonic == null || override) {
-            subsonic = getSubsonicClient();
-        }
-        return subsonic;
-    }
+                if (preferences.authentication != null) {
+                    if (preferences.authentication
+                            .password != null
+                    ) setPassword(
+                        preferences.authentication.password
+                    )
+                    if (preferences.authentication
+                            .token != null
+                    ) setToken(
+                        preferences.authentication.token
+                    )
+                    if (preferences.authentication
+                            .salt != null
+                    ) setSalt(
+                        preferences.authentication.salt
+                    )
+                }
 
-    public static Github getGithubClientInstance() {
-        if (github == null) {
-            github = new Github();
-        }
-        return github;
-    }
+                return Subsonic(preferences)
+            }
 
-    public SharedPreferences getPreferences() {
-        if (preferences == null) {
-            preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        }
+        private val subsonicPreferences: SubsonicPreferences
+            get() {
+                val server = getInUseServerAddress()
+                val username = getUser()
+                val password = getPassword()
+                val token = getToken()
+                val salt = getSalt()
+                val isLowSecurity = isLowSecurity()
 
-        return preferences;
-    }
+                val preferences = SubsonicPreferences()
+                preferences.serverUrl = server
+                preferences.username = username
+                preferences.setAuthentication(password, token, salt, isLowSecurity)
 
-    public static void refreshSubsonicClient() {
-        subsonic = getSubsonicClient();
-    }
-
-    private static Subsonic getSubsonicClient() {
-        SubsonicPreferences preferences = getSubsonicPreferences();
-
-        if (preferences.getAuthentication() != null) {
-            if (preferences.getAuthentication().getPassword() != null)
-                Preferences.setPassword(preferences.getAuthentication().getPassword());
-            if (preferences.getAuthentication().getToken() != null)
-                Preferences.setToken(preferences.getAuthentication().getToken());
-            if (preferences.getAuthentication().getSalt() != null)
-                Preferences.setSalt(preferences.getAuthentication().getSalt());
-        }
-
-        return new Subsonic(preferences);
-    }
-
-    @NonNull
-    private static SubsonicPreferences getSubsonicPreferences() {
-        String server = Preferences.getInUseServerAddress();
-        String username = Preferences.getUser();
-        String password = Preferences.getPassword();
-        String token = Preferences.getToken();
-        String salt = Preferences.getSalt();
-        boolean isLowSecurity = Preferences.isLowScurity();
-
-        SubsonicPreferences preferences = new SubsonicPreferences();
-        preferences.setServerUrl(server);
-        preferences.setUsername(username);
-        preferences.setAuthentication(password, token, salt, isLowSecurity);
-
-        return preferences;
+                return preferences
+            }
     }
 }

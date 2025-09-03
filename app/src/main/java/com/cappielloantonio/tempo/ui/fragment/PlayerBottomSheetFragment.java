@@ -273,7 +273,7 @@ public class PlayerBottomSheetFragment extends Fragment {
     }
 
     public void setPlayerControllerVerticalPagerDraggableState(Boolean isDraggable) {
-        ViewPager2 playerControllerVerticalPager = (ViewPager2) bind.playerBodyLayout.playerBodyBottomSheetViewPager;
+        ViewPager2 playerControllerVerticalPager = bind.playerBodyLayout.playerBodyBottomSheetViewPager;
         playerControllerVerticalPager.setUserInputEnabled(isDraggable);
     }
 

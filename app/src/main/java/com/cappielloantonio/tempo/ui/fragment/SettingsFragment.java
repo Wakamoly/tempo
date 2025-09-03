@@ -194,7 +194,7 @@ public class SettingsFragment extends PreferenceFragmentCompat {
     }
 
     private void setAppLanguage() {
-        ListPreference localePref = (ListPreference) findPreference("language");
+        ListPreference localePref = findPreference("language");
 
         Map<String, String> locales = UIUtil.getLangPreferenceDropdownEntries(requireContext());
 

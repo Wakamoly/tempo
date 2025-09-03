@@ -110,7 +110,7 @@ public class AlbumPageFragment extends Fragment implements ClickCallback {
         if (item.getItemId() == R.id.action_rate_album) {
             Bundle bundle = new Bundle();
             AlbumID3 album = albumPageViewModel.getAlbum().getValue();
-            bundle.putParcelable(Constants.ALBUM_OBJECT, (Parcelable) album);
+            bundle.putParcelable(Constants.ALBUM_OBJECT, album);
             RatingDialog dialog = new RatingDialog();
             dialog.setArguments(bundle);
             dialog.show(requireActivity().getSupportFragmentManager(), null);

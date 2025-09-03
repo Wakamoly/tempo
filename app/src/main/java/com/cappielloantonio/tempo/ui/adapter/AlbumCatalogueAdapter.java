@@ -25,7 +25,7 @@ import java.util.List;
 public class AlbumCatalogueAdapter extends RecyclerView.Adapter<AlbumCatalogueAdapter.ViewHolder> implements Filterable {
     private final ClickCallback click;
     private String currentFilter;
-    private boolean showArtist;
+    private final boolean showArtist;
 
     private final Filter filtering = new Filter() {
         @Override

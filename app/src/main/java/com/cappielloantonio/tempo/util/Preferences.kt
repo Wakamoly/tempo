@@ -1,11 +1,11 @@
 package com.cappielloantonio.tempo.util
 
-import android.util.Log
 import androidx.media3.common.Player
 import com.cappielloantonio.tempo.App
 import com.cappielloantonio.tempo.model.HomeSector
 import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension
 import com.google.gson.Gson
+import androidx.core.content.edit
 
 
 object Preferences {
@@ -78,7 +78,7 @@ object Preferences {
 
     @JvmStatic
     fun setServer(server: String?) {
-        App.getInstance().preferences.edit().putString(SERVER, server).apply()
+        App.getInstance().preferences.edit { putString(SERVER, server) }
     }
 
     @JvmStatic
@@ -88,7 +88,7 @@ object Preferences {
 
     @JvmStatic
     fun setUser(user: String?) {
-        App.getInstance().preferences.edit().putString(USER, user).apply()
+        App.getInstance().preferences.edit { putString(USER, user) }
     }
 
     @JvmStatic
@@ -98,7 +98,7 @@ object Preferences {
 
     @JvmStatic
     fun setPassword(password: String?) {
-        App.getInstance().preferences.edit().putString(PASSWORD, password).apply()
+        App.getInstance().preferences.edit { putString(PASSWORD, password) }
     }
 
     @JvmStatic
@@ -108,7 +108,7 @@ object Preferences {
 
     @JvmStatic
     fun setToken(token: String?) {
-        App.getInstance().preferences.edit().putString(TOKEN, token).apply()
+        App.getInstance().preferences.edit { putString(TOKEN, token) }
     }
 
     @JvmStatic
@@ -118,17 +118,17 @@ object Preferences {
 
     @JvmStatic
     fun setSalt(salt: String?) {
-        App.getInstance().preferences.edit().putString(SALT, salt).apply()
+        App.getInstance().preferences.edit { putString(SALT, salt) }
     }
 
     @JvmStatic
-    fun isLowScurity(): Boolean {
+    fun isLowSecurity(): Boolean {
         return App.getInstance().preferences.getBoolean(LOW_SECURITY, false)
     }
 
     @JvmStatic
     fun setLowSecurity(isLowSecurity: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(LOW_SECURITY, isLowSecurity).apply()
+        App.getInstance().preferences.edit { putBoolean(LOW_SECURITY, isLowSecurity) }
     }
 
     @JvmStatic
@@ -138,7 +138,7 @@ object Preferences {
 
     @JvmStatic
     fun setServerId(serverId: String?) {
-        App.getInstance().preferences.edit().putString(SERVER_ID, serverId).apply()
+        App.getInstance().preferences.edit { putString(SERVER_ID, serverId) }
     }
 
     @JvmStatic
@@ -148,7 +148,7 @@ object Preferences {
 
     @JvmStatic
     fun setOpenSubsonic(isOpenSubsonic: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(OPEN_SUBSONIC, isOpenSubsonic).apply()
+        App.getInstance().preferences.edit { putBoolean(OPEN_SUBSONIC, isOpenSubsonic) }
     }
 
     @JvmStatic
@@ -158,7 +158,9 @@ object Preferences {
 
     @JvmStatic
     fun setOpenSubsonicExtensions(extension: List<OpenSubsonicExtension>) {
-        App.getInstance().preferences.edit().putString(OPEN_SUBSONIC_EXTENSIONS, Gson().toJson(extension)).apply()
+        App.getInstance().preferences.edit {
+            putString(OPEN_SUBSONIC_EXTENSIONS, Gson().toJson(extension))
+        }
     }
 
     @JvmStatic
@@ -168,7 +170,7 @@ object Preferences {
 
     @JvmStatic
     fun setLocalAddress(address: String?) {
-        App.getInstance().preferences.edit().putString(LOCAL_ADDRESS, address).apply()
+        App.getInstance().preferences.edit { putString(LOCAL_ADDRESS, address) }
     }
 
     @JvmStatic
@@ -186,7 +188,7 @@ object Preferences {
     @JvmStatic
     fun switchInUseServerAddress() {
         val inUseAddress = if (getInUseServerAddress() == getServer()) getLocalAddress() else getServer()
-        App.getInstance().preferences.edit().putString(IN_USE_SERVER_ADDRESS, inUseAddress).apply()
+        App.getInstance().preferences.edit { putString(IN_USE_SERVER_ADDRESS, inUseAddress) }
     }
 
     @JvmStatic
@@ -198,7 +200,12 @@ object Preferences {
 
     @JvmStatic
     fun setServerSwitchableTimer() {
-        App.getInstance().preferences.edit().putLong(NEXT_SERVER_SWITCH, System.currentTimeMillis()).apply()
+        App.getInstance().preferences.edit {
+            putLong(
+                NEXT_SERVER_SWITCH,
+                System.currentTimeMillis()
+            )
+        }
     }
 
     @JvmStatic
@@ -208,7 +215,7 @@ object Preferences {
 
     @JvmStatic
     fun dontAskForOptimization() {
-        App.getInstance().preferences.edit().putBoolean(BATTERY_OPTIMIZATION, false).apply()
+        App.getInstance().preferences.edit { putBoolean(BATTERY_OPTIMIZATION, false) }
     }
 
     @JvmStatic
@@ -218,7 +225,7 @@ object Preferences {
 
     @JvmStatic
     fun setPlaybackSpeed(playbackSpeed: Float) {
-        App.getInstance().preferences.edit().putFloat(PLAYBACK_SPEED, playbackSpeed).apply()
+        App.getInstance().preferences.edit { putFloat(PLAYBACK_SPEED, playbackSpeed) }
     }
 
     @JvmStatic
@@ -228,7 +235,7 @@ object Preferences {
 
     @JvmStatic
     fun setSkipSilenceMode(isSkipSilenceMode: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(SKIP_SILENCE, isSkipSilenceMode).apply()
+        App.getInstance().preferences.edit { putBoolean(SKIP_SILENCE, isSkipSilenceMode) }
     }
 
     @JvmStatic
@@ -238,7 +245,7 @@ object Preferences {
 
     @JvmStatic
     fun setShuffleModeEnabled(shuffleModeEnabled: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(SHUFFLE_MODE, shuffleModeEnabled).apply()
+        App.getInstance().preferences.edit { putBoolean(SHUFFLE_MODE, shuffleModeEnabled) }
     }
 
     @JvmStatic
@@ -248,7 +255,7 @@ object Preferences {
 
     @JvmStatic
     fun setRepeatMode(repeatMode: Int) {
-        App.getInstance().preferences.edit().putInt(REPEAT_MODE, repeatMode).apply()
+        App.getInstance().preferences.edit { putInt(REPEAT_MODE, repeatMode) }
     }
 
     @JvmStatic
@@ -298,8 +305,9 @@ object Preferences {
 
     @JvmStatic
     fun setDataSavingMode(isDataSavingModeEnabled: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(DATA_SAVING_MODE, isDataSavingModeEnabled)
-                .apply()
+        App.getInstance().preferences.edit {
+            putBoolean(DATA_SAVING_MODE, isDataSavingModeEnabled)
+        }
     }
 
     @JvmStatic
@@ -309,9 +317,11 @@ object Preferences {
 
     @JvmStatic
     fun setStarredAlbumsSyncEnabled(isStarredSyncEnabled: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(
+        App.getInstance().preferences.edit {
+            putBoolean(
                 SYNC_STARRED_ALBUMS_FOR_OFFLINE_USE, isStarredSyncEnabled
-        ).apply()
+            )
+        }
     }
 
     @JvmStatic
@@ -321,9 +331,11 @@ object Preferences {
 
     @JvmStatic
     fun setStarredSyncEnabled(isStarredSyncEnabled: Boolean) {
-        App.getInstance().preferences.edit().putBoolean(
+        App.getInstance().preferences.edit {
+            putBoolean(
                 SYNC_STARRED_TRACKS_FOR_OFFLINE_USE, isStarredSyncEnabled
-        ).apply()
+            )
+        }
     }
 
     @JvmStatic
@@ -335,7 +347,12 @@ object Preferences {
 
     @JvmStatic
     fun setServerUnreachableDatetime() {
-        App.getInstance().preferences.edit().putLong(SERVER_UNREACHABLE, System.currentTimeMillis()).apply()
+        App.getInstance().preferences.edit {
+            putLong(
+                SERVER_UNREACHABLE,
+                System.currentTimeMillis()
+            )
+        }
     }
 
     @JvmStatic
@@ -365,7 +382,7 @@ object Preferences {
 
     @JvmStatic
     fun setPodcastSectionHidden() {
-        App.getInstance().preferences.edit().putBoolean(PODCAST_SECTION_VISIBILITY, false).apply()
+        App.getInstance().preferences.edit { putBoolean(PODCAST_SECTION_VISIBILITY, false) }
     }
 
     @JvmStatic
@@ -375,7 +392,7 @@ object Preferences {
 
     @JvmStatic
     fun setRadioSectionHidden() {
-        App.getInstance().preferences.edit().putBoolean(RADIO_SECTION_VISIBILITY, false).apply()
+        App.getInstance().preferences.edit { putBoolean(RADIO_SECTION_VISIBILITY, false) }
     }
 
     @JvmStatic
@@ -400,10 +417,12 @@ object Preferences {
 
     @JvmStatic
     fun setStreamingCacheStoragePreference(streamingCachePreference: Int) {
-        return App.getInstance().preferences.edit().putString(
+        return App.getInstance().preferences.edit {
+            putString(
                 STREAMING_CACHE_STORAGE,
                 streamingCachePreference.toString()
-        ).apply()
+            )
+        }
     }
 
     @JvmStatic
@@ -413,10 +432,12 @@ object Preferences {
 
     @JvmStatic
     fun setDownloadStoragePreference(storagePreference: Int) {
-        return App.getInstance().preferences.edit().putString(
+        return App.getInstance().preferences.edit {
+            putString(
                 DOWNLOAD_STORAGE,
                 storagePreference.toString()
-        ).apply()
+            )
+        }
     }
 
     @JvmStatic
@@ -429,10 +450,12 @@ object Preferences {
 
     @JvmStatic
     fun setDefaultDownloadViewType(viewType: String) {
-        return App.getInstance().preferences.edit().putString(
+        return App.getInstance().preferences.edit {
+            putString(
                 DEFAULT_DOWNLOAD_VIEW_TYPE,
                 viewType
-        ).apply()
+            )
+        }
     }
 
     @JvmStatic
@@ -497,7 +520,7 @@ object Preferences {
 
     @JvmStatic
     fun setHomeSectorList(extension: List<HomeSector>?) {
-        App.getInstance().preferences.edit().putString(HOME_SECTOR_LIST, Gson().toJson(extension)).apply()
+        App.getInstance().preferences.edit { putString(HOME_SECTOR_LIST, Gson().toJson(extension)) }
     }
 
     @JvmStatic
@@ -519,7 +542,12 @@ object Preferences {
 
     @JvmStatic
     fun setTempoUpdateReminder() {
-        App.getInstance().preferences.edit().putLong(NEXT_UPDATE_CHECK, System.currentTimeMillis()).apply()
+        App.getInstance().preferences.edit {
+            putLong(
+                NEXT_UPDATE_CHECK,
+                System.currentTimeMillis()
+            )
+        }
     }
 
     @JvmStatic
@@ -529,7 +557,7 @@ object Preferences {
 
     @JvmStatic
     fun setLastInstantMix() {
-        App.getInstance().preferences.edit().putLong(LAST_INSTANT_MIX, System.currentTimeMillis()).apply()
+        App.getInstance().preferences.edit { putLong(LAST_INSTANT_MIX, System.currentTimeMillis()) }
     }
 
     @JvmStatic

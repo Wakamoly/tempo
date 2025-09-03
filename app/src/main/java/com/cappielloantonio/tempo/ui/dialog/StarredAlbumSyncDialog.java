@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 public class StarredAlbumSyncDialog extends DialogFragment {
     private StarredAlbumsSyncViewModel starredAlbumsSyncViewModel;
 
-    private Runnable onCancel;
+    private final Runnable onCancel;
 
     public StarredAlbumSyncDialog(Runnable onCancel) {
         this.onCancel = onCancel;

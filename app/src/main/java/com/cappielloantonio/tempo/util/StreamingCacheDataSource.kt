@@ -49,7 +49,7 @@ class StreamingCacheDataSource private constructor(
 
         if (dataSpec != null) {
             val cacheKey = cacheDataSource.cacheKeyFactory.buildCacheKey(dataSpec)
-            val contentLength = ContentMetadata.getContentLength(cacheDataSource.cache.getContentMetadata(cacheKey));
+            val contentLength = ContentMetadata.getContentLength(cacheDataSource.cache.getContentMetadata(cacheKey))
 
             if (contentLength == C.LENGTH_UNSET.toLong()) {
                 Log.d(TAG, "Removing partial cache for $cacheKey")
