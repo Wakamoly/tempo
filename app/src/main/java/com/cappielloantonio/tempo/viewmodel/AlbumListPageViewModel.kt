@@ -1,67 +1,80 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.repository.DownloadRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.util.Constants
+import java.util.Calendar
+import java.util.Date
+import kotlin.math.min
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class AlbumListPageViewModel(application: Application) : AndroidViewModel(application) {
+    private val albumRepository: AlbumRepository
+    private val downloadRepository: DownloadRepository
 
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.repository.DownloadRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.util.Constants;
+    var title: String? = null
+    var artist: ArtistID3? = null
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Comparator;
-import java.util.List;
+    private var albumList: MutableLiveData<MutableList<AlbumID3?>?>? = null
 
-public class AlbumListPageViewModel extends AndroidViewModel {
-    private final AlbumRepository albumRepository;
-    private final DownloadRepository downloadRepository;
+    var maxNumber: Int = 500
 
-    public String title;
-    public ArtistID3 artist;
-
-    private MutableLiveData<List<AlbumID3>> albumList;
-
-    public int maxNumber = 500;
-
-    public AlbumListPageViewModel(@NonNull Application application) {
-        super(application);
-
-        albumRepository = new AlbumRepository();
-        downloadRepository = new DownloadRepository();
+    init {
+        albumRepository = AlbumRepository()
+        downloadRepository = DownloadRepository()
     }
 
-    public LiveData<List<AlbumID3>> getAlbumList(LifecycleOwner owner) {
-        albumList = new MutableLiveData<>(new ArrayList<>());
+    fun getAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+        albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
 
-        switch (title) {
-            case Constants.ALBUM_RECENTLY_PLAYED:
-                albumRepository.getAlbums("recent", maxNumber, null, null).observe(owner, albums -> albumList.setValue(albums));
-                break;
-            case Constants.ALBUM_MOST_PLAYED:
-                albumRepository.getAlbums("frequent", maxNumber, null, null).observe(owner, albums -> albumList.setValue(albums));
-                break;
-            case Constants.ALBUM_RECENTLY_ADDED:
-                albumRepository.getAlbums("newest", maxNumber, null, null).observe(owner, albums -> albumList.setValue(albums));
-                break;
-            case Constants.ALBUM_STARRED:
-                albumList = albumRepository.getStarredAlbums(false, -1);
-                break;
-            case Constants.ALBUM_NEW_RELEASES:
-                int currentYear = Calendar.getInstance().get(Calendar.YEAR);
-                albumRepository.getAlbums("byYear", maxNumber, currentYear, currentYear).observe(owner, albums -> {
-                    albums.sort(Comparator.comparing(AlbumID3::getCreated).reversed());
-                    albumList.postValue(albums.subList(0, Math.min(20, albums.size())));
-                });
-                break;
+        when (title) {
+            Constants.ALBUM_RECENTLY_PLAYED -> albumRepository.getAlbums(
+                "recent",
+                maxNumber,
+                null,
+                null
+            ).observe(
+                owner,
+                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+
+            Constants.ALBUM_MOST_PLAYED -> albumRepository.getAlbums(
+                "frequent",
+                maxNumber,
+                null,
+                null
+            ).observe(
+                owner,
+                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+
+            Constants.ALBUM_RECENTLY_ADDED -> albumRepository.getAlbums(
+                "newest",
+                maxNumber,
+                null,
+                null
+            ).observe(
+                owner,
+                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+
+            Constants.ALBUM_STARRED -> albumList = albumRepository.getStarredAlbums(false, -1)
+            Constants.ALBUM_NEW_RELEASES -> {
+                val currentYear = Calendar.getInstance().get(Calendar.YEAR)
+                albumRepository.getAlbums("byYear", maxNumber, currentYear, currentYear)
+                    .observe(owner, Observer { albums: MutableList<AlbumID3?>? ->
+                        albums!!.sort(
+                            Comparator.comparing<AlbumID3?, Date?>(AlbumID3::created).reversed()
+                        )
+                        albumList!!.postValue(albums.subList(0, min(20, albums.size)))
+                    })
+            }
         }
 
-        return albumList;
+        return albumList!!
     }
 }

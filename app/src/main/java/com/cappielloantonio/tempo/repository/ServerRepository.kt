@@ -1,61 +1,43 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.lifecycle.LiveData;
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.ServerDao
+import com.cappielloantonio.tempo.model.Server
 
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.ServerDao;
-import com.cappielloantonio.tempo.model.Server;
+class ServerRepository {
+    private val serverDao: ServerDao = AppDatabase.Companion.getInstance().serverDao()
 
-import java.util.List;
+    val liveServer: LiveData<MutableList<Server?>?>?
+        get() = serverDao.getAll()
 
-public class ServerRepository {
-    private static final String TAG = "QueueRepository";
-
-    private final ServerDao serverDao = AppDatabase.getInstance().serverDao();
-
-    public LiveData<List<Server>> getLiveServer() {
-        return serverDao.getAll();
+    fun insert(server: Server?) {
+        val insert = InsertThreadSafe(serverDao, server)
+        val thread = Thread(insert)
+        thread.start()
     }
 
-    public void insert(Server server) {
-        InsertThreadSafe insert = new InsertThreadSafe(serverDao, server);
-        Thread thread = new Thread(insert);
-        thread.start();
+    fun delete(server: Server?) {
+        val delete = DeleteThreadSafe(serverDao, server)
+        val thread = Thread(delete)
+        thread.start()
     }
 
-    public void delete(Server server) {
-        DeleteThreadSafe delete = new DeleteThreadSafe(serverDao, server);
-        Thread thread = new Thread(delete);
-        thread.start();
-    }
-
-    private static class InsertThreadSafe implements Runnable {
-        private final ServerDao serverDao;
-        private final Server server;
-
-        public InsertThreadSafe(ServerDao serverDao, Server server) {
-            this.serverDao = serverDao;
-            this.server = server;
-        }
-
-        @Override
-        public void run() {
-            serverDao.insert(server);
+    private class InsertThreadSafe(private val serverDao: ServerDao, private val server: Server?) :
+        Runnable {
+        override fun run() {
+            serverDao.insert(server)
         }
     }
 
-    private static class DeleteThreadSafe implements Runnable {
-        private final ServerDao serverDao;
-        private final Server server;
-
-        public DeleteThreadSafe(ServerDao serverDao, Server server) {
-            this.serverDao = serverDao;
-            this.server = server;
+    private class DeleteThreadSafe(private val serverDao: ServerDao, private val server: Server?) :
+        Runnable {
+        override fun run() {
+            serverDao.delete(server)
         }
+    }
 
-        @Override
-        public void run() {
-            serverDao.delete(server);
-        }
+    companion object {
+        private const val TAG = "QueueRepository"
     }
 }

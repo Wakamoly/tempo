@@ -1,23 +1,20 @@
-package com.cappielloantonio.tempo.database.dao;
+package com.cappielloantonio.tempo.database.dao
 
-import androidx.room.Dao;
-import androidx.room.Delete;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-
-import com.cappielloantonio.tempo.model.RecentSearch;
-
-import java.util.List;
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.cappielloantonio.tempo.model.RecentSearch
 
 @Dao
-public interface RecentSearchDao {
-    @Query("SELECT * FROM recent_search ORDER BY search DESC")
-    List<String> getRecent();
+interface RecentSearchDao {
+    @get:Query("SELECT * FROM recent_search ORDER BY search DESC")
+    val recent: MutableList<String?>?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(RecentSearch search);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insert(search: RecentSearch?)
 
     @Delete
-    void delete(RecentSearch search);
+    fun delete(search: RecentSearch?)
 }

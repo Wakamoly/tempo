@@ -1,29 +1,25 @@
-package com.cappielloantonio.tempo.database.dao;
+package com.cappielloantonio.tempo.database.dao
 
-import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-
-import com.cappielloantonio.tempo.model.Queue;
-import com.cappielloantonio.tempo.model.SessionMediaItem;
-
-import java.util.List;
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.cappielloantonio.tempo.model.SessionMediaItem
 
 @Dao
-public interface SessionMediaItemDao {
+interface SessionMediaItemDao {
     @Query("SELECT * FROM session_media_item WHERE id = :id")
-    SessionMediaItem get(String id);
+    fun get(id: String?): SessionMediaItem?
 
     @Query("SELECT * FROM session_media_item WHERE timestamp = :timestamp")
-    List<SessionMediaItem> get(long timestamp);
+    fun get(timestamp: Long): MutableList<SessionMediaItem?>?
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void insert(SessionMediaItem sessionMediaItem);
+    @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
+    fun insert(sessionMediaItem: SessionMediaItem?)
 
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    void insertAll(List<SessionMediaItem> sessionMediaItems);
+    @Insert(onConflict = OnConflictStrategy.Companion.IGNORE)
+    fun insertAll(sessionMediaItems: MutableList<SessionMediaItem?>?)
 
     @Query("DELETE FROM session_media_item")
-    void deleteAll();
+    fun deleteAll()
 }

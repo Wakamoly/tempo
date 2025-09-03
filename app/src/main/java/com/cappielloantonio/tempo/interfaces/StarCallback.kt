@@ -1,9 +1,9 @@
-package com.cappielloantonio.tempo.interfaces;
+package com.cappielloantonio.tempo.interfaces
 
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
 
 @Keep
-public interface StarCallback {
-    default void onError() {}
-    default void onSuccess() {}
+interface StarCallback {
+    fun onError() {}
+    fun onSuccess() {}
 }

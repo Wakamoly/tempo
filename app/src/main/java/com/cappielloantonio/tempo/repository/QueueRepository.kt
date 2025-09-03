@@ -1,363 +1,317 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.QueueDao
+import com.cappielloantonio.tempo.model.Queue
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.PlayQueue
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.stream.Collectors
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.QueueDao;
-import com.cappielloantonio.tempo.model.Queue;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.PlayQueue;
+class QueueRepository {
+    private val queueDao: QueueDao = AppDatabase.Companion.getInstance().queueDao()
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+    val liveQueue: LiveData<MutableList<Queue?>?>?
+        get() = queueDao.getAll()
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
+    val media: MutableList<Child?>
+        get() {
+            var media: MutableList<Child?> =
+                ArrayList<Child?>()
 
-public class QueueRepository {
-    private static final String TAG = "QueueRepository";
+            val getMedia = GetMediaThreadSafe(queueDao)
+            val thread = Thread(getMedia)
+            thread.start()
 
-    private final QueueDao queueDao = AppDatabase.getInstance().queueDao();
+            try {
+                thread.join()
+                media = getMedia.getMedia().stream()
+                    .map<Child?> { obj: Queue? ->
+                        Child::class.java.cast(
+                            obj
+                        )
+                    }
+                    .collect(Collectors.toList())
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
 
-    public LiveData<List<Queue>> getLiveQueue() {
-        return queueDao.getAll();
-    }
-
-    public List<Child> getMedia() {
-        List<Child> media = new ArrayList<>();
-
-        GetMediaThreadSafe getMedia = new GetMediaThreadSafe(queueDao);
-        Thread thread = new Thread(getMedia);
-        thread.start();
-
-        try {
-            thread.join();
-            media = getMedia.getMedia().stream()
-                    .map(Child.class::cast)
-                    .collect(Collectors.toList());
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            return media
         }
 
-        return media;
-    }
+    val playQueue: MutableLiveData<PlayQueue?>
+        get() {
+            val playQueue = MutableLiveData<PlayQueue?>()
 
-    public MutableLiveData<PlayQueue> getPlayQueue() {
-        MutableLiveData<PlayQueue> playQueue = new MutableLiveData<>();
-
-        App.getSubsonicClientInstance(false)
+            getSubsonicClientInstance(false)
                 .getBookmarksClient()
                 .getPlayQueue()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getPlayQueue() != null) {
-                            playQueue.setValue(response.body().getSubsonicResponse().getPlayQueue());
+                .enqueue(object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playQueue != null) {
+                            playQueue.value = response.body()!!.subsonicResponse.playQueue
                         }
                     }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        playQueue.setValue(null);
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable
+                    ) {
+                        playQueue.value = null
                     }
-                });
+                })
 
-        return playQueue;
+            return playQueue
+        }
+
+    fun savePlayQueue(ids: MutableList<String?>?, current: String?, position: Long) {
+        getSubsonicClientInstance(false)
+            .getBookmarksClient()
+            .savePlayQueue(ids, current, position)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
+
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void savePlayQueue(List<String> ids, String current, long position) {
-        App.getSubsonicClientInstance(false)
-                .getBookmarksClient()
-                .savePlayQueue(ids, current, position)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
-    }
-
-    public void insert(Child media, boolean reset, int afterIndex) {
+    fun insert(media: Child, reset: Boolean, afterIndex: Int) {
         try {
-            List<Queue> mediaList = new ArrayList<>();
+            var mediaList: MutableList<Queue?> = ArrayList<Queue?>()
 
             if (!reset) {
-                GetMediaThreadSafe getMediaThreadSafe = new GetMediaThreadSafe(queueDao);
-                Thread getMediaThread = new Thread(getMediaThreadSafe);
-                getMediaThread.start();
-                getMediaThread.join();
+                val getMediaThreadSafe = GetMediaThreadSafe(queueDao)
+                val getMediaThread = Thread(getMediaThreadSafe)
+                getMediaThread.start()
+                getMediaThread.join()
 
-                mediaList = getMediaThreadSafe.getMedia();
+                mediaList = getMediaThreadSafe.getMedia()
             }
 
-            Queue queueItem = new Queue(media);
-            mediaList.add(afterIndex, queueItem);
+            val queueItem = Queue(media)
+            mediaList.add(afterIndex, queueItem)
 
-            for (int i = 0; i < mediaList.size(); i++) {
-                mediaList.get(i).setTrackOrder(i);
+            for (i in mediaList.indices) {
+                mediaList.get(i)!!.trackOrder = i
             }
 
-            Thread delete = new Thread(new DeleteAllThreadSafe(queueDao));
-            delete.start();
-            delete.join();
+            val delete = Thread(DeleteAllThreadSafe(queueDao))
+            delete.start()
+            delete.join()
 
-            Thread insertAll = new Thread(new InsertAllThreadSafe(queueDao, mediaList));
-            insertAll.start();
-            insertAll.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            val insertAll = Thread(InsertAllThreadSafe(queueDao, mediaList))
+            insertAll.start()
+            insertAll.join()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
     }
 
-    public void insertAll(List<Child> toAdd, boolean reset, int afterIndex) {
+    fun insertAll(toAdd: MutableList<Child?>, reset: Boolean, afterIndex: Int) {
         try {
-            List<Queue> media = new ArrayList<>();
+            var media: MutableList<Queue?> = ArrayList<Queue?>()
 
             if (!reset) {
-                GetMediaThreadSafe getMediaThreadSafe = new GetMediaThreadSafe(queueDao);
-                Thread getMediaThread = new Thread(getMediaThreadSafe);
-                getMediaThread.start();
-                getMediaThread.join();
+                val getMediaThreadSafe = GetMediaThreadSafe(queueDao)
+                val getMediaThread = Thread(getMediaThreadSafe)
+                getMediaThread.start()
+                getMediaThread.join()
 
-                media = getMediaThreadSafe.getMedia();
+                media = getMediaThreadSafe.getMedia()
             }
 
-            for (int i = 0; i < toAdd.size(); i++) {
-                Queue queueItem = new Queue(toAdd.get(i));
-                media.add(afterIndex + i, queueItem);
+            for (i in toAdd.indices) {
+                val queueItem = Queue(toAdd.get(i)!!)
+                media.add(afterIndex + i, queueItem)
             }
 
-            for (int i = 0; i < media.size(); i++) {
-                media.get(i).setTrackOrder(i);
+            for (i in media.indices) {
+                media.get(i)!!.trackOrder = i
             }
 
-            Thread delete = new Thread(new DeleteAllThreadSafe(queueDao));
-            delete.start();
-            delete.join();
+            val delete = Thread(DeleteAllThreadSafe(queueDao))
+            delete.start()
+            delete.join()
 
-            Thread insertAll = new Thread(new InsertAllThreadSafe(queueDao, media));
-            insertAll.start();
-            insertAll.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            val insertAll = Thread(InsertAllThreadSafe(queueDao, media))
+            insertAll.start()
+            insertAll.join()
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
     }
 
-    public void delete(int position) {
-        DeleteThreadSafe delete = new DeleteThreadSafe(queueDao, position);
-        Thread thread = new Thread(delete);
-        thread.start();
+    fun delete(position: Int) {
+        val delete = DeleteThreadSafe(queueDao, position)
+        val thread = Thread(delete)
+        thread.start()
     }
 
-    public void deleteAll() {
-        DeleteAllThreadSafe deleteAll = new DeleteAllThreadSafe(queueDao);
-        Thread thread = new Thread(deleteAll);
-        thread.start();
+    fun deleteAll() {
+        val deleteAll = DeleteAllThreadSafe(queueDao)
+        val thread = Thread(deleteAll)
+        thread.start()
     }
 
-    public int count() {
-        int count = 0;
+    fun count(): Int {
+        var count = 0
 
-        CountThreadSafe countThread = new CountThreadSafe(queueDao);
-        Thread thread = new Thread(countThread);
-        thread.start();
+        val countThread = CountThreadSafe(queueDao)
+        val thread = Thread(countThread)
+        thread.start()
 
         try {
-            thread.join();
-            count = countThread.getCount();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            thread.join()
+            count = countThread.count
+        } catch (e: InterruptedException) {
+            e.printStackTrace()
         }
 
-        return count;
+        return count
     }
 
-    public void setLastPlayedTimestamp(String id) {
-        SetLastPlayedTimestampThreadSafe timestamp = new SetLastPlayedTimestampThreadSafe(queueDao, id);
-        Thread thread = new Thread(timestamp);
-        thread.start();
+    fun setLastPlayedTimestamp(id: String?) {
+        val timestamp = SetLastPlayedTimestampThreadSafe(queueDao, id)
+        val thread = Thread(timestamp)
+        thread.start()
     }
 
-    public void setPlayingPausedTimestamp(String id, long ms) {
-        SetPlayingPausedTimestampThreadSafe timestamp = new SetPlayingPausedTimestampThreadSafe(queueDao, id, ms);
-        Thread thread = new Thread(timestamp);
-        thread.start();
+    fun setPlayingPausedTimestamp(id: String?, ms: Long) {
+        val timestamp = SetPlayingPausedTimestampThreadSafe(queueDao, id, ms)
+        val thread = Thread(timestamp)
+        thread.start()
     }
 
-    public int getLastPlayedMediaIndex() {
-        int index = 0;
+    val lastPlayedMediaIndex: Int
+        get() {
+            var index = 0
 
-        GetLastPlayedMediaThreadSafe getLastPlayedMediaThreadSafe = new GetLastPlayedMediaThreadSafe(queueDao);
-        Thread thread = new Thread(getLastPlayedMediaThreadSafe);
-        thread.start();
+            val getLastPlayedMediaThreadSafe =
+                GetLastPlayedMediaThreadSafe(queueDao)
+            val thread = Thread(getLastPlayedMediaThreadSafe)
+            thread.start()
 
-        try {
-            thread.join();
-            Queue lastMediaPlayed = getLastPlayedMediaThreadSafe.getQueueItem();
-            index = lastMediaPlayed.getTrackOrder();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                thread.join()
+                val lastMediaPlayed =
+                    getLastPlayedMediaThreadSafe.queueItem
+                index = lastMediaPlayed.trackOrder
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+
+            return index
         }
 
-        return index;
-    }
+    val lastPlayedMediaTimestamp: Long
+        get() {
+            var timestamp: Long = 0
 
-    public long getLastPlayedMediaTimestamp() {
-        long timestamp = 0;
+            val getLastPlayedMediaThreadSafe =
+                GetLastPlayedMediaThreadSafe(queueDao)
+            val thread = Thread(getLastPlayedMediaThreadSafe)
+            thread.start()
 
-        GetLastPlayedMediaThreadSafe getLastPlayedMediaThreadSafe = new GetLastPlayedMediaThreadSafe(queueDao);
-        Thread thread = new Thread(getLastPlayedMediaThreadSafe);
-        thread.start();
+            try {
+                thread.join()
+                val lastMediaPlayed =
+                    getLastPlayedMediaThreadSafe.queueItem
+                timestamp = lastMediaPlayed.playingChanged
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
 
-        try {
-            thread.join();
-            Queue lastMediaPlayed = getLastPlayedMediaThreadSafe.getQueueItem();
-            timestamp = lastMediaPlayed.getPlayingChanged();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            return timestamp
         }
 
-        return timestamp;
-    }
+    private class GetMediaThreadSafe(private val queueDao: QueueDao) : Runnable {
+        private var media: MutableList<Queue?>? = null
 
-    private static class GetMediaThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private List<Queue> media;
-
-        public GetMediaThreadSafe(QueueDao queueDao) {
-            this.queueDao = queueDao;
+        override fun run() {
+            media = queueDao.getAllSimple()
         }
 
-        @Override
-        public void run() {
-            media = queueDao.getAllSimple();
-        }
-
-        public List<Queue> getMedia() {
-            return media;
-        }
-    }
-
-    private static class InsertAllThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private final List<Queue> media;
-
-        public InsertAllThreadSafe(QueueDao queueDao, List<Queue> media) {
-            this.queueDao = queueDao;
-            this.media = media;
-        }
-
-        @Override
-        public void run() {
-            queueDao.insertAll(media);
+        fun getMedia(): MutableList<Queue?> {
+            return media!!
         }
     }
 
-    private static class DeleteThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private final int position;
-
-        public DeleteThreadSafe(QueueDao queueDao, int position) {
-            this.queueDao = queueDao;
-            this.position = position;
-        }
-
-        @Override
-        public void run() {
-            queueDao.delete(position);
+    private class InsertAllThreadSafe(
+        private val queueDao: QueueDao,
+        private val media: MutableList<Queue?>?
+    ) : Runnable {
+        override fun run() {
+            queueDao.insertAll(media)
         }
     }
 
-    private static class DeleteAllThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-
-        public DeleteAllThreadSafe(QueueDao queueDao) {
-            this.queueDao = queueDao;
-        }
-
-        @Override
-        public void run() {
-            queueDao.deleteAll();
+    private class DeleteThreadSafe(private val queueDao: QueueDao, private val position: Int) :
+        Runnable {
+        override fun run() {
+            queueDao.delete(position)
         }
     }
 
-    private static class CountThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private int count = 0;
-
-        public CountThreadSafe(QueueDao queueDao) {
-            this.queueDao = queueDao;
-        }
-
-        @Override
-        public void run() {
-            count = queueDao.count();
-        }
-
-        public int getCount() {
-            return count;
+    private class DeleteAllThreadSafe(private val queueDao: QueueDao) : Runnable {
+        override fun run() {
+            queueDao.deleteAll()
         }
     }
 
-    private static class SetLastPlayedTimestampThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private final String mediaId;
+    private class CountThreadSafe(private val queueDao: QueueDao) : Runnable {
+        var count: Int = 0
+            private set
 
-        public SetLastPlayedTimestampThreadSafe(QueueDao queueDao, String mediaId) {
-            this.queueDao = queueDao;
-            this.mediaId = mediaId;
-        }
-
-        @Override
-        public void run() {
-            queueDao.setLastPlay(mediaId, System.currentTimeMillis());
+        override fun run() {
+            count = queueDao.count()
         }
     }
 
-    private static class SetPlayingPausedTimestampThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private final String mediaId;
-        private final long ms;
-
-        public SetPlayingPausedTimestampThreadSafe(QueueDao queueDao, String mediaId, long ms) {
-            this.queueDao = queueDao;
-            this.mediaId = mediaId;
-            this.ms = ms;
-        }
-
-        @Override
-        public void run() {
-            queueDao.setPlayingChanged(mediaId, ms);
+    private class SetLastPlayedTimestampThreadSafe(
+        private val queueDao: QueueDao,
+        private val mediaId: String?
+    ) : Runnable {
+        override fun run() {
+            queueDao.setLastPlay(mediaId, System.currentTimeMillis())
         }
     }
 
-    private static class GetLastPlayedMediaThreadSafe implements Runnable {
-        private final QueueDao queueDao;
-        private Queue lastMediaPlayed;
+    private class SetPlayingPausedTimestampThreadSafe(
+        private val queueDao: QueueDao,
+        private val mediaId: String?,
+        private val ms: Long
+    ) : Runnable {
+        override fun run() {
+            queueDao.setPlayingChanged(mediaId, ms)
+        }
+    }
 
-        public GetLastPlayedMediaThreadSafe(QueueDao queueDao) {
-            this.queueDao = queueDao;
+    private class GetLastPlayedMediaThreadSafe(private val queueDao: QueueDao) : Runnable {
+        private var lastMediaPlayed: Queue? = null
+
+        override fun run() {
+            lastMediaPlayed = queueDao.getLastPlayed()
         }
 
-        @Override
-        public void run() {
-            lastMediaPlayed = queueDao.getLastPlayed();
-        }
+        val queueItem: Queue
+            get() = lastMediaPlayed
+    }
 
-        public Queue getQueueItem() {
-            return lastMediaPlayed;
-        }
+    companion object {
+        private const val TAG = "QueueRepository"
     }
 }

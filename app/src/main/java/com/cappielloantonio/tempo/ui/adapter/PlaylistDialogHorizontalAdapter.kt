@@ -1,79 +1,76 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.ItemHorizontalPlaylistDialogBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.MusicUtil
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class PlaylistDialogHorizontalAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<PlaylistDialogHorizontalAdapter.ViewHolder?>() {
+    private var playlists: MutableList<Playlist>
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.ItemHorizontalPlaylistDialogBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Playlist;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class PlaylistDialogHorizontalAdapter extends RecyclerView.Adapter<PlaylistDialogHorizontalAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Playlist> playlists;
-
-    public PlaylistDialogHorizontalAdapter(ClickCallback click) {
-        this.click = click;
-        this.playlists = Collections.emptyList();
+    init {
+        this.playlists = mutableListOf<Playlist?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalPlaylistDialogBinding view = ItemHorizontalPlaylistDialogBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalPlaylistDialogBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return PlaylistDialogHorizontalAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Playlist playlist = playlists.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val playlist = playlists.get(position)
 
-        holder.item.playlistDialogTitleTextView.setText(playlist.getName());
-        holder.item.playlistDialogCountTextView.setText(holder.itemView.getContext().getString(R.string.playlist_counted_tracks, playlist.getSongCount(), MusicUtil.getReadableDurationString(playlist.getDuration(), false)));
+        holder.item.playlistDialogTitleTextView.text = playlist.name
+        holder.item.playlistDialogCountTextView.text = holder.itemView.context.getString(
+            R.string.playlist_counted_tracks,
+            playlist.songCount,
+            MusicUtil.getReadableDurationString(playlist.duration, false)
+        )
     }
 
-    @Override
-    public int getItemCount() {
-        return playlists.size();
+    override fun getItemCount(): Int {
+        return playlists.size
     }
 
-    public void setItems(List<Playlist> playlists) {
-        this.playlists = playlists;
-        notifyDataSetChanged();
+    fun setItems(playlists: MutableList<Playlist>) {
+        this.playlists = playlists
+        notifyDataSetChanged()
     }
 
-    public Playlist getItem(int id) {
-        return playlists.get(id);
+    fun getItem(id: Int): Playlist? {
+        return playlists.get(id)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalPlaylistDialogBinding item;
+    inner class ViewHolder internal constructor(var item: ItemHorizontalPlaylistDialogBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.playlistDialogTitleTextView.setSelected(true)
 
-        ViewHolder(ItemHorizontalPlaylistDialogBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.playlistDialogTitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.PLAYLIST_OBJECT, playlists.get(getBindingAdapterPosition()));
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.PLAYLIST_OBJECT,
+                playlists.get(getBindingAdapterPosition())
+            )
 
-            click.onPlaylistClick(bundle);
+            click.onPlaylistClick(bundle)
         }
     }
 }

@@ -1,76 +1,62 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.ItemLibraryGenreBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Genre
+import com.cappielloantonio.tempo.util.Constants
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class GenreAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<GenreAdapter.ViewHolder?>() {
+    private var genres: MutableList<Genre>
 
-import com.cappielloantonio.tempo.databinding.ItemLibraryGenreBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Genre;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class GenreAdapter extends RecyclerView.Adapter<GenreAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Genre> genres;
-
-    public GenreAdapter(ClickCallback click) {
-        this.click = click;
-        this.genres = Collections.emptyList();
+    init {
+        this.genres = mutableListOf<Genre?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryGenreBinding view = ItemLibraryGenreBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view =
+            ItemLibraryGenreBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return GenreAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Genre genre = genres.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val genre = genres.get(position)
 
-        holder.item.genreLabel.setText(genre.getGenre());
+        holder.item.genreLabel.text = genre.genre
     }
 
-    @Override
-    public int getItemCount() {
-        return genres.size();
+    override fun getItemCount(): Int {
+        return genres.size
     }
 
-    public Genre getItem(int position) {
-        return genres.get(position);
+    fun getItem(position: Int): Genre? {
+        return genres.get(position)
     }
 
-    public void setItems(List<Genre> genres) {
-        this.genres = genres;
-        notifyDataSetChanged();
+    fun setItems(genres: MutableList<Genre>) {
+        this.genres = genres
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryGenreBinding item;
-
-        ViewHolder(ItemLibraryGenreBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
+    inner class ViewHolder internal constructor(var item: ItemLibraryGenreBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        private void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE);
-            bundle.putParcelable(Constants.GENRE_OBJECT, genres.get(getBindingAdapterPosition()));
+        private fun onClick() {
+            val bundle = Bundle()
+            bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE)
+            bundle.putParcelable(Constants.GENRE_OBJECT, genres.get(getBindingAdapterPosition()))
 
-            click.onGenreClick(bundle);
+            click.onGenreClick(bundle)
         }
     }
 }

@@ -1,73 +1,71 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.content.Intent;
-import android.net.Uri;
-import android.os.Bundle;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.content.Intent
+import android.net.Uri
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogGithubTempoUpdateBinding
+import com.cappielloantonio.tempo.github.models.LatestRelease
+import com.cappielloantonio.tempo.util.Preferences.setTempoUpdateReminder
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.DialogFragment;
+class GithubTempoUpdateDialog(private val latestRelease: LatestRelease) : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val bind = DialogGithubTempoUpdateBinding.inflate(getLayoutInflater())
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogGithubTempoUpdateBinding;
-import com.cappielloantonio.tempo.github.models.LatestRelease;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+        val builder = MaterialAlertDialogBuilder(requireActivity())
+            .setView(bind.getRoot())
+            .setTitle(R.string.github_update_dialog_title)
+            .setPositiveButton(
+                R.string.github_update_dialog_positive_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNegativeButton(
+                R.string.github_update_dialog_negative_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNeutralButton(
+                R.string.github_update_dialog_neutral_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
 
-import java.util.Objects;
-
-public class GithubTempoUpdateDialog extends DialogFragment {
-    private final LatestRelease latestRelease;
-
-    public GithubTempoUpdateDialog(LatestRelease latestRelease) {
-        this.latestRelease = latestRelease;
+        return builder.create()
     }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        DialogGithubTempoUpdateBinding bind = DialogGithubTempoUpdateBinding.inflate(getLayoutInflater());
+    override fun onStart() {
+        super.onStart()
 
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity())
-                .setView(bind.getRoot())
-                .setTitle(R.string.github_update_dialog_title)
-                .setPositiveButton(R.string.github_update_dialog_positive_button, (dialog, id) -> { })
-                .setNegativeButton(R.string.github_update_dialog_negative_button, (dialog, id) -> { })
-                .setNeutralButton(R.string.github_update_dialog_neutral_button, (dialog, id) -> { });
-
-        return builder.create();
+        setButtonAction()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    private fun setButtonAction() {
+        val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        setButtonAction();
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                openLink(latestRelease.htmlUrl)
+                Objects.requireNonNull<Dialog?>(dialog).dismiss()
+            })
+
+        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                setTempoUpdateReminder()
+                Objects.requireNonNull<Dialog?>(dialog).dismiss()
+            })
+
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                openLink(getString(R.string.support_url))
+                Objects.requireNonNull<Dialog?>(dialog).dismiss()
+            })
     }
 
-    private void setButtonAction() {
-        AlertDialog alertDialog = (AlertDialog) Objects.requireNonNull(getDialog());
-
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            openLink(latestRelease.getHtmlUrl());
-            Objects.requireNonNull(getDialog()).dismiss();
-        });
-
-        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE).setOnClickListener(v -> {
-            Preferences.setTempoUpdateReminder();
-            Objects.requireNonNull(getDialog()).dismiss();
-        });
-
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
-            openLink(getString(R.string.support_url));
-            Objects.requireNonNull(getDialog()).dismiss();
-        });
-    }
-
-    private void openLink(String link) {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(link));
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        startActivity(intent);
+    private fun openLink(link: String?) {
+        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        startActivity(intent)
     }
 }

@@ -1,58 +1,52 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.PlaylistRepository
+import com.cappielloantonio.tempo.subsonic.models.Playlist
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class PlaylistPageViewModel(application: Application) : AndroidViewModel(application) {
+    private val playlistRepository: PlaylistRepository
 
-import com.cappielloantonio.tempo.repository.PlaylistRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Playlist;
+    private var playlist: Playlist? = null
+    private val isOffline = false
 
-import java.util.List;
-
-public class PlaylistPageViewModel extends AndroidViewModel {
-    private final PlaylistRepository playlistRepository;
-
-    private Playlist playlist;
-    private boolean isOffline;
-
-    public PlaylistPageViewModel(@NonNull Application application) {
-        super(application);
-
-        playlistRepository = new PlaylistRepository();
+    init {
+        playlistRepository = PlaylistRepository()
     }
 
-    public LiveData<List<Child>> getPlaylistSongLiveList() {
-        return playlistRepository.getPlaylistSongs(playlist.getId());
+    val playlistSongLiveList: LiveData<MutableList<Child?>?>?
+        get() = playlistRepository.getPlaylistSongs(playlist!!.id)
+
+    fun getPlaylist(): Playlist {
+        return playlist!!
     }
 
-    public Playlist getPlaylist() {
-        return playlist;
+    fun setPlaylist(playlist: Playlist) {
+        this.playlist = playlist
     }
 
-    public void setPlaylist(Playlist playlist) {
-        this.playlist = playlist;
+    fun isPinned(owner: LifecycleOwner): LiveData<Boolean?> {
+        val isPinnedLive = MutableLiveData<Boolean?>()
+
+        playlistRepository.getPinnedPlaylists()
+            .observe(owner, Observer { playlists: MutableList<Playlist?>? ->
+                isPinnedLive.postValue(
+                    playlists!!.stream().anyMatch { obj: Playlist? -> obj!!.id == playlist!!.id })
+            })
+
+        return isPinnedLive
     }
 
-    public LiveData<Boolean> isPinned(LifecycleOwner owner) {
-        MutableLiveData<Boolean> isPinnedLive = new MutableLiveData<>();
-
-        playlistRepository.getPinnedPlaylists().observe(owner, playlists -> {
-            isPinnedLive.postValue(playlists.stream().anyMatch(obj -> obj.getId().equals(playlist.getId())));
-        });
-
-        return isPinnedLive;
-    }
-
-    public void setPinned(boolean isNowPinned) {
+    fun setPinned(isNowPinned: Boolean) {
         if (isNowPinned) {
-            playlistRepository.insert(playlist);
+            playlistRepository.insert(playlist)
         } else {
-            playlistRepository.delete(playlist);
+            playlistRepository.delete(playlist)
         }
     }
 }

@@ -1,24 +1,28 @@
-package com.cappielloantonio.tempo.github.api.release;
+package com.cappielloantonio.tempo.github.api.release
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.github.Github
+import com.cappielloantonio.tempo.github.GithubRetrofitClient
+import com.cappielloantonio.tempo.github.models.LatestRelease
 
-import com.cappielloantonio.tempo.github.Github;
-import com.cappielloantonio.tempo.github.GithubRetrofitClient;
-import com.cappielloantonio.tempo.github.models.LatestRelease;
+class ReleaseClient(github: Github) {
+    private val releaseService: ReleaseService
 
-import retrofit2.Call;
-
-public class ReleaseClient {
-    private static final String TAG = "ReleaseClient";
-
-    private final ReleaseService releaseService;
-
-    public ReleaseClient(Github github) {
-        this.releaseService = new GithubRetrofitClient(github).getRetrofit().create(ReleaseService.class);
+    init {
+        this.releaseService =
+            GithubRetrofitClient(github).retrofit.create<ReleaseService>(ReleaseService::class.java)
     }
 
-    public Call<LatestRelease> getLatestRelease() {
-        Log.d(TAG, "getLatestRelease()");
-        return releaseService.getLatestRelease(Github.getOwner(), Github.getRepo());
+    val latestRelease: Call<LatestRelease?>?
+        get() {
+            Log.d(TAG, "getLatestRelease()")
+            return releaseService.getLatestRelease(
+                Github.Companion.getOwner(),
+                Github.Companion.getRepo()
+            )
+        }
+
+    companion object {
+        private const val TAG = "ReleaseClient"
     }
 }

@@ -1,134 +1,148 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerQueueBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.ui.adapter.PlayerSongQueueAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.stream.Collectors;
+import android.content.ComponentName
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerQueueBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.model.Queue
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.ui.adapter.PlayerSongQueueAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import java.util.Collections
+import java.util.stream.Collectors
 
 @UnstableApi
-public class PlayerQueueFragment extends Fragment implements ClickCallback {
-    private static final String TAG = "PlayerQueueFragment";
+class PlayerQueueFragment : Fragment(), ClickCallback {
+    private var bind: InnerFragmentPlayerQueueBinding? = null
 
-    private InnerFragmentPlayerQueueBinding bind;
+    private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
 
-    private PlayerBottomSheetViewModel playerBottomSheetViewModel;
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    private var playerSongQueueAdapter: PlayerSongQueueAdapter? = null
 
-    private PlayerSongQueueAdapter playerSongQueueAdapter;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        bind = InnerFragmentPlayerQueueBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        bind = InnerFragmentPlayerQueueBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
+        playerBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
+                PlayerBottomSheetViewModel::class.java
+            )
 
-        playerBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(PlayerBottomSheetViewModel.class);
+        initQueueRecyclerView()
 
-        initQueueRecyclerView();
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        initializeBrowser();
-        bindMediaController();
+    override fun onStart() {
+        super.onStart()
+        initializeBrowser()
+        bindMediaController()
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        setMediaBrowserListenableFuture();
-        updateNowPlayingItem();
+    override fun onResume() {
+        super.onResume()
+        setMediaBrowserListenableFuture()
+        updateNowPlayingItem()
     }
 
-    @Override
-    public void onStop() {
-        releaseBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initializeBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture!!)
     }
 
-    private void bindMediaController() {
-        mediaBrowserListenableFuture.addListener(() -> {
+    private fun bindMediaController() {
+        mediaBrowserListenableFuture!!.addListener(Runnable {
             try {
-                MediaBrowser mediaBrowser = mediaBrowserListenableFuture.get();
-                initShuffleButton(mediaBrowser);
-                initCleanButton(mediaBrowser);
-            } catch (Exception exception) {
-                exception.printStackTrace();
+                val mediaBrowser = mediaBrowserListenableFuture!!.get()
+                initShuffleButton(mediaBrowser)
+                initCleanButton(mediaBrowser)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
             }
-        }, MoreExecutors.directExecutor());
+        }, MoreExecutors.directExecutor())
     }
 
-    private void setMediaBrowserListenableFuture() {
-        playerSongQueueAdapter.setMediaBrowserListenableFuture(mediaBrowserListenableFuture);
+    private fun setMediaBrowserListenableFuture() {
+        playerSongQueueAdapter!!.setMediaBrowserListenableFuture(mediaBrowserListenableFuture)
     }
 
-    private void initQueueRecyclerView() {
-        bind.playerQueueRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.playerQueueRecyclerView.setHasFixedSize(true);
+    private fun initQueueRecyclerView() {
+        bind!!.playerQueueRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.playerQueueRecyclerView.setHasFixedSize(true)
 
-        playerSongQueueAdapter = new PlayerSongQueueAdapter(this);
-        bind.playerQueueRecyclerView.setAdapter(playerSongQueueAdapter);
-        playerBottomSheetViewModel.getQueueSong().observe(getViewLifecycleOwner(), queue -> {
-            if (queue != null) {
-                playerSongQueueAdapter.setItems(queue.stream().map(item -> (Child) item).collect(Collectors.toList()));
-            }
-        });
+        playerSongQueueAdapter = PlayerSongQueueAdapter(this)
+        bind!!.playerQueueRecyclerView.setAdapter(playerSongQueueAdapter)
+        playerBottomSheetViewModel!!.getQueueSong()
+            .observe(getViewLifecycleOwner(), Observer { queue: MutableList<Queue?>? ->
+                if (queue != null) {
+                    playerSongQueueAdapter!!.setItems(
+                        queue.stream().map<Child?> { item: Queue? -> item as Child? }.collect(
+                            Collectors.toList()
+                        )
+                    )
+                }
+            })
 
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.LEFT) {
-            int originalPosition = -1;
-            int fromPosition = -1;
-            int toPosition = -1;
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT
+        ) {
+            var originalPosition: Int = -1
+            var fromPosition: Int = -1
+            var toPosition: Int = -1
 
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
                 if (originalPosition == -1) {
-                    originalPosition = viewHolder.getBindingAdapterPosition();
+                    originalPosition = viewHolder.getBindingAdapterPosition()
                 }
 
-                fromPosition = viewHolder.getBindingAdapterPosition();
-                toPosition = target.getBindingAdapterPosition();
+                fromPosition = viewHolder.getBindingAdapterPosition()
+                toPosition = target.getBindingAdapterPosition()
 
                 /*
                  * Per spostare un elemento nella coda devo:
@@ -140,80 +154,107 @@ public class PlayerQueueFragment extends Fragment implements ClickCallback {
                  * In questo modo evito che ad ogni cambio di posizione vada a riscrivere nel db
                  * Al rilascio dell'elemento chiamo il metodo clearView()
                  */
+                Collections.swap(playerSongQueueAdapter!!.getItems(), fromPosition, toPosition)
+                recyclerView.adapter!!.notifyItemMoved(fromPosition, toPosition)
 
-                Collections.swap(playerSongQueueAdapter.getItems(), fromPosition, toPosition);
-                recyclerView.getAdapter().notifyItemMoved(fromPosition, toPosition);
-
-                return false;
+                return false
             }
 
-            @Override
-            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ) {
+                super.clearView(recyclerView, viewHolder)
 
                 if (originalPosition != -1 && fromPosition != -1 && toPosition != -1) {
-                    MediaManager.swap(mediaBrowserListenableFuture, playerSongQueueAdapter.getItems(), originalPosition, toPosition);
+                    MediaManager.swap(
+                        mediaBrowserListenableFuture,
+                        playerSongQueueAdapter!!.getItems(),
+                        originalPosition,
+                        toPosition
+                    )
                 }
 
-                originalPosition = -1;
-                fromPosition = -1;
-                toPosition = -1;
+                originalPosition = -1
+                fromPosition = -1
+                toPosition = -1
             }
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                MediaManager.remove(mediaBrowserListenableFuture, playerSongQueueAdapter.getItems(), viewHolder.getBindingAdapterPosition());
-                viewHolder.getBindingAdapter().notifyDataSetChanged();
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                MediaManager.remove(
+                    mediaBrowserListenableFuture,
+                    playerSongQueueAdapter!!.getItems(),
+                    viewHolder.getBindingAdapterPosition()
+                )
+                viewHolder.bindingAdapter!!.notifyDataSetChanged()
             }
-        }).attachToRecyclerView(bind.playerQueueRecyclerView);
+        }).attachToRecyclerView(bind!!.playerQueueRecyclerView)
     }
 
-    private void initShuffleButton(MediaBrowser mediaBrowser) {
-        bind.playerShuffleQueueFab.setOnClickListener(view -> {
-            int startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1;
-            int endPosition = playerSongQueueAdapter.getItems().size() - 1;
-
+    private fun initShuffleButton(mediaBrowser: MediaBrowser) {
+        bind!!.playerShuffleQueueFab.setOnClickListener(View.OnClickListener { view: View? ->
+            val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
+            val endPosition = playerSongQueueAdapter!!.getItems().size - 1
             if (startPosition < endPosition) {
-                ArrayList<Integer> pool = new ArrayList<>();
+                val pool = ArrayList<Int?>()
 
-                for (int i = startPosition; i <= endPosition; i++) {
-                    pool.add(i);
+                for (i in startPosition..endPosition) {
+                    pool.add(i)
                 }
 
-                while (pool.size() >= 2) {
-                    int fromPosition = (int) (Math.random() * (pool.size()));
-                    int positionA = pool.get(fromPosition);
-                    pool.remove(fromPosition);
+                while (pool.size >= 2) {
+                    val fromPosition = (Math.random() * (pool.size)).toInt()
+                    val positionA: Int = pool.get(fromPosition)!!
+                    pool.removeAt(fromPosition)
 
-                    int toPosition = (int) (Math.random() * (pool.size()));
-                    int positionB = pool.get(toPosition);
-                    pool.remove(toPosition);
+                    val toPosition = (Math.random() * (pool.size)).toInt()
+                    val positionB: Int = pool.get(toPosition)!!
+                    pool.removeAt(toPosition)
 
-                    Collections.swap(playerSongQueueAdapter.getItems(), positionA, positionB);
-                    bind.playerQueueRecyclerView.getAdapter().notifyItemMoved(positionA, positionB);
+                    Collections.swap(playerSongQueueAdapter!!.getItems(), positionA, positionB)
+                    bind!!.playerQueueRecyclerView.adapter!!
+                        .notifyItemMoved(positionA, positionB)
                 }
 
-                MediaManager.shuffle(mediaBrowserListenableFuture, playerSongQueueAdapter.getItems(), startPosition, endPosition);
+                MediaManager.shuffle(
+                    mediaBrowserListenableFuture,
+                    playerSongQueueAdapter!!.getItems(),
+                    startPosition,
+                    endPosition
+                )
             }
-        });
+        })
     }
 
-    private void initCleanButton(MediaBrowser mediaBrowser) {
-        bind.playerCleanQueueButton.setOnClickListener(view -> {
-            int startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1;
-            int endPosition = playerSongQueueAdapter.getItems().size();
+    private fun initCleanButton(mediaBrowser: MediaBrowser) {
+        bind!!.playerCleanQueueButton.setOnClickListener(View.OnClickListener { view: View? ->
+            val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
+            val endPosition = playerSongQueueAdapter!!.getItems().size
 
-            MediaManager.removeRange(mediaBrowserListenableFuture, playerSongQueueAdapter.getItems(), startPosition, endPosition);
-            bind.playerQueueRecyclerView.getAdapter().notifyItemRangeRemoved(startPosition, endPosition);
-        });
+            MediaManager.removeRange(
+                mediaBrowserListenableFuture,
+                playerSongQueueAdapter!!.getItems(),
+                startPosition,
+                endPosition
+            )
+            bind!!.playerQueueRecyclerView.adapter!!
+                .notifyItemRangeRemoved(startPosition, endPosition)
+        })
     }
 
-    private void updateNowPlayingItem() {
-        playerSongQueueAdapter.notifyDataSetChanged();
+    private fun updateNowPlayingItem() {
+        playerSongQueueAdapter!!.notifyDataSetChanged()
     }
 
-    @Override
-    public void onMediaClick(Bundle bundle) {
-        MediaManager.startQueue(mediaBrowserListenableFuture, bundle.getParcelableArrayList(Constants.TRACKS_OBJECT), bundle.getInt(Constants.ITEM_POSITION));
+    override fun onMediaClick(bundle: Bundle) {
+        MediaManager.startQueue(
+            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT
+            ), bundle.getInt(Constants.ITEM_POSITION)
+        )
+    }
+
+    companion object {
+        private const val TAG = "PlayerQueueFragment"
     }
 }

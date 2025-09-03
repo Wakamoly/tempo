@@ -1,41 +1,33 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.repository.PodcastRepository
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
+import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
+class PodcastChannelPageViewModel(application: Application) : AndroidViewModel(application) {
+    private val podcastRepository: PodcastRepository
 
-import com.cappielloantonio.tempo.repository.PodcastRepository;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
-import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode;
+    private var podcastChannel: PodcastChannel? = null
 
-import java.util.List;
-
-public class PodcastChannelPageViewModel extends AndroidViewModel {
-    private final PodcastRepository podcastRepository;
-
-    private PodcastChannel podcastChannel;
-
-    public PodcastChannelPageViewModel(@NonNull Application application) {
-        super(application);
-
-        podcastRepository = new PodcastRepository();
+    init {
+        podcastRepository = PodcastRepository()
     }
 
-    public LiveData<List<PodcastChannel>> getPodcastChannelEpisodes() {
-        return podcastRepository.getPodcastChannels(true, podcastChannel.getId());
+    val podcastChannelEpisodes: LiveData<MutableList<PodcastChannel?>?>?
+        get() = podcastRepository.getPodcastChannels(true, podcastChannel!!.id)
+
+    fun getPodcastChannel(): PodcastChannel {
+        return podcastChannel!!
     }
 
-    public PodcastChannel getPodcastChannel() {
-        return podcastChannel;
+    fun setPodcastChannel(podcastChannel: PodcastChannel) {
+        this.podcastChannel = podcastChannel
     }
 
-    public void setPodcastChannel(PodcastChannel podcastChannel) {
-        this.podcastChannel = podcastChannel;
-    }
-
-    public void requestPodcastEpisodeDownload(PodcastEpisode podcastEpisode) {
-        podcastRepository.downloadPodcastEpisode(podcastEpisode.getId());
+    fun requestPodcastEpisodeDownload(podcastEpisode: PodcastEpisode) {
+        podcastRepository.downloadPodcastEpisode(podcastEpisode.id)
     }
 }

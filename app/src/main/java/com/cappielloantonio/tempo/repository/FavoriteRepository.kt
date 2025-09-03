@@ -1,140 +1,120 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.FavoriteDao
+import com.cappielloantonio.tempo.interfaces.StarCallback
+import com.cappielloantonio.tempo.model.Favorite
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.FavoriteDao;
-import com.cappielloantonio.tempo.interfaces.StarCallback;
-import com.cappielloantonio.tempo.model.Favorite;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class FavoriteRepository {
+    private val favoriteDao: FavoriteDao = AppDatabase.Companion.getInstance().favoriteDao()
 
-import java.util.ArrayList;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class FavoriteRepository {
-    private final FavoriteDao favoriteDao = AppDatabase.getInstance().favoriteDao();
-
-    public void star(String id, String albumId, String artistId, StarCallback starCallback) {
-        App.getSubsonicClientInstance(false)
-                .getMediaAnnotationClient()
-                .star(id, albumId, artistId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful()) {
-                            starCallback.onSuccess();
-                        } else {
-                            starCallback.onError();
-                        }
+    fun star(id: String?, albumId: String?, artistId: String?, starCallback: StarCallback) {
+        getSubsonicClientInstance(false)
+            .getMediaAnnotationClient()
+            .star(id, albumId, artistId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful) {
+                        starCallback.onSuccess()
+                    } else {
+                        starCallback.onError()
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        starCallback.onError();
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    starCallback.onError()
+                }
+            })
+    }
+
+    fun unstar(id: String?, albumId: String?, artistId: String?, starCallback: StarCallback) {
+        getSubsonicClientInstance(false)
+            .getMediaAnnotationClient()
+            .unstar(id, albumId, artistId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful) {
+                        starCallback.onSuccess()
+                    } else {
+                        starCallback.onError()
                     }
-                });
+                }
+
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    starCallback.onError()
+                }
+            })
     }
 
-    public void unstar(String id, String albumId, String artistId, StarCallback starCallback) {
-        App.getSubsonicClientInstance(false)
-                .getMediaAnnotationClient()
-                .unstar(id, albumId, artistId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful()) {
-                            starCallback.onSuccess();
-                        } else {
-                            starCallback.onError();
-                        }
-                    }
+    val favorites: MutableList<Favorite?>?
+        get() {
+            var favorites: MutableList<Favorite?>? =
+                ArrayList<Favorite?>()
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        starCallback.onError();
-                    }
-                });
-    }
+            val getAllThreadSafe = GetAllThreadSafe(favoriteDao)
+            val thread = Thread(getAllThreadSafe)
+            thread.start()
 
-    public List<Favorite> getFavorites() {
-        List<Favorite> favorites = new ArrayList<>();
+            try {
+                thread.join()
+                favorites = getAllThreadSafe.favorites
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
 
-        GetAllThreadSafe getAllThreadSafe = new GetAllThreadSafe(favoriteDao);
-        Thread thread = new Thread(getAllThreadSafe);
-        thread.start();
-
-        try {
-            thread.join();
-            favorites = getAllThreadSafe.getFavorites();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            return favorites
         }
 
-        return favorites;
-    }
+    private class GetAllThreadSafe(private val favoriteDao: FavoriteDao) : Runnable {
+        var favorites: MutableList<Favorite?>? = ArrayList<Favorite?>()
+            private set
 
-    private static class GetAllThreadSafe implements Runnable {
-        private final FavoriteDao favoriteDao;
-        private List<Favorite> favorites = new ArrayList<>();
-
-        public GetAllThreadSafe(FavoriteDao favoriteDao) {
-            this.favoriteDao = favoriteDao;
-        }
-
-        @Override
-        public void run() {
-            favorites = favoriteDao.getAll();
-        }
-
-        public List<Favorite> getFavorites() {
-            return favorites;
+        override fun run() {
+            favorites = favoriteDao.getAll()
         }
     }
 
-    public void starLater(String id, String albumId, String artistId, boolean toStar) {
-        InsertThreadSafe insert = new InsertThreadSafe(favoriteDao, new Favorite(System.currentTimeMillis(), id, albumId, artistId, toStar));
-        Thread thread = new Thread(insert);
-        thread.start();
+    fun starLater(id: String?, albumId: String?, artistId: String?, toStar: Boolean) {
+        val insert = InsertThreadSafe(
+            favoriteDao,
+            Favorite(System.currentTimeMillis(), id, albumId, artistId, toStar)
+        )
+        val thread = Thread(insert)
+        thread.start()
     }
 
-    private static class InsertThreadSafe implements Runnable {
-        private final FavoriteDao favoriteDao;
-        private final Favorite favorite;
-
-        public InsertThreadSafe(FavoriteDao favoriteDao, Favorite favorite) {
-            this.favoriteDao = favoriteDao;
-            this.favorite = favorite;
-        }
-
-        @Override
-        public void run() {
-            favoriteDao.insert(favorite);
+    private class InsertThreadSafe(
+        private val favoriteDao: FavoriteDao,
+        private val favorite: Favorite?
+    ) : Runnable {
+        override fun run() {
+            favoriteDao.insert(favorite)
         }
     }
 
-    public void delete(Favorite favorite) {
-        DeleteThreadSafe delete = new DeleteThreadSafe(favoriteDao, favorite);
-        Thread thread = new Thread(delete);
-        thread.start();
+    fun delete(favorite: Favorite?) {
+        val delete = DeleteThreadSafe(favoriteDao, favorite)
+        val thread = Thread(delete)
+        thread.start()
     }
 
-    private static class DeleteThreadSafe implements Runnable {
-        private final FavoriteDao favoriteDao;
-        private final Favorite favorite;
-
-        public DeleteThreadSafe(FavoriteDao favoriteDao, Favorite favorite) {
-            this.favoriteDao = favoriteDao;
-            this.favorite = favorite;
-        }
-
-        @Override
-        public void run() {
-            favoriteDao.delete(favorite);
+    private class DeleteThreadSafe(
+        private val favoriteDao: FavoriteDao,
+        private val favorite: Favorite?
+    ) : Runnable {
+        override fun run() {
+            favoriteDao.delete(favorite)
         }
     }
 }

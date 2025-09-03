@@ -1,48 +1,39 @@
-package com.cappielloantonio.tempo.ui.fragment.pager;
+package com.cappielloantonio.tempo.ui.fragment.pager
 
-import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
-import androidx.fragment.app.Fragment;
-import androidx.media3.common.util.UnstableApi;
-import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.annotation.OptIn
+import androidx.fragment.app.Fragment
+import androidx.media3.common.util.UnstableApi
+import androidx.viewpager2.adapter.FragmentStateAdapter
 
-import java.util.ArrayList;
-import java.util.List;
+@OptIn(markerClass = UnstableApi::class)
+class HomePager(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    private val fragments: MutableList<Fragment> = ArrayList<Fragment>()
+    private val titles: MutableList<String?> = ArrayList<String?>()
+    private val icons: MutableList<Int?> = ArrayList<Int?>()
 
-@OptIn(markerClass = UnstableApi.class)
-public class HomePager extends FragmentStateAdapter {
-    private static final String TAG = "HomePager";
-
-    private final List<Fragment> fragments = new ArrayList<>();
-    private final List<String> titles = new ArrayList<>();
-    private final List<Integer> icons = new ArrayList<>();
-
-    public HomePager(@NonNull Fragment fragment) {
-        super(fragment);
+    override fun createFragment(position: Int): Fragment {
+        return fragments.get(position)
     }
 
-    @NonNull
-    @Override
-    public Fragment createFragment(int position) {
-        return fragments.get(position);
+    override fun getItemCount(): Int {
+        return fragments.size
     }
 
-    @Override
-    public int getItemCount() {
-        return fragments.size();
+    fun addFragment(fragment: Fragment?, title: String?, drawable: Int) {
+        fragments.add(fragment!!)
+        titles.add(title)
+        icons.add(drawable)
     }
 
-    public void addFragment(Fragment fragment, String title, int drawable) {
-        fragments.add(fragment);
-        titles.add(title);
-        icons.add(drawable);
+    fun getPageTitle(position: Int): String? {
+        return titles.get(position)
     }
 
-    public String getPageTitle(int position) {
-        return titles.get(position);
+    fun getPageIcon(position: Int): Int? {
+        return icons.get(position)
     }
 
-    public Integer getPageIcon(int position) {
-        return icons.get(position);
+    companion object {
+        private const val TAG = "HomePager"
     }
 }

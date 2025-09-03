@@ -1,21 +1,30 @@
-package com.cappielloantonio.tempo.subsonic.api.mediaretrieval;
+package com.cappielloantonio.tempo.subsonic.api.mediaretrieval
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface MediaRetrievalService {
+interface MediaRetrievalService {
     @GET("stream")
-    Call<ApiResponse> stream(@QueryMap Map<String, String> params, @Query("id") String id, @Query("maxBitRate") Integer maxBitRate, @Query("format") String format);
+    fun stream(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("maxBitRate") maxBitRate: Int?,
+        @Query("format") format: String?
+    ): Call<ApiResponse?>?
 
     @GET("download")
-    Call<ApiResponse> download(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun download(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getLyrics")
-    Call<ApiResponse> getLyrics(@QueryMap Map<String, String> params, @Query("artist") String artist, @Query("title") String title);
+    fun getLyrics(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("artist") artist: String?,
+        @Query("title") title: String?
+    ): Call<ApiResponse?>?
 }

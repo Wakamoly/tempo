@@ -1,28 +1,28 @@
-package com.cappielloantonio.tempo.subsonic.utils;
+package com.cappielloantonio.tempo.subsonic.utils
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.security.MessageDigest
+import java.security.NoSuchAlgorithmException
 
-public class StringUtil {
-    public static String tokenize(String s) {
-        final String MD5 = "MD5";
+object StringUtil {
+    fun tokenize(s: String): String {
+        val MD5 = "MD5"
         try {
-            MessageDigest digest = java.security.MessageDigest.getInstance(MD5);
-            digest.update(s.getBytes());
-            byte[] messageDigest = digest.digest();
+            val digest = MessageDigest.getInstance(MD5)
+            digest.update(s.toByteArray())
+            val messageDigest = digest.digest()
 
-            StringBuilder hexString = new StringBuilder();
-            for (byte aMessageDigest : messageDigest) {
-                StringBuilder h = new StringBuilder(Integer.toHexString(0xFF & aMessageDigest));
-                while (h.length() < 2) {
-                    h.insert(0, "0");
+            val hexString = StringBuilder()
+            for (aMessageDigest in messageDigest) {
+                val h = StringBuilder(Integer.toHexString(0xFF and aMessageDigest.toInt()))
+                while (h.length < 2) {
+                    h.insert(0, "0")
                 }
-                hexString.append(h);
+                hexString.append(h)
             }
-            return hexString.toString();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            return hexString.toString()
+        } catch (e: NoSuchAlgorithmException) {
+            e.printStackTrace()
         }
-        return "";
+        return ""
     }
 }

@@ -1,51 +1,54 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.os.Bundle;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogConnectionAlertBinding
+import com.cappielloantonio.tempo.util.Preferences.isDataSavingMode
+import com.cappielloantonio.tempo.util.Preferences.setDataSavingMode
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
+class ConnectionAlertDialog : DialogFragment() {
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val bind = DialogConnectionAlertBinding.inflate(getLayoutInflater())
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogConnectionAlertBinding;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+        val builder = MaterialAlertDialogBuilder(activity!!)
+            .setView(bind.getRoot())
+            .setTitle(R.string.connection_alert_dialog_title)
+            .setPositiveButton(
+                R.string.connection_alert_dialog_positive_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+            .setNegativeButton(
+                R.string.connection_alert_dialog_negative_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
 
-import java.util.Objects;
-
-public class ConnectionAlertDialog extends DialogFragment {
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        DialogConnectionAlertBinding bind = DialogConnectionAlertBinding.inflate(getLayoutInflater());
-
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(getActivity())
-                .setView(bind.getRoot())
-                .setTitle(R.string.connection_alert_dialog_title)
-                .setPositiveButton(R.string.connection_alert_dialog_positive_button, (dialog, id) -> dialog.cancel())
-                .setNegativeButton(R.string.connection_alert_dialog_negative_button, (dialog, id) -> dialog.cancel());
-
-        if (!Preferences.isDataSavingMode()) {
-            builder.setNeutralButton(R.string.connection_alert_dialog_neutral_button, (dialog, id) -> {
-            });
+        if (!isDataSavingMode()) {
+            builder.setNeutralButton(
+                R.string.connection_alert_dialog_neutral_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
         }
 
-        return builder.create();
+        return builder.create()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        setButtonAction();
+        setButtonAction()
     }
 
-    private void setButtonAction() {
-        androidx.appcompat.app.AlertDialog alertDialog = (androidx.appcompat.app.AlertDialog) Objects.requireNonNull(getDialog());
+    private fun setButtonAction() {
+        val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
-            Preferences.setDataSavingMode(true);
-            Objects.requireNonNull(getDialog()).dismiss();
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                setDataSavingMode(true)
+                Objects.requireNonNull<Dialog?>(dialog).dismiss()
+            })
     }
 }

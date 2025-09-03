@@ -1,270 +1,340 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.PopupMenu;
-
-import androidx.activity.OnBackPressedCallback;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentDownloadBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.model.DownloadStack;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.DownloadHorizontalAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.DownloadViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import android.content.ComponentName
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.widget.PopupMenu
+import androidx.activity.OnBackPressedCallback
+import androidx.activity.OnBackPressedDispatcher.addCallback
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.navigation.Navigation.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentDownloadBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.model.DownloadStack
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.DownloadHorizontalAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.Preferences.setDefaultDownloadViewType
+import com.cappielloantonio.tempo.viewmodel.DownloadViewModel
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.common.util.concurrent.ListenableFuture
+import java.util.Collections
+import java.util.Objects
 
 @UnstableApi
-public class DownloadFragment extends Fragment implements ClickCallback {
-    private static final String TAG = "DownloadFragment";
+class DownloadFragment : Fragment(), ClickCallback {
+    private var bind: FragmentDownloadBinding? = null
+    private var activity: MainActivity? = null
+    private var downloadViewModel: DownloadViewModel? = null
 
-    private FragmentDownloadBinding bind;
-    private MainActivity activity;
-    private DownloadViewModel downloadViewModel;
+    private var downloadHorizontalAdapter: DownloadHorizontalAdapter? = null
 
-    private DownloadHorizontalAdapter downloadHorizontalAdapter;
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
 
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    private var materialToolbar: MaterialToolbar? = null
 
-    private MaterialToolbar materialToolbar;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        activity = activity as MainActivity?
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+        bind = FragmentDownloadBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
+        downloadViewModel =
+            ViewModelProvider(requireActivity()).get<DownloadViewModel>(DownloadViewModel::class.java)
 
-        bind = FragmentDownloadBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-        downloadViewModel = new ViewModelProvider(requireActivity()).get(DownloadViewModel.class);
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        initAppBar();
-        initDownloadedView();
+        initAppBar()
+        initDownloadedView()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
-        activity.setBottomNavigationBarVisibility(true);
-        activity.setBottomSheetVisibility(true);
+        initializeMediaBrowser()
+        activity!!.setBottomNavigationBarVisibility(true)
+        activity!!.setBottomSheetVisibility(true)
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initAppBar() {
-        materialToolbar = bind.getRoot().findViewById(R.id.toolbar);
+    private fun initAppBar() {
+        materialToolbar = bind!!.getRoot().findViewById<MaterialToolbar>(R.id.toolbar)
 
-        activity.setSupportActionBar(materialToolbar);
-        Objects.requireNonNull(materialToolbar.getOverflowIcon()).setTint(requireContext().getResources().getColor(R.color.titleTextColor, null));
+        activity!!.setSupportActionBar(materialToolbar)
+        Objects.requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
+            .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
     }
 
-    private void initDownloadedView() {
-        bind.downloadedRecyclerView.setHasFixedSize(true);
+    private fun initDownloadedView() {
+        bind!!.downloadedRecyclerView.setHasFixedSize(true)
 
-        downloadHorizontalAdapter = new DownloadHorizontalAdapter(this);
-        bind.downloadedRecyclerView.setAdapter(downloadHorizontalAdapter);
+        downloadHorizontalAdapter = DownloadHorizontalAdapter(this)
+        bind!!.downloadedRecyclerView.setAdapter(downloadHorizontalAdapter)
 
-        downloadViewModel.getDownloadedTracks(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), songs -> {
-            if (songs != null) {
-                if (songs.isEmpty()) {
-                    if (bind != null) {
-                        bind.emptyDownloadLayout.setVisibility(View.VISIBLE);
-                        bind.fragmentDownloadNestedScrollView.setVisibility(View.GONE);
-                        bind.downloadDownloadedSector.setVisibility(View.GONE);
-                        bind.downloadedGroupByImageView.setVisibility(View.GONE);
+        downloadViewModel!!.getDownloadedTracks(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                if (songs != null) {
+                    if (songs.isEmpty()) {
+                        if (bind != null) {
+                            bind!!.emptyDownloadLayout.visibility = View.VISIBLE
+                            bind!!.fragmentDownloadNestedScrollView.visibility = View.GONE
+                            bind!!.downloadDownloadedSector.visibility = View.GONE
+                            bind!!.downloadedGroupByImageView.setVisibility(View.GONE)
+                        }
+                    } else {
+                        if (bind != null) {
+                            bind!!.emptyDownloadLayout.visibility = View.GONE
+                            bind!!.fragmentDownloadNestedScrollView.visibility = View.VISIBLE
+                            bind!!.downloadDownloadedSector.visibility = View.VISIBLE
+                            bind!!.downloadedGroupByImageView.setVisibility(View.VISIBLE)
+
+                            finishDownloadView(songs)
+                        }
                     }
-                } else {
-                    if (bind != null) {
-                        bind.emptyDownloadLayout.setVisibility(View.GONE);
-                        bind.fragmentDownloadNestedScrollView.setVisibility(View.VISIBLE);
-                        bind.downloadDownloadedSector.setVisibility(View.VISIBLE);
-                        bind.downloadedGroupByImageView.setVisibility(View.VISIBLE);
 
-                        finishDownloadView(songs);
-                    }
+                    if (bind != null) bind!!.loadingProgressBar.visibility = View.GONE
+                }
+            })
+
+        bind!!.downloadedGroupByImageView.setOnClickListener(View.OnClickListener { view: View? ->
+            showPopupMenu(
+                view,
+                R.menu.download_popup_menu
+            )
+        })
+        bind!!.downloadedGoBackImageView.setOnClickListener(View.OnClickListener { view: View? -> downloadViewModel!!.popViewStack() })
+    }
+
+    private fun finishDownloadView(songs: MutableList<Child?>?) {
+        downloadViewModel!!.getViewStack()
+            .observe(getViewLifecycleOwner(), Observer { stack: ArrayList<DownloadStack>? ->
+                bind!!.downloadedRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+                val lastLevel = stack!!.get(stack.size - 1)
+
+                when (lastLevel.id) {
+                    Constants.DOWNLOAD_TYPE_TRACK -> downloadHorizontalAdapter!!.setItems(
+                        Constants.DOWNLOAD_TYPE_TRACK,
+                        lastLevel.id,
+                        lastLevel.view,
+                        songs
+                    )
+
+                    Constants.DOWNLOAD_TYPE_ALBUM -> downloadHorizontalAdapter!!.setItems(
+                        Constants.DOWNLOAD_TYPE_TRACK,
+                        lastLevel.id,
+                        lastLevel.view,
+                        songs
+                    )
+
+                    Constants.DOWNLOAD_TYPE_ARTIST -> downloadHorizontalAdapter!!.setItems(
+                        Constants.DOWNLOAD_TYPE_ALBUM,
+                        lastLevel.id,
+                        lastLevel.view,
+                        songs
+                    )
+
+                    Constants.DOWNLOAD_TYPE_GENRE -> downloadHorizontalAdapter!!.setItems(
+                        Constants.DOWNLOAD_TYPE_TRACK,
+                        lastLevel.id,
+                        lastLevel.view,
+                        songs
+                    )
+
+                    Constants.DOWNLOAD_TYPE_YEAR -> downloadHorizontalAdapter!!.setItems(
+                        Constants.DOWNLOAD_TYPE_TRACK,
+                        lastLevel.id,
+                        lastLevel.view,
+                        songs
+                    )
                 }
 
-                if (bind != null) bind.loadingProgressBar.setVisibility(View.GONE);
-            }
-        });
+                bind!!.downloadedGoBackImageView.setVisibility(if (stack.size > 1) View.VISIBLE else View.GONE)
 
-        bind.downloadedGroupByImageView.setOnClickListener(view -> showPopupMenu(view, R.menu.download_popup_menu));
-        bind.downloadedGoBackImageView.setOnClickListener(view -> downloadViewModel.popViewStack());
+                setupBackPressing(stack.size)
+                setupShuffleButton()
+            })
     }
 
-    private void finishDownloadView(List<Child> songs) {
-        downloadViewModel.getViewStack().observe(getViewLifecycleOwner(), stack -> {
-            bind.downloadedRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-
-            DownloadStack lastLevel = stack.get(stack.size() - 1);
-
-            switch (lastLevel.getId()) {
-                case Constants.DOWNLOAD_TYPE_TRACK:
-                    downloadHorizontalAdapter.setItems(Constants.DOWNLOAD_TYPE_TRACK, lastLevel.getId(), lastLevel.getView(), songs);
-                    break;
-                case Constants.DOWNLOAD_TYPE_ALBUM:
-                    downloadHorizontalAdapter.setItems(Constants.DOWNLOAD_TYPE_TRACK, lastLevel.getId(), lastLevel.getView(), songs);
-                    break;
-                case Constants.DOWNLOAD_TYPE_ARTIST:
-                    downloadHorizontalAdapter.setItems(Constants.DOWNLOAD_TYPE_ALBUM, lastLevel.getId(), lastLevel.getView(), songs);
-                    break;
-                case Constants.DOWNLOAD_TYPE_GENRE:
-                    downloadHorizontalAdapter.setItems(Constants.DOWNLOAD_TYPE_TRACK, lastLevel.getId(), lastLevel.getView(), songs);
-                    break;
-                case Constants.DOWNLOAD_TYPE_YEAR:
-                    downloadHorizontalAdapter.setItems(Constants.DOWNLOAD_TYPE_TRACK, lastLevel.getId(), lastLevel.getView(), songs);
-                    break;
-            }
-
-            bind.downloadedGoBackImageView.setVisibility(stack.size() > 1 ? View.VISIBLE : View.GONE);
-
-            setupBackPressing(stack.size());
-            setupShuffleButton();
-        });
-    }
-
-    private void setupShuffleButton() {
-        bind.shuffleDownloadedTextViewClickable.setOnClickListener(view -> {
-            List<Child> songs = downloadHorizontalAdapter.getShuffling();
-
+    private fun setupShuffleButton() {
+        bind!!.shuffleDownloadedTextViewClickable.setOnClickListener(View.OnClickListener { view: View? ->
+            val songs = downloadHorizontalAdapter!!.getShuffling()
             if (songs != null && !songs.isEmpty()) {
-                Collections.shuffle(songs);
-                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0);
-                activity.setBottomSheetInPeek(true);
+                Collections.shuffle(songs)
+                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                activity!!.setBottomSheetInPeek(true)
             }
-        });
+        })
     }
 
-    private void setupBackPressing(int stackSize) {
-        requireActivity().getOnBackPressedDispatcher().addCallback(getViewLifecycleOwner(), new OnBackPressedCallback(true) {
-            @Override
-            public void handleOnBackPressed() {
-                if (stackSize > 1) {
-                    downloadViewModel.popViewStack();
-                } else {
-                    activity.navController.navigateUp();
+    private fun setupBackPressing(stackSize: Int) {
+        requireActivity().getOnBackPressedDispatcher()
+            .addCallback(getViewLifecycleOwner(), object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    if (stackSize > 1) {
+                        downloadViewModel!!.popViewStack()
+                    } else {
+                        activity!!.navController.navigateUp()
+                    }
+
+                    remove()
                 }
+            })
+    }
 
-                remove();
+    private fun showPopupMenu(view: View?, menuResource: Int) {
+        val popup = PopupMenu(requireContext(), view)
+        popup.menuInflater.inflate(menuResource, popup.menu)
+
+        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+            if (menuItem!!.itemId == R.id.menu_download_group_by_track) {
+                downloadViewModel!!.initViewStack(
+                    DownloadStack(
+                        Constants.DOWNLOAD_TYPE_TRACK,
+                        null
+                    )
+                )
+                setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_TRACK)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_download_group_by_album) {
+                downloadViewModel!!.initViewStack(
+                    DownloadStack(
+                        Constants.DOWNLOAD_TYPE_ALBUM,
+                        null
+                    )
+                )
+                setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_ALBUM)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_download_group_by_artist) {
+                downloadViewModel!!.initViewStack(
+                    DownloadStack(
+                        Constants.DOWNLOAD_TYPE_ARTIST,
+                        null
+                    )
+                )
+                setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_ARTIST)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_download_group_by_genre) {
+                downloadViewModel!!.initViewStack(
+                    DownloadStack(
+                        Constants.DOWNLOAD_TYPE_GENRE,
+                        null
+                    )
+                )
+                setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_GENRE)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_download_group_by_year) {
+                downloadViewModel!!.initViewStack(DownloadStack(Constants.DOWNLOAD_TYPE_YEAR, null))
+                setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_YEAR)
+                return@setOnMenuItemClickListener true
             }
-        });
+            false
+        })
+
+        popup.show()
     }
 
-    private void showPopupMenu(View view, int menuResource) {
-        PopupMenu popup = new PopupMenu(requireContext(), view);
-        popup.getMenuInflater().inflate(menuResource, popup.getMenu());
-
-        popup.setOnMenuItemClickListener(menuItem -> {
-            if (menuItem.getItemId() == R.id.menu_download_group_by_track) {
-                downloadViewModel.initViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_TRACK, null));
-                Preferences.setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_TRACK);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_download_group_by_album) {
-                downloadViewModel.initViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_ALBUM, null));
-                Preferences.setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_ALBUM);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_download_group_by_artist) {
-                downloadViewModel.initViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_ARTIST, null));
-                Preferences.setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_ARTIST);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_download_group_by_genre) {
-                downloadViewModel.initViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_GENRE, null));
-                Preferences.setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_GENRE);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_download_group_by_year) {
-                downloadViewModel.initViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_YEAR, null));
-                Preferences.setDefaultDownloadViewType(Constants.DOWNLOAD_TYPE_YEAR);
-                return true;
-            }
-
-            return false;
-        });
-
-        popup.show();
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun releaseMediaBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    private void releaseMediaBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    override fun onYearClick(bundle: Bundle) {
+        downloadViewModel!!.pushViewStack(
+            DownloadStack(
+                Constants.DOWNLOAD_TYPE_YEAR, bundle.getString(
+                    Constants.DOWNLOAD_TYPE_YEAR
+                )
+            )
+        )
     }
 
-    @Override
-    public void onYearClick(Bundle bundle) {
-        downloadViewModel.pushViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_YEAR, bundle.getString(Constants.DOWNLOAD_TYPE_YEAR)));
+    override fun onGenreClick(bundle: Bundle) {
+        downloadViewModel!!.pushViewStack(
+            DownloadStack(
+                Constants.DOWNLOAD_TYPE_GENRE, bundle.getString(
+                    Constants.DOWNLOAD_TYPE_GENRE
+                )
+            )
+        )
     }
 
-    @Override
-    public void onGenreClick(Bundle bundle) {
-        downloadViewModel.pushViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_GENRE, bundle.getString(Constants.DOWNLOAD_TYPE_GENRE)));
+    override fun onArtistClick(bundle: Bundle) {
+        downloadViewModel!!.pushViewStack(
+            DownloadStack(
+                Constants.DOWNLOAD_TYPE_ARTIST, bundle.getString(
+                    Constants.DOWNLOAD_TYPE_ARTIST
+                )
+            )
+        )
     }
 
-    @Override
-    public void onArtistClick(Bundle bundle) {
-        downloadViewModel.pushViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_ARTIST, bundle.getString(Constants.DOWNLOAD_TYPE_ARTIST)));
+    override fun onAlbumClick(bundle: Bundle) {
+        downloadViewModel!!.pushViewStack(
+            DownloadStack(
+                Constants.DOWNLOAD_TYPE_ALBUM, bundle.getString(
+                    Constants.DOWNLOAD_TYPE_ALBUM
+                )
+            )
+        )
     }
 
-    @Override
-    public void onAlbumClick(Bundle bundle) {
-        downloadViewModel.pushViewStack(new DownloadStack(Constants.DOWNLOAD_TYPE_ALBUM, bundle.getString(Constants.DOWNLOAD_TYPE_ALBUM)));
+    override fun onMediaClick(bundle: Bundle) {
+        MediaManager.startQueue(
+            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT
+            ), bundle.getInt(Constants.ITEM_POSITION)
+        )
+        activity!!.setBottomSheetInPeek(true)
     }
 
-    @Override
-    public void onMediaClick(Bundle bundle) {
-        MediaManager.startQueue(mediaBrowserListenableFuture, bundle.getParcelableArrayList(Constants.TRACKS_OBJECT), bundle.getInt(Constants.ITEM_POSITION));
-        activity.setBottomSheetInPeek(true);
+    override fun onMediaLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.songBottomSheetDialog, bundle)
     }
 
-    @Override
-    public void onMediaLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.songBottomSheetDialog, bundle);
+    override fun onDownloadGroupLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.downloadBottomSheetDialog, bundle)
     }
 
-    @Override
-    public void onDownloadGroupLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.downloadBottomSheetDialog, bundle);
+    companion object {
+        private const val TAG = "DownloadFragment"
     }
 }

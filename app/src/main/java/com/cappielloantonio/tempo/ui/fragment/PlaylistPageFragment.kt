@@ -1,273 +1,334 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.SearchView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners;
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentPlaylistPageBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.SongHorizontalAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.viewmodel.PlaylistPageViewModel;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.Collections;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import android.content.ComponentName
+import android.content.Context
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.SearchView
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.navigation.Navigation.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.room.RoomDatabase.Builder.build
+import com.bumptech.glide.load.resource.bitmap.GranularRoundedCorners
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentPlaylistPageBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.SongHorizontalAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.viewmodel.PlaylistPageViewModel
+import com.google.common.util.concurrent.ListenableFuture
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Collections
+import java.util.Objects
+import java.util.stream.Collectors
 
 @UnstableApi
-public class PlaylistPageFragment extends Fragment implements ClickCallback {
-    private FragmentPlaylistPageBinding bind;
-    private MainActivity activity;
-    private PlaylistPageViewModel playlistPageViewModel;
+class PlaylistPageFragment : Fragment(), ClickCallback {
+    private var bind: FragmentPlaylistPageBinding? = null
+    private var activity: MainActivity? = null
+    private var playlistPageViewModel: PlaylistPageViewModel? = null
 
-    private SongHorizontalAdapter songHorizontalAdapter;
+    private var songHorizontalAdapter: SongHorizontalAdapter? = null
 
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.playlist_page_menu, menu);
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.playlist_page_menu, menu)
 
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        val searchItem = menu.findItem(R.id.action_search)
 
-        SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
-                return false;
+        val searchView = searchItem.actionView as SearchView?
+        searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchView.clearFocus()
+                return false
             }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                songHorizontalAdapter.getFilter().filter(newText);
-                return false;
+            override fun onQueryTextChange(newText: String?): Boolean {
+                songHorizontalAdapter!!.filter.filter(newText)
+                return false
             }
-        });
+        })
 
-        searchView.setPadding(-32, 0, 0, 0);
+        searchView.setPadding(-32, 0, 0, 0)
 
-        initMenuOption(menu);
+        initMenuOption(menu)
     }
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        activity = activity as MainActivity?
 
-        bind = FragmentPlaylistPageBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-        playlistPageViewModel = new ViewModelProvider(requireActivity()).get(PlaylistPageViewModel.class);
+        bind = FragmentPlaylistPageBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
+        playlistPageViewModel =
+            ViewModelProvider(requireActivity()).get<PlaylistPageViewModel>(PlaylistPageViewModel::class.java)
 
-        init();
-        initAppBar();
-        initMusicButton();
-        initBackCover();
-        initSongsView();
+        init()
+        initAppBar()
+        initMusicButton()
+        initBackCover()
+        initSongsView()
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
+        initializeMediaBrowser()
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == R.id.action_download_playlist) {
-            playlistPageViewModel.getPlaylistSongLiveList().observe(getViewLifecycleOwner(), songs -> {
-                if (isVisible() && getActivity() != null) {
-                    DownloadUtil.getDownloadTracker(requireContext()).download(
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        if (item.itemId == R.id.action_download_playlist) {
+            playlistPageViewModel!!.getPlaylistSongLiveList()
+                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                    if (isVisible && activity != null) {
+                        DownloadUtil.getDownloadTracker(requireContext()).download(
                             MappingUtil.mapDownloads(songs),
-                            songs.stream().map(child -> {
-                                Download toDownload = new Download(child);
-                                toDownload.setPlaylistId(playlistPageViewModel.getPlaylist().getId());
-                                toDownload.setPlaylistName(playlistPageViewModel.getPlaylist().getName());
-                                return toDownload;
-                            }).collect(Collectors.toList())
-                    );
+                            songs!!.stream().map<Download?> { child: Child? ->
+                                val toDownload = Download(child!!)
+                                toDownload.playlistId = playlistPageViewModel!!.getPlaylist().id
+                                toDownload.playlistName = playlistPageViewModel!!.getPlaylist().name
+                                toDownload
+                            }.collect(Collectors.toList())
+                        )
+                    }
+                })
+            return true
+        } else if (item.itemId == R.id.action_pin_playlist) {
+            playlistPageViewModel!!.setPinned(true)
+            return true
+        } else if (item.itemId == R.id.action_unpin_playlist) {
+            playlistPageViewModel!!.setPinned(false)
+            return true
+        }
+
+        return false
+    }
+
+    private fun init() {
+        playlistPageViewModel!!.setPlaylist(requireArguments().getParcelable<Playlist?>(Constants.PLAYLIST_OBJECT))
+    }
+
+    private fun initMenuOption(menu: Menu) {
+        playlistPageViewModel!!.isPinned(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { isPinned: Boolean? ->
+                menu.findItem(R.id.action_unpin_playlist).isVisible = isPinned!!
+                menu.findItem(R.id.action_pin_playlist).isVisible = !isPinned
+            })
+    }
+
+    private fun initAppBar() {
+        activity!!.setSupportActionBar(bind!!.animToolbar)
+
+        if (activity!!.supportActionBar != null) {
+            activity!!.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
+        }
+
+        bind!!.animToolbar.setTitle(playlistPageViewModel!!.getPlaylist().name)
+
+        bind!!.playlistNameLabel.text = playlistPageViewModel!!.getPlaylist().name
+        bind!!.playlistSongCountLabel.text = getString(
+            R.string.playlist_song_count,
+            playlistPageViewModel!!.getPlaylist().songCount
+        )
+        bind!!.playlistDurationLabel.text = getString(
+            R.string.playlist_duration, MusicUtil.getReadableDurationString(
+                playlistPageViewModel!!.getPlaylist().duration, false
+            )
+        )
+
+        bind!!.animToolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
+            hideKeyboard(v!!)
+            activity!!.navController.navigateUp()
+        })
+
+        Objects.requireNonNull<Drawable?>(bind!!.animToolbar.getOverflowIcon())
+            .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
+    }
+
+    private fun hideKeyboard(view: View) {
+        val imm =
+            requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
+    }
+
+    private fun initMusicButton() {
+        playlistPageViewModel!!.getPlaylistSongLiveList()
+            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                if (bind != null) {
+                    bind!!.playlistPagePlayButton.setOnClickListener(View.OnClickListener { v: View? ->
+                        MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                        activity!!.setBottomSheetInPeek(true)
+                    })
+
+                    bind!!.playlistPageShuffleButton.setOnClickListener(View.OnClickListener { v: View? ->
+                        Collections.shuffle(songs)
+                        MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                        activity!!.setBottomSheetInPeek(true)
+                    })
                 }
-            });
-            return true;
-        } else if (item.getItemId() == R.id.action_pin_playlist) {
-            playlistPageViewModel.setPinned(true);
-            return true;
-        } else if (item.getItemId() == R.id.action_unpin_playlist) {
-            playlistPageViewModel.setPinned(false);
-            return true;
-        }
-
-        return false;
+            })
     }
 
-    private void init() {
-        playlistPageViewModel.setPlaylist(requireArguments().getParcelable(Constants.PLAYLIST_OBJECT));
-    }
+    private fun initBackCover() {
+        playlistPageViewModel!!.getPlaylistSongLiveList()
+            .observe(requireActivity(), Observer { songs: MutableList<Child?>? ->
+                if (bind != null && songs != null && !songs.isEmpty()) {
+                    Collections.shuffle(songs)
 
-    private void initMenuOption(Menu menu) {
-        playlistPageViewModel.isPinned(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), isPinned -> {
-            menu.findItem(R.id.action_unpin_playlist).setVisible(isPinned);
-            menu.findItem(R.id.action_pin_playlist).setVisible(!isPinned);
-        });
-    }
-
-    private void initAppBar() {
-        activity.setSupportActionBar(bind.animToolbar);
-
-        if (activity.getSupportActionBar() != null) {
-            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
-        }
-
-        bind.animToolbar.setTitle(playlistPageViewModel.getPlaylist().getName());
-
-        bind.playlistNameLabel.setText(playlistPageViewModel.getPlaylist().getName());
-        bind.playlistSongCountLabel.setText(getString(R.string.playlist_song_count, playlistPageViewModel.getPlaylist().getSongCount()));
-        bind.playlistDurationLabel.setText(getString(R.string.playlist_duration, MusicUtil.getReadableDurationString(playlistPageViewModel.getPlaylist().getDuration(), false)));
-
-        bind.animToolbar.setNavigationOnClickListener(v -> {
-            hideKeyboard(v);
-            activity.navController.navigateUp();
-        });
-
-        Objects.requireNonNull(bind.animToolbar.getOverflowIcon()).setTint(requireContext().getResources().getColor(R.color.titleTextColor, null));
-    }
-
-    private void hideKeyboard(View view) {
-        InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
-    }
-
-    private void initMusicButton() {
-        playlistPageViewModel.getPlaylistSongLiveList().observe(getViewLifecycleOwner(), songs -> {
-            if (bind != null) {
-                bind.playlistPagePlayButton.setOnClickListener(v -> {
-                    MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0);
-                    activity.setBottomSheetInPeek(true);
-                });
-
-                bind.playlistPageShuffleButton.setOnClickListener(v -> {
-                    Collections.shuffle(songs);
-                    MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0);
-                    activity.setBottomSheetInPeek(true);
-                });
-            }
-        });
-    }
-
-    private void initBackCover() {
-        playlistPageViewModel.getPlaylistSongLiveList().observe(requireActivity(), songs -> {
-            if (bind != null && songs != null && !songs.isEmpty()) {
-                Collections.shuffle(songs);
-
-                // Pic top-left
-                CustomGlideRequest.Builder
-                        .from(requireContext(), !songs.isEmpty() ? songs.get(0).getCoverArtId() : playlistPageViewModel.getPlaylist().getCoverArtId(), CustomGlideRequest.ResourceType.Song)
+                    // Pic top-left
+                    CustomGlideRequest.Builder.Companion.from(
+                        requireContext(),
+                        if (!songs.isEmpty()) songs.get(0)!!.coverArtId else playlistPageViewModel!!.getPlaylist().coverArtId,
+                        CustomGlideRequest.ResourceType.Song
+                    )
                         .build()
-                        .transform(new GranularRoundedCorners(CustomGlideRequest.CORNER_RADIUS, 0, 0, 0))
-                        .into(bind.playlistCoverImageViewTopLeft);
+                        .transform(
+                            GranularRoundedCorners(
+                                CustomGlideRequest.CORNER_RADIUS.toFloat(),
+                                0f,
+                                0f,
+                                0f
+                            )
+                        )
+                        .into(bind!!.playlistCoverImageViewTopLeft)
 
-                // Pic top-right
-                CustomGlideRequest.Builder
-                        .from(requireContext(), songs.size() > 1 ? songs.get(1).getCoverArtId() : playlistPageViewModel.getPlaylist().getCoverArtId(), CustomGlideRequest.ResourceType.Song)
+                    // Pic top-right
+                    CustomGlideRequest.Builder.Companion.from(
+                        requireContext(),
+                        if (songs.size > 1) songs.get(1)!!.coverArtId else playlistPageViewModel!!.getPlaylist().coverArtId,
+                        CustomGlideRequest.ResourceType.Song
+                    )
                         .build()
-                        .transform(new GranularRoundedCorners(0, CustomGlideRequest.CORNER_RADIUS, 0, 0))
-                        .into(bind.playlistCoverImageViewTopRight);
+                        .transform(
+                            GranularRoundedCorners(
+                                0f,
+                                CustomGlideRequest.CORNER_RADIUS.toFloat(),
+                                0f,
+                                0f
+                            )
+                        )
+                        .into(bind!!.playlistCoverImageViewTopRight)
 
-                // Pic bottom-left
-                CustomGlideRequest.Builder
-                        .from(requireContext(), songs.size() > 2 ? songs.get(2).getCoverArtId() : playlistPageViewModel.getPlaylist().getCoverArtId(), CustomGlideRequest.ResourceType.Song)
+                    // Pic bottom-left
+                    CustomGlideRequest.Builder.Companion.from(
+                        requireContext(),
+                        if (songs.size > 2) songs.get(2)!!.coverArtId else playlistPageViewModel!!.getPlaylist().coverArtId,
+                        CustomGlideRequest.ResourceType.Song
+                    )
                         .build()
-                        .transform(new GranularRoundedCorners(0, 0, 0, CustomGlideRequest.CORNER_RADIUS))
-                        .into(bind.playlistCoverImageViewBottomLeft);
+                        .transform(
+                            GranularRoundedCorners(
+                                0f,
+                                0f,
+                                0f,
+                                CustomGlideRequest.CORNER_RADIUS.toFloat()
+                            )
+                        )
+                        .into(bind!!.playlistCoverImageViewBottomLeft)
 
-                // Pic bottom-right
-                CustomGlideRequest.Builder
-                        .from(requireContext(), songs.size() > 3 ? songs.get(3).getCoverArtId() : playlistPageViewModel.getPlaylist().getCoverArtId(), CustomGlideRequest.ResourceType.Song)
+                    // Pic bottom-right
+                    CustomGlideRequest.Builder.Companion.from(
+                        requireContext(),
+                        if (songs.size > 3) songs.get(3)!!.coverArtId else playlistPageViewModel!!.getPlaylist().coverArtId,
+                        CustomGlideRequest.ResourceType.Song
+                    )
                         .build()
-                        .transform(new GranularRoundedCorners(0, 0, CustomGlideRequest.CORNER_RADIUS, 0))
-                        .into(bind.playlistCoverImageViewBottomRight);
-            }
-        });
+                        .transform(
+                            GranularRoundedCorners(
+                                0f,
+                                0f,
+                                CustomGlideRequest.CORNER_RADIUS.toFloat(),
+                                0f
+                            )
+                        )
+                        .into(bind!!.playlistCoverImageViewBottomRight)
+                }
+            })
     }
 
-    private void initSongsView() {
-        bind.songRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.songRecyclerView.setHasFixedSize(true);
+    private fun initSongsView() {
+        bind!!.songRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.songRecyclerView.setHasFixedSize(true)
 
-        songHorizontalAdapter = new SongHorizontalAdapter(this, true, false, null);
-        bind.songRecyclerView.setAdapter(songHorizontalAdapter);
+        songHorizontalAdapter = SongHorizontalAdapter(this, true, false, null)
+        bind!!.songRecyclerView.setAdapter(songHorizontalAdapter)
 
-        playlistPageViewModel.getPlaylistSongLiveList().observe(getViewLifecycleOwner(), songs -> songHorizontalAdapter.setItems(songs));
+        playlistPageViewModel!!.getPlaylistSongLiveList().observe(
+            getViewLifecycleOwner(),
+            Observer { songs: MutableList<Child?>? -> songHorizontalAdapter!!.setItems(songs) })
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseMediaBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseMediaBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    @Override
-    public void onMediaClick(Bundle bundle) {
-        MediaManager.startQueue(mediaBrowserListenableFuture, bundle.getParcelableArrayList(Constants.TRACKS_OBJECT), bundle.getInt(Constants.ITEM_POSITION));
-        activity.setBottomSheetInPeek(true);
+    override fun onMediaClick(bundle: Bundle) {
+        MediaManager.startQueue(
+            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT
+            ), bundle.getInt(Constants.ITEM_POSITION)
+        )
+        activity!!.setBottomSheetInPeek(true)
     }
 
-    @Override
-    public void onMediaLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.songBottomSheetDialog, bundle);
+    override fun onMediaLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.songBottomSheetDialog, bundle)
     }
 }

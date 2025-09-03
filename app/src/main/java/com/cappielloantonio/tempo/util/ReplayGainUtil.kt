@@ -1,178 +1,181 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import androidx.annotation.OptIn;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.Metadata;
-import androidx.media3.common.Tracks;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.exoplayer.ExoPlayer;
+import androidx.annotation.OptIn
+import androidx.media3.common.Metadata
+import androidx.media3.common.Tracks
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.ExoPlayer
+import com.cappielloantonio.tempo.model.ReplayGain
+import com.cappielloantonio.tempo.util.Preferences.getReplayGainMode
+import kotlin.math.pow
 
-import com.cappielloantonio.tempo.model.ReplayGain;
+@OptIn(markerClass = UnstableApi::class)
+object ReplayGainUtil {
+    private val tags = arrayOf<String?>(
+        "REPLAYGAIN_TRACK_GAIN",
+        "REPLAYGAIN_ALBUM_GAIN",
+        "R128_TRACK_GAIN",
+        "R128_ALBUM_GAIN"
+    )
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+    fun setReplayGain(player: ExoPlayer, tracks: Tracks?) {
+        val metadata = getMetadata(tracks)
+        val gains = getReplayGains(metadata)
 
-@OptIn(markerClass = UnstableApi.class)
-public class ReplayGainUtil {
-    private static final String[] tags = {"REPLAYGAIN_TRACK_GAIN", "REPLAYGAIN_ALBUM_GAIN", "R128_TRACK_GAIN", "R128_ALBUM_GAIN"};
-
-    public static void setReplayGain(ExoPlayer player, Tracks tracks) {
-        List<Metadata> metadata = getMetadata(tracks);
-        List<ReplayGain> gains = getReplayGains(metadata);
-
-        applyReplayGain(player, gains);
+        applyReplayGain(player, gains)
     }
 
-    private static List<Metadata> getMetadata(Tracks tracks) {
-        List<Metadata> metadata = new ArrayList<>();
+    private fun getMetadata(tracks: Tracks?): MutableList<Metadata?> {
+        val metadata: MutableList<Metadata?> = ArrayList<Metadata?>()
 
-        if (tracks != null && !tracks.getGroups().isEmpty()) {
-            for (int i = 0; i < tracks.getGroups().size(); i++) {
-                Tracks.Group group = tracks.getGroups().get(i);
+        if (tracks != null && !tracks.groups.isEmpty()) {
+            for (i in tracks.groups.indices) {
+                val group = tracks.groups.get(i)
 
-                if (group != null && group.getMediaTrackGroup() != null) {
-                    for (int j = 0; j < group.getMediaTrackGroup().length; j++) {
-                        metadata.add(group.getTrackFormat(j).metadata);
+                if (group != null && group.mediaTrackGroup != null) {
+                    for (j in 0 until group.mediaTrackGroup.length) {
+                        metadata.add(group.getTrackFormat(j).metadata)
                     }
                 }
             }
         }
 
-        return metadata;
+        return metadata
     }
 
-    private static List<ReplayGain> getReplayGains(List<Metadata> metadata) {
-        List<ReplayGain> gains = new ArrayList<>();
+    private fun getReplayGains(metadata: MutableList<Metadata?>?): MutableList<ReplayGain?> {
+        val gains: MutableList<ReplayGain?> = ArrayList<ReplayGain?>()
 
         if (metadata != null) {
-            for (int i = 0; i < metadata.size(); i++) {
-                Metadata singleMetadata = metadata.get(i);
+            for (i in metadata.indices) {
+                val singleMetadata = metadata.get(i)
 
                 if (singleMetadata != null) {
-                    for (int j = 0; j < singleMetadata.length(); j++) {
-                        Metadata.Entry entry = singleMetadata.get(j);
+                    for (j in 0 until singleMetadata.length()) {
+                        val entry = singleMetadata.get(j)
 
                         if (checkReplayGain(entry)) {
-                            ReplayGain replayGain = setReplayGains(entry);
-                            gains.add(replayGain);
+                            val replayGain = setReplayGains(entry)
+                            gains.add(replayGain)
                         }
                     }
                 }
             }
         }
 
-        if (gains.size() == 0) gains.add(0, new ReplayGain());
-        if (gains.size() == 1) gains.add(1, new ReplayGain());
+        if (gains.size == 0) gains.add(0, ReplayGain())
+        if (gains.size == 1) gains.add(1, ReplayGain())
 
-        return gains;
+        return gains
     }
 
-    private static boolean checkReplayGain(Metadata.Entry entry) {
-        for (String tag : tags) {
-            if (entry.toString().contains(tag)) {
-                return true;
+    private fun checkReplayGain(entry: Metadata.Entry): Boolean {
+        for (tag in tags) {
+            if (entry.toString().contains(tag!!)) {
+                return true
             }
         }
 
-        return false;
+        return false
     }
 
-    private static ReplayGain setReplayGains(Metadata.Entry entry) {
-        ReplayGain replayGain = new ReplayGain();
+    private fun setReplayGains(entry: Metadata.Entry): ReplayGain {
+        val replayGain = ReplayGain()
 
-        if (entry.toString().contains(tags[0])) {
-            replayGain.setTrackGain(parseReplayGainTag(entry));
+        if (entry.toString().contains(tags[0]!!)) {
+            replayGain.trackGain = parseReplayGainTag(entry)
         }
 
-        if (entry.toString().contains(tags[1])) {
-            replayGain.setAlbumGain(parseReplayGainTag(entry));
+        if (entry.toString().contains(tags[1]!!)) {
+            replayGain.albumGain = parseReplayGainTag(entry)
         }
 
-        if (entry.toString().contains(tags[2])) {
-            replayGain.setTrackGain(parseReplayGainTag(entry) / 256f);
+        if (entry.toString().contains(tags[2]!!)) {
+            replayGain.trackGain = parseReplayGainTag(entry) / 256f
         }
 
-        if (entry.toString().contains(tags[3])) {
-            replayGain.setAlbumGain(parseReplayGainTag(entry) / 256f);
+        if (entry.toString().contains(tags[3]!!)) {
+            replayGain.albumGain = parseReplayGainTag(entry) / 256f
         }
 
-        return replayGain;
+        return replayGain
     }
 
-    private static Float parseReplayGainTag(Metadata.Entry entry) {
+    private fun parseReplayGainTag(entry: Metadata.Entry): Float {
         try {
-            return Float.parseFloat(entry.toString().replaceAll("[^\\d.-]", ""));
-        } catch (NumberFormatException exception) {
-            return 0f;
+            return entry.toString().replace("[^\\d.-]".toRegex(), "").toFloat()
+        } catch (exception: NumberFormatException) {
+            return 0f
         }
     }
 
-    private static void applyReplayGain(ExoPlayer player, List<ReplayGain> gains) {
-        if (Objects.equals(Preferences.getReplayGainMode(), "disabled") || gains == null || gains.isEmpty()) {
-            setNoReplayGain(player);
-            return;
+    private fun applyReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>?) {
+        if (getReplayGainMode() == "disabled" || gains == null || gains.isEmpty()) {
+            setNoReplayGain(player)
+            return
         }
 
-        if (Objects.equals(Preferences.getReplayGainMode(), "auto")) {
+        if (getReplayGainMode() == "auto") {
             if (areTracksConsecutive(player)) {
-                setAutoReplayGain(player, gains);
+                setAutoReplayGain(player, gains)
             } else {
-                setTrackReplayGain(player, gains);
+                setTrackReplayGain(player, gains)
             }
 
-            return;
+            return
         }
 
-        if (Objects.equals(Preferences.getReplayGainMode(), "track")) {
-            setTrackReplayGain(player, gains);
-            return;
+        if (getReplayGainMode() == "track") {
+            setTrackReplayGain(player, gains)
+            return
         }
 
-        if (Objects.equals(Preferences.getReplayGainMode(), "album")) {
-            setAlbumReplayGain(player, gains);
-            return;
+        if (getReplayGainMode() == "album") {
+            setAlbumReplayGain(player, gains)
+            return
         }
 
-        setNoReplayGain(player);
+        setNoReplayGain(player)
     }
 
-    private static void setNoReplayGain(ExoPlayer player) {
-        setReplayGain(player, 0f);
+    private fun setNoReplayGain(player: ExoPlayer) {
+        setReplayGain(player, 0f)
     }
 
-    private static void setTrackReplayGain(ExoPlayer player, List<ReplayGain> gains) {
-        float trackGain = gains.get(0).getTrackGain() != 0f ? gains.get(0).getTrackGain() : gains.get(1).getTrackGain();
+    private fun setTrackReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+        val trackGain =
+            if (gains.get(0)!!.trackGain != 0f) gains.get(0)!!.trackGain else gains.get(1)!!.trackGain
 
-        setReplayGain(player, trackGain != 0f ? trackGain : 0f);
+        setReplayGain(player, if (trackGain != 0f) trackGain else 0f)
     }
 
-    private static void setAlbumReplayGain(ExoPlayer player, List<ReplayGain> gains) {
-        float albumGain = gains.get(0).getAlbumGain() != 0f ? gains.get(0).getAlbumGain() : gains.get(1).getAlbumGain();
+    private fun setAlbumReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+        val albumGain =
+            if (gains.get(0)!!.albumGain != 0f) gains.get(0)!!.albumGain else gains.get(1)!!.albumGain
 
-        setReplayGain(player, albumGain != 0f ? albumGain : 0f);
+        setReplayGain(player, if (albumGain != 0f) albumGain else 0f)
     }
 
-    private static void setAutoReplayGain(ExoPlayer player, List<ReplayGain> gains) {
-        float albumGain = gains.get(0).getAlbumGain() != 0f ? gains.get(0).getAlbumGain() : gains.get(1).getAlbumGain();
-        float trackGain = gains.get(0).getTrackGain() != 0f ? gains.get(0).getTrackGain() : gains.get(1).getTrackGain();
+    private fun setAutoReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+        val albumGain =
+            if (gains.get(0)!!.albumGain != 0f) gains.get(0)!!.albumGain else gains.get(1)!!.albumGain
+        val trackGain =
+            if (gains.get(0)!!.trackGain != 0f) gains.get(0)!!.trackGain else gains.get(1)!!.trackGain
 
-        setReplayGain(player, albumGain != 0f ? albumGain : trackGain);
+        setReplayGain(player, if (albumGain != 0f) albumGain else trackGain)
     }
 
-    private static boolean areTracksConsecutive(ExoPlayer player) {
-        MediaItem currentMediaItem = player.getCurrentMediaItem();
-        int currentMediaItemIndex = player.getCurrentMediaItemIndex();
-        MediaItem pastMediaItem = currentMediaItemIndex > 0 ? player.getMediaItemAt(currentMediaItemIndex - 1) : null;
+    private fun areTracksConsecutive(player: ExoPlayer): Boolean {
+        val currentMediaItem = player.currentMediaItem
+        val currentMediaItemIndex = player.currentMediaItemIndex
+        val pastMediaItem =
+            if (currentMediaItemIndex > 0) player.getMediaItemAt(currentMediaItemIndex - 1) else null
 
-        return currentMediaItem != null &&
-                pastMediaItem != null &&
-                pastMediaItem.mediaMetadata.albumTitle != null &&
-                currentMediaItem.mediaMetadata.albumTitle != null &&
-                pastMediaItem.mediaMetadata.albumTitle.toString().equals(currentMediaItem.mediaMetadata.albumTitle.toString());
+        return currentMediaItem != null && pastMediaItem != null && pastMediaItem.mediaMetadata.albumTitle != null && currentMediaItem.mediaMetadata.albumTitle != null &&
+                pastMediaItem.mediaMetadata.albumTitle.toString() == currentMediaItem.mediaMetadata.albumTitle.toString()
     }
 
-    private static void setReplayGain(ExoPlayer player, float gain) {
-        player.setVolume((float) Math.pow(10f, gain / 20f));
+    private fun setReplayGain(player: ExoPlayer, gain: Float) {
+        player.volume = 10.0.pow((gain / 20f).toDouble()).toFloat()
     }
 }

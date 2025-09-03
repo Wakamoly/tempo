@@ -1,15 +1,15 @@
-package com.cappielloantonio.tempo.subsonic.api.open;
+package com.cappielloantonio.tempo.subsonic.api.open
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface OpenService {
+interface OpenService {
     @GET("getLyricsBySongId")
-    Call<ApiResponse> getLyricsBySongId(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getLyricsBySongId(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 }

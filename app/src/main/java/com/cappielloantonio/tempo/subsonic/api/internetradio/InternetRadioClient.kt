@@ -1,41 +1,61 @@
-package com.cappielloantonio.tempo.subsonic.api.internetradio;
+package com.cappielloantonio.tempo.subsonic.api.internetradio
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class InternetRadioClient(private val subsonic: Subsonic) {
+    private val internetRadioService: InternetRadioService
 
-import retrofit2.Call;
-
-public class InternetRadioClient {
-    private static final String TAG = "InternetRadioClient";
-
-    private final Subsonic subsonic;
-    private final InternetRadioService internetRadioService;
-
-    public InternetRadioClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.internetRadioService = new RetrofitClient(subsonic).getRetrofit().create(InternetRadioService.class);
+    init {
+        this.internetRadioService =
+            RetrofitClient(subsonic).retrofit.create<InternetRadioService>(InternetRadioService::class.java)
     }
 
-    public Call<ApiResponse> getInternetRadioStations() {
-        Log.d(TAG, "getInternetRadioStations()");
-        return internetRadioService.getInternetRadioStations(subsonic.getParams());
+    val internetRadioStations: Call<ApiResponse?>?
+        get() {
+            Log.d(TAG, "getInternetRadioStations()")
+            return internetRadioService.getInternetRadioStations(subsonic.getParams())
+        }
+
+    fun createInternetRadioStation(
+        streamUrl: String?,
+        name: String?,
+        homepageUrl: String?
+    ): Call<ApiResponse?>? {
+        Log.d(TAG, "createInternetRadioStation()")
+        return internetRadioService.createInternetRadioStation(
+            subsonic.getParams(),
+            streamUrl,
+            name,
+            homepageUrl
+        )
     }
 
-    public Call<ApiResponse> createInternetRadioStation(String streamUrl, String name, String homepageUrl) {
-        Log.d(TAG, "createInternetRadioStation()");
-        return internetRadioService.createInternetRadioStation(subsonic.getParams(), streamUrl, name, homepageUrl);
+    fun updateInternetRadioStation(
+        id: String?,
+        streamUrl: String?,
+        name: String?,
+        homepageUrl: String?
+    ): Call<ApiResponse?>? {
+        Log.d(TAG, "updateInternetRadioStation()")
+        return internetRadioService.updateInternetRadioStation(
+            subsonic.getParams(),
+            id,
+            streamUrl,
+            name,
+            homepageUrl
+        )
     }
 
-    public Call<ApiResponse> updateInternetRadioStation(String id, String streamUrl, String name, String homepageUrl) {
-        Log.d(TAG, "updateInternetRadioStation()");
-        return internetRadioService.updateInternetRadioStation(subsonic.getParams(), id, streamUrl, name, homepageUrl);
+    fun deleteInternetRadioStation(id: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "deleteInternetRadioStation()")
+        return internetRadioService.deleteInternetRadioStation(subsonic.getParams(), id)
     }
 
-    public Call<ApiResponse> deleteInternetRadioStation(String id) {
-        Log.d(TAG, "deleteInternetRadioStation()");
-        return internetRadioService.deleteInternetRadioStation(subsonic.getParams(), id);
+    companion object {
+        private const val TAG = "InternetRadioClient"
     }
 }

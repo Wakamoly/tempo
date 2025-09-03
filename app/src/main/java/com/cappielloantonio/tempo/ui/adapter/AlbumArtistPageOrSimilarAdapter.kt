@@ -1,95 +1,91 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemLibraryArtistPageOrSimilarAlbumBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class AlbumArtistPageOrSimilarAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<AlbumArtistPageOrSimilarAdapter.ViewHolder?>() {
+    private var albums: MutableList<AlbumID3>
 
-import com.cappielloantonio.tempo.databinding.ItemLibraryArtistPageOrSimilarAlbumBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class AlbumArtistPageOrSimilarAdapter extends RecyclerView.Adapter<AlbumArtistPageOrSimilarAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<AlbumID3> albums;
-
-    public AlbumArtistPageOrSimilarAdapter(ClickCallback click) {
-        this.click = click;
-        this.albums = Collections.emptyList();
+    init {
+        this.albums = mutableListOf<AlbumID3?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryArtistPageOrSimilarAlbumBinding view = ItemLibraryArtistPageOrSimilarAlbumBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryArtistPageOrSimilarAlbumBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return AlbumArtistPageOrSimilarAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        AlbumID3 album = albums.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val album = albums.get(position)
 
-        holder.item.albumNameLabel.setText(album.getName());
-        holder.item.artistNameLabel.setText(album.getArtist());
+        holder.item.albumNameLabel.text = album.name
+        holder.item.artistNameLabel.text = album.artist
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), album.getCoverArtId(), CustomGlideRequest.ResourceType.Album)
-                .build()
-                .into(holder.item.artistPageAlbumCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            album.coverArtId,
+            CustomGlideRequest.ResourceType.Album
+        )
+            .build()
+            .into(holder.item.artistPageAlbumCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return albums.size();
+    override fun getItemCount(): Int {
+        return albums.size
     }
 
-    public AlbumID3 getItem(int position) {
-        return albums.get(position);
+    fun getItem(position: Int): AlbumID3? {
+        return albums.get(position)
     }
 
-    public void setItems(List<AlbumID3> albums) {
-        this.albums = albums;
-        notifyDataSetChanged();
+    fun setItems(albums: MutableList<AlbumID3>) {
+        this.albums = albums
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryArtistPageOrSimilarAlbumBinding item;
+    inner class ViewHolder internal constructor(var item: ItemLibraryArtistPageOrSimilarAlbumBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.albumNameLabel.setSelected(true)
+            item.artistNameLabel.setSelected(true)
 
-        ViewHolder(ItemLibraryArtistPageOrSimilarAlbumBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.albumNameLabel.setSelected(true);
-            item.artistNameLabel.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
         }
 
-        private void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()));
+        private fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()))
 
-            click.onAlbumClick(bundle);
+            click.onAlbumClick(bundle)
         }
 
-        private boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()));
+        private fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()))
 
-            click.onAlbumLongClick(bundle);
+            click.onAlbumLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

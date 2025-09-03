@@ -1,148 +1,164 @@
-package com.cappielloantonio.tempo.service;
+package com.cappielloantonio.tempo.service
 
-import static androidx.media3.common.util.Assertions.checkNotNull;
-
-import android.content.Context;
-
-import androidx.annotation.Nullable;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.util.Log;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.common.util.Util;
-import androidx.media3.datasource.DataSource;
-import androidx.media3.exoplayer.offline.Download;
-import androidx.media3.exoplayer.offline.DownloadCursor;
-import androidx.media3.exoplayer.offline.DownloadHelper;
-import androidx.media3.exoplayer.offline.DownloadIndex;
-import androidx.media3.exoplayer.offline.DownloadManager;
-import androidx.media3.exoplayer.offline.DownloadRequest;
-import androidx.media3.exoplayer.offline.DownloadService;
-
-import com.cappielloantonio.tempo.repository.DownloadRepository;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
+import android.content.Context
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Assertions
+import androidx.media3.common.util.Log
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.common.util.Util
+import androidx.media3.datasource.DataSource
+import androidx.media3.exoplayer.offline.Download
+import androidx.media3.exoplayer.offline.DownloadHelper
+import androidx.media3.exoplayer.offline.DownloadIndex
+import androidx.media3.exoplayer.offline.DownloadManager
+import androidx.media3.exoplayer.offline.DownloadRequest
+import androidx.media3.exoplayer.offline.DownloadService
+import com.cappielloantonio.tempo.repository.DownloadRepository
+import com.cappielloantonio.tempo.util.DownloadUtil
+import java.io.IOException
 
 @UnstableApi
-public class DownloaderManager {
-    private static final String TAG = "DownloaderManager";
+class DownloaderManager(
+    context: Context,
+    private val dataSourceFactory: DataSource.Factory?,
+    downloadManager: DownloadManager
+) {
+    private val context: Context
+    private val downloadIndex: DownloadIndex
 
-    private final Context context;
-    private final DataSource.Factory dataSourceFactory;
-    private final DownloadIndex downloadIndex;
+    init {
+        this.context = context.applicationContext
 
-    private static HashMap<String, Download> downloads;
+        downloads = HashMap<String?, Download?>()
+        downloadIndex = downloadManager.downloadIndex
 
-    public DownloaderManager(Context context, DataSource.Factory dataSourceFactory, DownloadManager downloadManager) {
-        this.context = context.getApplicationContext();
-        this.dataSourceFactory = dataSourceFactory;
-
-        downloads = new HashMap<>();
-        downloadIndex = downloadManager.getDownloadIndex();
-
-        loadDownloads();
+        loadDownloads()
     }
 
-    private DownloadRequest buildDownloadRequest(MediaItem mediaItem) {
+    private fun buildDownloadRequest(mediaItem: MediaItem): DownloadRequest {
         return DownloadHelper
-                .forMediaItem(
-                        context,
-                        mediaItem,
-                        DownloadUtil.buildRenderersFactory(context, false),
-                        dataSourceFactory)
-                .getDownloadRequest(Util.getUtf8Bytes(checkNotNull(mediaItem.mediaId)))
-                .copyWithId(mediaItem.mediaId);
+            .forMediaItem(
+                context,
+                mediaItem,
+                DownloadUtil.buildRenderersFactory(context, false),
+                dataSourceFactory
+            )
+            .getDownloadRequest(Util.getUtf8Bytes(Assertions.checkNotNull<String?>(mediaItem.mediaId)))
+            .copyWithId(mediaItem.mediaId)
     }
 
-    public boolean isDownloaded(String mediaId) {
-        @Nullable Download download = downloads.get(mediaId);
-        return download != null && download.state != Download.STATE_FAILED;
+    fun isDownloaded(mediaId: String?): Boolean {
+        val download: Download? = downloads.get(mediaId)
+        return download != null && download.state != Download.STATE_FAILED
     }
 
-    public boolean isDownloaded(MediaItem mediaItem) {
-        return isDownloaded(mediaItem.mediaId);
+    fun isDownloaded(mediaItem: MediaItem): Boolean {
+        return isDownloaded(mediaItem.mediaId)
     }
 
-    public boolean areDownloaded(List<MediaItem> mediaItems) {
-        return mediaItems.stream().anyMatch(this::isDownloaded);
+    fun areDownloaded(mediaItems: MutableList<MediaItem?>): Boolean {
+        return mediaItems.stream()
+            .anyMatch { mediaItem: MediaItem? -> this.isDownloaded(mediaItem!!) }
     }
 
-    public void download(MediaItem mediaItem, com.cappielloantonio.tempo.model.Download download) {
-        download.setDownloadUri(mediaItem.requestMetadata.mediaUri.toString());
+    fun download(mediaItem: MediaItem, download: com.cappielloantonio.tempo.model.Download) {
+        download.downloadUri = mediaItem.requestMetadata.mediaUri.toString()
 
-        DownloadService.sendAddDownload(context, DownloaderService.class, buildDownloadRequest(mediaItem), false);
-        insertDatabase(download);
+        DownloadService.sendAddDownload(
+            context,
+            DownloaderService::class.java,
+            buildDownloadRequest(mediaItem),
+            false
+        )
+        insertDatabase(download)
     }
 
-    public void download(List<MediaItem> mediaItems, List<com.cappielloantonio.tempo.model.Download> downloads) {
-        for (int counter = 0; counter < mediaItems.size(); counter++) {
-            download(mediaItems.get(counter), downloads.get(counter));
+    fun download(
+        mediaItems: MutableList<MediaItem?>,
+        downloads: MutableList<com.cappielloantonio.tempo.model.Download?>
+    ) {
+        for (counter in mediaItems.indices) {
+            download(mediaItems.get(counter)!!, downloads.get(counter)!!)
         }
     }
 
-    public void remove(MediaItem mediaItem, com.cappielloantonio.tempo.model.Download download) {
-        DownloadService.sendRemoveDownload(context, DownloaderService.class, buildDownloadRequest(mediaItem).id, false);
-        deleteDatabase(download.getId());
-        downloads.remove(download.getId());
+    fun remove(mediaItem: MediaItem, download: com.cappielloantonio.tempo.model.Download) {
+        DownloadService.sendRemoveDownload(
+            context,
+            DownloaderService::class.java,
+            buildDownloadRequest(mediaItem).id,
+            false
+        )
+        deleteDatabase(download.id)
+        downloads.remove(download.id)
     }
 
-    public void remove(List<MediaItem> mediaItems, List<com.cappielloantonio.tempo.model.Download> downloads) {
-        for (int counter = 0; counter < mediaItems.size(); counter++) {
-            remove(mediaItems.get(counter), downloads.get(counter));
+    fun remove(
+        mediaItems: MutableList<MediaItem?>,
+        downloads: MutableList<com.cappielloantonio.tempo.model.Download?>
+    ) {
+        for (counter in mediaItems.indices) {
+            remove(mediaItems.get(counter)!!, downloads.get(counter)!!)
         }
     }
 
-    public void removeAll() {
-        DownloadService.sendRemoveAllDownloads(context, DownloaderService.class, false);
-        deleteAllDatabase();
-        DownloadUtil.eraseDownloadFolder(context);
+    fun removeAll() {
+        DownloadService.sendRemoveAllDownloads(context, DownloaderService::class.java, false)
+        deleteAllDatabase()
+        DownloadUtil.eraseDownloadFolder(context)
     }
 
-    private void loadDownloads() {
-        try (DownloadCursor loadedDownloads = downloadIndex.getDownloads()) {
-            while (loadedDownloads.moveToNext()) {
-                Download download = loadedDownloads.getDownload();
-                downloads.put(download.request.id, download);
+    private fun loadDownloads() {
+        try {
+            downloadIndex.getDownloads().use { loadedDownloads ->
+                while (loadedDownloads.moveToNext()) {
+                    val download = loadedDownloads.download
+                    downloads.put(download.request.id, download)
+                }
             }
-        } catch (IOException e) {
-            Log.w(TAG, "Failed to query downloads", e);
+        } catch (e: IOException) {
+            Log.w(TAG, "Failed to query downloads", e)
         }
     }
 
-    public static String getDownloadNotificationMessage(String id) {
-        com.cappielloantonio.tempo.model.Download download = getDownloadRepository().getDownload(id);
-        return download != null ? download.getTitle() : null;
-    }
+    companion object {
+        private const val TAG = "DownloaderManager"
 
-    public static void updateRequestDownload(Download download) {
-        updateDatabase(download.request.id);
-        downloads.put(download.request.id, download);
-    }
+        private val downloads: HashMap<String?, Download?>
 
-    public static void removeRequestDownload(Download download) {
-        deleteDatabase(download.request.id);
-        downloads.remove(download.request.id);
-    }
+        fun getDownloadNotificationMessage(id: String?): String? {
+            val download: com.cappielloantonio.tempo.model.Download? =
+                downloadRepository.getDownload(id)
+            return if (download != null) download.title else null
+        }
 
-    private static DownloadRepository getDownloadRepository() {
-        return new DownloadRepository();
-    }
+        fun updateRequestDownload(download: Download) {
+            updateDatabase(download.request.id)
+            downloads.put(download.request.id, download)
+        }
 
-    private static void insertDatabase(com.cappielloantonio.tempo.model.Download download) {
-        getDownloadRepository().insert(download);
-    }
+        fun removeRequestDownload(download: Download) {
+            deleteDatabase(download.request.id)
+            downloads.remove(download.request.id)
+        }
 
-    private static void deleteDatabase(String id) {
-        getDownloadRepository().delete(id);
-    }
+        private val downloadRepository: DownloadRepository
+            get() = DownloadRepository()
 
-    private static void deleteAllDatabase() {
-        getDownloadRepository().deleteAll();
-    }
+        private fun insertDatabase(download: com.cappielloantonio.tempo.model.Download?) {
+            downloadRepository.insert(download)
+        }
 
-    private static void updateDatabase(String id) {
-        getDownloadRepository().update(id);
+        private fun deleteDatabase(id: String?) {
+            downloadRepository.delete(id)
+        }
+
+        private fun deleteAllDatabase() {
+            downloadRepository.deleteAll()
+        }
+
+        private fun updateDatabase(id: String?) {
+            downloadRepository.update(id)
+        }
     }
 }

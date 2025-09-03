@@ -1,104 +1,114 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.media3.common.util.UnstableApi;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentHomeBinding;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.fragment.pager.HomePager;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.appbar.MaterialToolbar;
-import com.google.android.material.tabs.TabLayout;
-import com.google.android.material.tabs.TabLayoutMediator;
-
-import java.util.Objects;
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.media3.common.util.UnstableApi
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentHomeBinding
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.fragment.pager.HomePager
+import com.cappielloantonio.tempo.util.Preferences.isPodcastSectionVisible
+import com.cappielloantonio.tempo.util.Preferences.isRadioSectionVisible
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.MaterialToolbar
+import com.google.android.material.tabs.TabLayout
+import com.google.android.material.tabs.TabLayoutMediator
+import com.google.android.material.tabs.TabLayoutMediator.TabConfigurationStrategy
+import java.util.Objects
 
 @UnstableApi
-public class HomeFragment extends Fragment {
-    private static final String TAG = "HomeFragment";
+class HomeFragment : Fragment() {
+    private var bind: FragmentHomeBinding? = null
+    private var activity: MainActivity? = null
 
-    private FragmentHomeBinding bind;
-    private MainActivity activity;
+    private var materialToolbar: MaterialToolbar? = null
+    private var appBarLayout: AppBarLayout? = null
+    private var tabLayout: TabLayout? = null
 
-    private MaterialToolbar materialToolbar;
-    private AppBarLayout appBarLayout;
-    private TabLayout tabLayout;
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
-        bind = FragmentHomeBinding.inflate(inflater, container, false);
-        return bind.getRoot();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        activity = activity as MainActivity?
+        bind = FragmentHomeBinding.inflate(inflater, container, false)
+        return bind!!.getRoot()
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        initAppBar();
-        initHomePager();
+        initAppBar()
+        initHomePager()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        activity.setBottomNavigationBarVisibility(true);
-        activity.setBottomSheetVisibility(true);
+        activity!!.setBottomNavigationBarVisibility(true)
+        activity!!.setBottomSheetVisibility(true)
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initAppBar() {
-        appBarLayout = bind.getRoot().findViewById(R.id.toolbar_fragment);
-        materialToolbar = bind.getRoot().findViewById(R.id.toolbar);
+    private fun initAppBar() {
+        appBarLayout = bind!!.getRoot().findViewById<AppBarLayout>(R.id.toolbar_fragment)
+        materialToolbar = bind!!.getRoot().findViewById<MaterialToolbar>(R.id.toolbar)
 
-        activity.setSupportActionBar(materialToolbar);
-        Objects.requireNonNull(materialToolbar.getOverflowIcon()).setTint(requireContext().getResources().getColor(R.color.titleTextColor, null));
+        activity!!.setSupportActionBar(materialToolbar)
+        Objects.requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
+            .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
 
-        tabLayout = new TabLayout(requireContext());
-        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
-        tabLayout.setTabMode(TabLayout.MODE_FIXED);
+        tabLayout = TabLayout(requireContext())
+        tabLayout!!.setTabGravity(TabLayout.GRAVITY_FILL)
+        tabLayout!!.tabMode = TabLayout.MODE_FIXED
 
-        appBarLayout.addView(tabLayout);
+        appBarLayout!!.addView(tabLayout)
     }
 
-    private void initHomePager() {
-        HomePager pager = new HomePager(this);
+    private fun initHomePager() {
+        val pager = HomePager(this)
 
-        pager.addFragment(new HomeTabMusicFragment(), getString(R.string.home_section_music), R.drawable.ic_home);
+        pager.addFragment(
+            HomeTabMusicFragment(),
+            getString(R.string.home_section_music),
+            R.drawable.ic_home
+        )
 
-        if (Preferences.isPodcastSectionVisible())
-            pager.addFragment(new HomeTabPodcastFragment(), getString(R.string.home_section_podcast), R.drawable.ic_graphic_eq);
+        if (isPodcastSectionVisible()) pager.addFragment(
+            HomeTabPodcastFragment(),
+            getString(R.string.home_section_podcast),
+            R.drawable.ic_graphic_eq
+        )
 
-        if (Preferences.isRadioSectionVisible())
-            pager.addFragment(new HomeTabRadioFragment(), getString(R.string.home_section_radio), R.drawable.ic_play_for_work);
+        if (isRadioSectionVisible()) pager.addFragment(
+            HomeTabRadioFragment(),
+            getString(R.string.home_section_radio),
+            R.drawable.ic_play_for_work
+        )
 
-        bind.homeViewPager.setAdapter(pager);
-        bind.homeViewPager.setOffscreenPageLimit(3);
-        bind.homeViewPager.setUserInputEnabled(false);
+        bind!!.homeViewPager.setAdapter(pager)
+        bind!!.homeViewPager.setOffscreenPageLimit(3)
+        bind!!.homeViewPager.setUserInputEnabled(false)
 
-        new TabLayoutMediator(tabLayout, bind.homeViewPager,
-                (tab, position) -> {
-                    tab.setText(pager.getPageTitle(position));
-                    // tab.setIcon(pager.getPageIcon(position));
-                }
-        ).attach();
+        TabLayoutMediator(
+            tabLayout!!, bind!!.homeViewPager,
+            TabConfigurationStrategy { tab: TabLayout.Tab?, position: Int ->
+                tab!!.setText(pager.getPageTitle(position))
+            }
+        ).attach()
 
-        tabLayout.setVisibility(Preferences.isPodcastSectionVisible() || Preferences.isRadioSectionVisible() ? View.VISIBLE : View.GONE);
+        tabLayout!!.visibility = if (isPodcastSectionVisible() || isRadioSectionVisible()) View.VISIBLE else View.GONE
+    }
+
+    companion object {
+        private const val TAG = "HomeFragment"
     }
 }

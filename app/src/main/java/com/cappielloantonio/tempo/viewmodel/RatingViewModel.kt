@@ -1,84 +1,76 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Child
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
+class RatingViewModel(application: Application) : AndroidViewModel(application) {
+    private val songRepository: SongRepository
+    private val albumRepository: AlbumRepository
+    private val artistRepository: ArtistRepository
 
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.SongRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
+    private var song: Child? = null
+    private var album: AlbumID3? = null
+    private var artist: ArtistID3? = null
 
-public class RatingViewModel extends AndroidViewModel {
-    private final SongRepository songRepository;
-    private final AlbumRepository albumRepository;
-    private final ArtistRepository artistRepository;
-
-    private Child song;
-    private AlbumID3 album;
-    private ArtistID3 artist;
-
-    public RatingViewModel(@NonNull Application application) {
-        super(application);
-
-        songRepository = new SongRepository();
-        albumRepository = new AlbumRepository();
-        artistRepository = new ArtistRepository();
+    init {
+        songRepository = SongRepository()
+        albumRepository = AlbumRepository()
+        artistRepository = ArtistRepository()
     }
 
-    public Child getSong() {
-        return song;
+    fun getSong(): Child? {
+        return song
     }
 
-    public LiveData<Child> getLiveSong() {
-        return songRepository.getSong(song.getId());
+    val liveSong: LiveData<Child?>?
+        get() = songRepository.getSong(song!!.id)
+
+    fun setSong(song: Child?) {
+        this.song = song
+        this.album = null
+        this.artist = null
     }
 
-    public void setSong(Child song) {
-        this.song = song;
-        this.album = null;
-        this.artist = null;
+    fun getAlbum(): AlbumID3? {
+        return album
     }
 
-    public AlbumID3 getAlbum() {
-        return album;
+    val liveAlbum: LiveData<AlbumID3?>?
+        get() = albumRepository.getAlbum(album!!.id)
+
+    fun setAlbum(album: AlbumID3?) {
+        this.song = null
+        this.album = album
+        this.artist = null
     }
 
-    public LiveData<AlbumID3> getLiveAlbum() {
-        return albumRepository.getAlbum(album.getId());
+    fun getArtist(): ArtistID3? {
+        return artist
     }
 
-    public void setAlbum(AlbumID3 album) {
-        this.song = null;
-        this.album = album;
-        this.artist = null;
+    val liveArtist: LiveData<ArtistID3?>?
+        get() = artistRepository.getArtist(artist!!.id)
+
+    fun setArtist(artist: ArtistID3?) {
+        this.song = null
+        this.album = null
+        this.artist = artist
     }
 
-    public ArtistID3 getArtist() {
-        return artist;
-    }
-
-    public LiveData<ArtistID3> getLiveArtist() {
-        return artistRepository.getArtist(artist.getId());
-    }
-
-    public void setArtist(ArtistID3 artist) {
-        this.song = null;
-        this.album = null;
-        this.artist = artist;
-    }
-
-    public void rate(int star) {
+    fun rate(star: Int) {
         if (song != null) {
-            songRepository.setRating(song.getId(), star);
+            songRepository.setRating(song!!.id, star)
         } else if (album != null) {
-            albumRepository.setRating(album.getId(), star);
+            albumRepository.setRating(album!!.id, star)
         } else if (artist != null) {
-            artistRepository.setRating(artist.getId(), star);
+            artistRepository.setRating(artist!!.id, star)
         }
     }
 }

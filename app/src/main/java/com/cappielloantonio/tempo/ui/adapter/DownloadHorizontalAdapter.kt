@@ -1,355 +1,507 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.ItemHorizontalDownloadBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.Util;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.ItemHorizontalDownloadBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.util.Util
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Objects
+import java.util.stream.Collectors
 
 @UnstableApi
-public class DownloadHorizontalAdapter extends RecyclerView.Adapter<DownloadHorizontalAdapter.ViewHolder> {
-    private final ClickCallback click;
+class DownloadHorizontalAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<DownloadHorizontalAdapter.ViewHolder?>() {
+    private var view: String
+    private var filterKey: String? = null
+    private var filterValue: String? = null
 
-    private String view;
-    private String filterKey;
-    private String filterValue;
+    private var songs: MutableList<Child>
+    var shuffling: MutableList<Child?>? = null
+        private set
+    private var grouped: MutableList<Child>
 
-    private List<Child> songs;
-    private List<Child> shuffling;
-    private List<Child> grouped;
-
-    public DownloadHorizontalAdapter(ClickCallback click) {
-        this.click = click;
-        this.view = Constants.DOWNLOAD_TYPE_TRACK;
-        this.songs = Collections.emptyList();
-        this.grouped = Collections.emptyList();
+    init {
+        this.view = Constants.DOWNLOAD_TYPE_TRACK
+        this.songs = mutableListOf<Child?>()
+        this.grouped = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalDownloadBinding view = ItemHorizontalDownloadBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalDownloadBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return DownloadHorizontalAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        switch (view) {
-            case Constants.DOWNLOAD_TYPE_TRACK:
-                initTrackLayout(holder, position);
-                break;
-            case Constants.DOWNLOAD_TYPE_ALBUM:
-                initAlbumLayout(holder, position);
-                break;
-            case Constants.DOWNLOAD_TYPE_ARTIST:
-                initArtistLayout(holder, position);
-                break;
-            case Constants.DOWNLOAD_TYPE_GENRE:
-                initGenreLayout(holder, position);
-                break;
-            case Constants.DOWNLOAD_TYPE_YEAR:
-                initYearLayout(holder, position);
-                break;
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        when (view) {
+            Constants.DOWNLOAD_TYPE_TRACK -> initTrackLayout(holder, position)
+            Constants.DOWNLOAD_TYPE_ALBUM -> initAlbumLayout(holder, position)
+            Constants.DOWNLOAD_TYPE_ARTIST -> initArtistLayout(holder, position)
+            Constants.DOWNLOAD_TYPE_GENRE -> initGenreLayout(holder, position)
+            Constants.DOWNLOAD_TYPE_YEAR -> initYearLayout(holder, position)
         }
     }
 
-    @Override
-    public int getItemCount() {
-        return grouped.size();
+    override fun getItemCount(): Int {
+        return grouped.size
     }
 
-    public void setItems(String view, String filterKey, String filterValue, List<Child> songs) {
-        this.view = filterValue != null ? view : filterKey;
-        this.filterKey = filterKey;
-        this.filterValue = filterValue;
+    fun setItems(view: String, filterKey: String, filterValue: String?, songs: MutableList<Child>) {
+        this.view = if (filterValue != null) view else filterKey
+        this.filterKey = filterKey
+        this.filterValue = filterValue
 
-        this.songs = songs;
-        this.grouped = groupSong(songs);
-        this.shuffling = shufflingSong(new ArrayList<>(songs));
+        this.songs = songs
+        this.grouped = groupSong(songs)
+        this.shuffling = shufflingSong(ArrayList<Child?>(songs))
 
-        notifyDataSetChanged();
+        notifyDataSetChanged()
     }
 
-    public Child getItem(int id) {
-        return grouped.get(id);
+    fun getItem(id: Int): Child? {
+        return grouped.get(id)
     }
 
-    public List<Child> getShuffling() {
-        return shuffling;
+    override fun getItemViewType(position: Int): Int {
+        return position
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return position;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
+    private fun groupSong(songs: MutableList<Child>): MutableList<Child> {
+        when (view) {
+            Constants.DOWNLOAD_TYPE_TRACK -> return filterSong(
+                filterKey!!,
+                filterValue,
+                songs.stream().filter { song: Child? ->
+                    Objects.nonNull(
+                        song!!.id
+                    )
+                }.filter(Util.distinctByKey<Child?>(Child::id)).collect(Collectors.toList())
+            )
 
-    private List<Child> groupSong(List<Child> songs) {
-        switch (view) {
-            case Constants.DOWNLOAD_TYPE_TRACK:
-                return filterSong(filterKey, filterValue, songs.stream().filter(song -> Objects.nonNull(song.getId())).filter(Util.distinctByKey(Child::getId)).collect(Collectors.toList()));
-            case Constants.DOWNLOAD_TYPE_ALBUM:
-                return filterSong(filterKey, filterValue, songs.stream().filter(song -> Objects.nonNull(song.getAlbumId())).filter(Util.distinctByKey(Child::getAlbumId)).collect(Collectors.toList()));
-            case Constants.DOWNLOAD_TYPE_ARTIST:
-                return filterSong(filterKey, filterValue, songs.stream().filter(song -> Objects.nonNull(song.getArtistId())).filter(Util.distinctByKey(Child::getArtistId)).collect(Collectors.toList()));
-            case Constants.DOWNLOAD_TYPE_GENRE:
-                return filterSong(filterKey, filterValue, songs.stream().filter(song -> Objects.nonNull(song.getGenre())).filter(Util.distinctByKey(Child::getGenre)).collect(Collectors.toList()));
-            case Constants.DOWNLOAD_TYPE_YEAR:
-                return filterSong(filterKey, filterValue, songs.stream().filter(song -> Objects.nonNull(song.getYear())).filter(Util.distinctByKey(Child::getYear)).collect(Collectors.toList()));
-        }
-
-        return Collections.emptyList();
-    }
-
-    private List<Child> filterSong(String filterKey, String filterValue, List<Child> songs) {
-        if (filterValue != null) {
-            switch (filterKey) {
-                case Constants.DOWNLOAD_TYPE_TRACK:
-                    return songs.stream().filter(child -> child.getId().equals(filterValue)).collect(Collectors.toList());
-                case Constants.DOWNLOAD_TYPE_ALBUM:
-                    return songs.stream().filter(child -> Objects.equals(child.getAlbumId(), filterValue)).collect(Collectors.toList());
-                case Constants.DOWNLOAD_TYPE_GENRE:
-                    return songs.stream().filter(child -> Objects.equals(child.getGenre(), filterValue)).collect(Collectors.toList());
-                case Constants.DOWNLOAD_TYPE_YEAR:
-                    return songs.stream().filter(child -> Objects.equals(child.getYear(), Integer.valueOf(filterValue))).collect(Collectors.toList());
-                case Constants.DOWNLOAD_TYPE_ARTIST:
-                    return songs.stream().filter(child -> Objects.equals(child.getArtistId(), filterValue)).collect(Collectors.toList());
-            }
-        }
-
-        return songs;
-    }
-
-    private List<Child> shufflingSong(List<Child> songs) {
-        if (filterValue == null) {
-            return songs;
-        }
-
-        switch (filterKey) {
-            case Constants.DOWNLOAD_TYPE_TRACK:
-                return songs.stream().filter(child -> child.getId().equals(filterValue)).collect(Collectors.toList());
-            case Constants.DOWNLOAD_TYPE_ALBUM:
-                return songs.stream().filter(child -> Objects.equals(child.getAlbumId(), filterValue)).collect(Collectors.toList());
-            case Constants.DOWNLOAD_TYPE_GENRE:
-                return songs.stream().filter(child -> Objects.equals(child.getGenre(), filterValue)).collect(Collectors.toList());
-            case Constants.DOWNLOAD_TYPE_YEAR:
-                return songs.stream().filter(child -> Objects.equals(child.getYear(), Integer.valueOf(filterValue))).collect(Collectors.toList());
-            case Constants.DOWNLOAD_TYPE_ARTIST:
-                return songs.stream().filter(child -> Objects.equals(child.getArtistId(), filterValue)).collect(Collectors.toList());
-            default:
-                return songs;
-        }
-    }
-
-    private String countSong(String filterKey, String filterValue, List<Child> songs) {
-        if (filterValue != null) {
-            switch (filterKey) {
-                case Constants.DOWNLOAD_TYPE_TRACK:
-                    return String.valueOf(songs.stream().filter(child -> child.getId().equals(filterValue)).count());
-                case Constants.DOWNLOAD_TYPE_ALBUM:
-                    return String.valueOf(songs.stream().filter(child -> Objects.equals(child.getAlbumId(), filterValue)).count());
-                case Constants.DOWNLOAD_TYPE_GENRE:
-                    return String.valueOf(songs.stream().filter(child -> Objects.equals(child.getGenre(), filterValue)).count());
-                case Constants.DOWNLOAD_TYPE_YEAR:
-                    return String.valueOf(songs.stream().filter(child -> Objects.equals(child.getYear(), Integer.valueOf(filterValue))).count());
-                case Constants.DOWNLOAD_TYPE_ARTIST:
-                    return String.valueOf(songs.stream().filter(child -> Objects.equals(child.getArtistId(), filterValue)).count());
-            }
-        }
-
-        return "0";
-    }
-
-    private void initTrackLayout(ViewHolder holder, int position) {
-        Child song = grouped.get(position);
-
-        holder.item.downloadedItemTitleTextView.setText(song.getTitle());
-        holder.item.downloadedItemSubtitleTextView.setText(
-                holder.itemView.getContext().getString(
-                        R.string.song_subtitle_formatter,
-                        song.getArtist(),
-                        MusicUtil.getReadableDurationString(song.getDuration(), false),
-                        ""
+            Constants.DOWNLOAD_TYPE_ALBUM -> return filterSong(
+                filterKey!!,
+                filterValue,
+                songs.stream().filter { song: Child? ->
+                    Objects.nonNull(
+                        song!!.albumId
+                    )
+                }.filter(Util.distinctByKey<Child?>(Child::albumId)).collect(
+                    Collectors.toList()
                 )
-        );
+            )
 
-        holder.item.downloadedItemPreTextView.setText(song.getAlbum());
+            Constants.DOWNLOAD_TYPE_ARTIST -> return filterSong(
+                filterKey!!,
+                filterValue,
+                songs.stream().filter { song: Child? ->
+                    Objects.nonNull(
+                        song!!.artistId
+                    )
+                }.filter(Util.distinctByKey<Child?>(Child::artistId)).collect(
+                    Collectors.toList()
+                )
+            )
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.itemCoverImageView);
+            Constants.DOWNLOAD_TYPE_GENRE -> return filterSong(
+                filterKey!!,
+                filterValue,
+                songs.stream().filter { song: Child? ->
+                    Objects.nonNull(
+                        song!!.genre
+                    )
+                }.filter(Util.distinctByKey<Child?>(Child::genre)).collect(Collectors.toList())
+            )
 
-        holder.item.itemCoverImageView.setVisibility(View.VISIBLE);
-        holder.item.downloadedItemMoreButton.setVisibility(View.VISIBLE);
-        holder.item.divider.setVisibility(View.VISIBLE);
-
-        if (position > 0 && grouped.get(position - 1) != null && !Objects.equals(grouped.get(position - 1).getAlbum(), grouped.get(position).getAlbum())) {
-            holder.item.divider.setPadding(0, (int) holder.itemView.getContext().getResources().getDimension(R.dimen.downloaded_item_padding), 0, 0);
-        } else {
-            if (position > 0) holder.item.divider.setVisibility(View.GONE);
-        }
-    }
-
-    private void initAlbumLayout(ViewHolder holder, int position) {
-        Child song = grouped.get(position);
-
-        holder.item.downloadedItemTitleTextView.setText(song.getAlbum());
-        holder.item.downloadedItemSubtitleTextView.setText(holder.itemView.getContext().getString(R.string.download_item_single_subtitle_formatter, countSong(Constants.DOWNLOAD_TYPE_ALBUM, song.getAlbumId(), songs)));
-        holder.item.downloadedItemPreTextView.setText(song.getArtist());
-
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.itemCoverImageView);
-
-        holder.item.itemCoverImageView.setVisibility(View.VISIBLE);
-        holder.item.downloadedItemMoreButton.setVisibility(View.VISIBLE);
-        holder.item.divider.setVisibility(View.VISIBLE);
-
-        if (position > 0 && grouped.get(position - 1) != null && !Objects.equals(grouped.get(position - 1).getArtist(), grouped.get(position).getArtist())) {
-            holder.item.divider.setPadding(0, (int) holder.itemView.getContext().getResources().getDimension(R.dimen.downloaded_item_padding), 0, 0);
-        } else {
-            if (position > 0) holder.item.divider.setVisibility(View.GONE);
-        }
-    }
-
-    private void initArtistLayout(ViewHolder holder, int position) {
-        Child song = grouped.get(position);
-
-        holder.item.downloadedItemTitleTextView.setText(song.getArtist());
-        holder.item.downloadedItemSubtitleTextView.setText(holder.itemView.getContext().getString(R.string.download_item_single_subtitle_formatter, countSong(Constants.DOWNLOAD_TYPE_ARTIST, song.getArtistId(), songs)));
-
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.itemCoverImageView);
-
-        holder.item.itemCoverImageView.setVisibility(View.VISIBLE);
-        holder.item.downloadedItemMoreButton.setVisibility(View.VISIBLE);
-        holder.item.divider.setVisibility(View.GONE);
-    }
-
-    private void initGenreLayout(ViewHolder holder, int position) {
-        Child song = grouped.get(position);
-
-        holder.item.downloadedItemTitleTextView.setText(song.getGenre());
-        holder.item.downloadedItemSubtitleTextView.setText(holder.itemView.getContext().getString(R.string.download_item_single_subtitle_formatter, countSong(Constants.DOWNLOAD_TYPE_GENRE, song.getGenre(), songs)));
-
-        holder.item.itemCoverImageView.setVisibility(View.GONE);
-        holder.item.downloadedItemMoreButton.setVisibility(View.VISIBLE);
-        holder.item.divider.setVisibility(View.GONE);
-    }
-
-    private void initYearLayout(ViewHolder holder, int position) {
-        Child song = grouped.get(position);
-
-        holder.item.downloadedItemTitleTextView.setText(String.valueOf(song.getYear()));
-        holder.item.downloadedItemSubtitleTextView.setText(holder.itemView.getContext().getString(R.string.download_item_single_subtitle_formatter, countSong(Constants.DOWNLOAD_TYPE_YEAR, song.getYear().toString(), songs)));
-
-        holder.item.itemCoverImageView.setVisibility(View.GONE);
-        holder.item.downloadedItemMoreButton.setVisibility(View.VISIBLE);
-        holder.item.divider.setVisibility(View.GONE);
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalDownloadBinding item;
-
-        ViewHolder(ItemHorizontalDownloadBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.downloadedItemTitleTextView.setSelected(true);
-            item.downloadedItemSubtitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-
-            item.downloadedItemMoreButton.setOnClickListener(v -> onLongClick());
+            Constants.DOWNLOAD_TYPE_YEAR -> return filterSong(
+                filterKey!!,
+                filterValue,
+                songs.stream().filter { song: Child? ->
+                    Objects.nonNull(
+                        song!!.year
+                    )
+                }.filter(Util.distinctByKey<Child?>(Child::year)).collect(Collectors.toList())
+            )
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
+        return mutableListOf<Child?>()
+    }
 
-            switch (view) {
-                case Constants.DOWNLOAD_TYPE_TRACK:
-                    bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, new ArrayList<>(grouped));
-                    bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition());
-                    click.onMediaClick(bundle);
-                    break;
-                case Constants.DOWNLOAD_TYPE_ALBUM:
-                    bundle.putString(Constants.DOWNLOAD_TYPE_ALBUM, grouped.get(getBindingAdapterPosition()).getAlbumId());
-                    click.onAlbumClick(bundle);
-                    break;
-                case Constants.DOWNLOAD_TYPE_ARTIST:
-                    bundle.putString(Constants.DOWNLOAD_TYPE_ARTIST, grouped.get(getBindingAdapterPosition()).getArtistId());
-                    click.onArtistClick(bundle);
-                    break;
-                case Constants.DOWNLOAD_TYPE_GENRE:
-                    bundle.putString(Constants.DOWNLOAD_TYPE_GENRE, grouped.get(getBindingAdapterPosition()).getGenre());
-                    click.onGenreClick(bundle);
-                    break;
-                case Constants.DOWNLOAD_TYPE_YEAR:
-                    bundle.putString(Constants.DOWNLOAD_TYPE_YEAR, grouped.get(getBindingAdapterPosition()).getYear().toString());
-                    click.onYearClick(bundle);
-                    break;
+    private fun filterSong(
+        filterKey: String,
+        filterValue: String?,
+        songs: MutableList<Child>
+    ): MutableList<Child> {
+        if (filterValue != null) {
+            when (filterKey) {
+                Constants.DOWNLOAD_TYPE_TRACK -> return songs.stream()
+                    .filter { child: Child? -> child!!.id == filterValue }.collect(
+                        Collectors.toList()
+                    )
+
+                Constants.DOWNLOAD_TYPE_ALBUM -> return songs.stream()
+                    .filter { child: Child? -> child!!.albumId == filterValue }.collect(
+                        Collectors.toList()
+                    )
+
+                Constants.DOWNLOAD_TYPE_GENRE -> return songs.stream()
+                    .filter { child: Child? -> child!!.genre == filterValue }.collect(
+                        Collectors.toList()
+                    )
+
+                Constants.DOWNLOAD_TYPE_YEAR -> return songs.stream()
+                    .filter { child: Child? -> child!!.year == filterValue.toInt() }.collect(
+                        Collectors.toList()
+                    )
+
+                Constants.DOWNLOAD_TYPE_ARTIST -> return songs.stream()
+                    .filter { child: Child? -> child!!.artistId == filterValue }.collect(
+                        Collectors.toList()
+                    )
             }
         }
 
-        private boolean onLongClick() {
-            ArrayList<Child> filteredSongs = new ArrayList<>();
+        return songs
+    }
 
-            Bundle bundle = new Bundle();
+    private fun shufflingSong(songs: MutableList<Child?>): MutableList<Child?>? {
+        if (filterValue == null) {
+            return songs
+        }
 
-            switch (view) {
-                case Constants.DOWNLOAD_TYPE_TRACK:
-                    filteredSongs.add(grouped.get(getBindingAdapterPosition()));
-                    break;
-                case Constants.DOWNLOAD_TYPE_ALBUM:
-                    filteredSongs.addAll(filterSong(Constants.DOWNLOAD_TYPE_ALBUM, grouped.get(getBindingAdapterPosition()).getAlbumId(), songs));
-                    break;
-                case Constants.DOWNLOAD_TYPE_ARTIST:
-                    filteredSongs.addAll(filterSong(Constants.DOWNLOAD_TYPE_ARTIST, grouped.get(getBindingAdapterPosition()).getArtistId(), songs));
-                    break;
-                case Constants.DOWNLOAD_TYPE_GENRE:
-                    filteredSongs.addAll(filterSong(Constants.DOWNLOAD_TYPE_GENRE, grouped.get(getBindingAdapterPosition()).getGenre(), songs));
-                    break;
-                case Constants.DOWNLOAD_TYPE_YEAR:
-                    filteredSongs.addAll(filterSong(Constants.DOWNLOAD_TYPE_YEAR, grouped.get(getBindingAdapterPosition()).getYear().toString(), songs));
-                    break;
+        when (filterKey) {
+            Constants.DOWNLOAD_TYPE_TRACK -> return songs.stream()
+                .filter { child: Child? -> child!!.id == filterValue }.collect(
+                    Collectors.toList()
+                )
+
+            Constants.DOWNLOAD_TYPE_ALBUM -> return songs.stream()
+                .filter { child: Child? -> child!!.albumId == filterValue }.collect(
+                    Collectors.toList()
+                )
+
+            Constants.DOWNLOAD_TYPE_GENRE -> return songs.stream()
+                .filter { child: Child? -> child!!.genre == filterValue }.collect(
+                    Collectors.toList()
+                )
+
+            Constants.DOWNLOAD_TYPE_YEAR -> return songs.stream()
+                .filter { child: Child? -> child!!.year == filterValue!!.toInt() }.collect(
+                    Collectors.toList()
+                )
+
+            Constants.DOWNLOAD_TYPE_ARTIST -> return songs.stream()
+                .filter { child: Child? -> child!!.artistId == filterValue }.collect(
+                    Collectors.toList()
+                )
+
+            else -> return songs
+        }
+    }
+
+    private fun countSong(
+        filterKey: String,
+        filterValue: String?,
+        songs: MutableList<Child>
+    ): String {
+        if (filterValue != null) {
+            when (filterKey) {
+                Constants.DOWNLOAD_TYPE_TRACK -> return songs.stream()
+                    .filter { child: Child? -> child!!.id == filterValue }.count().toString()
+
+                Constants.DOWNLOAD_TYPE_ALBUM -> return songs.stream()
+                    .filter { child: Child? -> child!!.albumId == filterValue }.count().toString()
+
+                Constants.DOWNLOAD_TYPE_GENRE -> return songs.stream()
+                    .filter { child: Child? -> child!!.genre == filterValue }.count().toString()
+
+                Constants.DOWNLOAD_TYPE_YEAR -> return songs.stream()
+                    .filter { child: Child? -> child!!.year == filterValue.toInt() }.count()
+                    .toString()
+
+                Constants.DOWNLOAD_TYPE_ARTIST -> return songs.stream()
+                    .filter { child: Child? -> child!!.artistId == filterValue }.count().toString()
+            }
+        }
+
+        return "0"
+    }
+
+    private fun initTrackLayout(holder: ViewHolder, position: Int) {
+        val song = grouped.get(position)
+
+        holder.item.downloadedItemTitleTextView.text = song.title
+        holder.item.downloadedItemSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.song_subtitle_formatter,
+            song.artist,
+            MusicUtil.getReadableDurationString(song.duration, false),
+            ""
+        )
+
+        holder.item.downloadedItemPreTextView.text = song.album
+
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.itemCoverImageView)
+
+        holder.item.itemCoverImageView.setVisibility(View.VISIBLE)
+        holder.item.downloadedItemMoreButton.visibility = View.VISIBLE
+        holder.item.divider.visibility = View.VISIBLE
+
+        if (position > 0 && grouped.get(position - 1) != null && (grouped.get(position - 1).album != grouped.get(
+                position
+            ).album)
+        ) {
+            holder.item.divider.setPadding(
+                0,
+                holder.itemView.context.resources
+                    .getDimension(R.dimen.downloaded_item_padding).toInt(),
+                0,
+                0
+            )
+        } else {
+            if (position > 0) holder.item.divider.visibility = View.GONE
+        }
+    }
+
+    private fun initAlbumLayout(holder: ViewHolder, position: Int) {
+        val song = grouped.get(position)
+
+        holder.item.downloadedItemTitleTextView.text = song.album
+        holder.item.downloadedItemSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.download_item_single_subtitle_formatter, countSong(
+                Constants.DOWNLOAD_TYPE_ALBUM, song.albumId, songs
+            )
+        )
+        holder.item.downloadedItemPreTextView.text = song.artist
+
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.itemCoverImageView)
+
+        holder.item.itemCoverImageView.setVisibility(View.VISIBLE)
+        holder.item.downloadedItemMoreButton.visibility = View.VISIBLE
+        holder.item.divider.visibility = View.VISIBLE
+
+        if (position > 0 && grouped.get(position - 1) != null && (grouped.get(position - 1).artist != grouped.get(
+                position
+            ).artist)
+        ) {
+            holder.item.divider.setPadding(
+                0,
+                holder.itemView.context.resources
+                    .getDimension(R.dimen.downloaded_item_padding).toInt(),
+                0,
+                0
+            )
+        } else {
+            if (position > 0) holder.item.divider.visibility = View.GONE
+        }
+    }
+
+    private fun initArtistLayout(holder: ViewHolder, position: Int) {
+        val song = grouped.get(position)
+
+        holder.item.downloadedItemTitleTextView.text = song.artist
+        holder.item.downloadedItemSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.download_item_single_subtitle_formatter, countSong(
+                Constants.DOWNLOAD_TYPE_ARTIST, song.artistId, songs
+            )
+        )
+
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.itemCoverImageView)
+
+        holder.item.itemCoverImageView.setVisibility(View.VISIBLE)
+        holder.item.downloadedItemMoreButton.visibility = View.VISIBLE
+        holder.item.divider.visibility = View.GONE
+    }
+
+    private fun initGenreLayout(holder: ViewHolder, position: Int) {
+        val song = grouped.get(position)
+
+        holder.item.downloadedItemTitleTextView.text = song.genre
+        holder.item.downloadedItemSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.download_item_single_subtitle_formatter, countSong(
+                Constants.DOWNLOAD_TYPE_GENRE, song.genre, songs
+            )
+        )
+
+        holder.item.itemCoverImageView.setVisibility(View.GONE)
+        holder.item.downloadedItemMoreButton.visibility = View.VISIBLE
+        holder.item.divider.visibility = View.GONE
+    }
+
+    private fun initYearLayout(holder: ViewHolder, position: Int) {
+        val song = grouped.get(position)
+
+        holder.item.downloadedItemTitleTextView.text = song.year.toString()
+        holder.item.downloadedItemSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.download_item_single_subtitle_formatter, countSong(
+                Constants.DOWNLOAD_TYPE_YEAR, song.year.toString(), songs
+            )
+        )
+
+        holder.item.itemCoverImageView.setVisibility(View.GONE)
+        holder.item.downloadedItemMoreButton.visibility = View.VISIBLE
+        holder.item.divider.visibility = View.GONE
+    }
+
+    inner class ViewHolder internal constructor(var item: ItemHorizontalDownloadBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.downloadedItemTitleTextView.setSelected(true)
+            item.downloadedItemSubtitleTextView.setSelected(true)
+
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
+
+            item.downloadedItemMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onLongClick() })
+        }
+
+        fun onClick() {
+            val bundle = Bundle()
+
+            when (view) {
+                Constants.DOWNLOAD_TYPE_TRACK -> {
+                    bundle.putParcelableArrayList(
+                        Constants.TRACKS_OBJECT,
+                        ArrayList<Child?>(grouped)
+                    )
+                    bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition())
+                    click.onMediaClick(bundle)
+                }
+
+                Constants.DOWNLOAD_TYPE_ALBUM -> {
+                    bundle.putString(
+                        Constants.DOWNLOAD_TYPE_ALBUM,
+                        grouped.get(getBindingAdapterPosition()).albumId
+                    )
+                    click.onAlbumClick(bundle)
+                }
+
+                Constants.DOWNLOAD_TYPE_ARTIST -> {
+                    bundle.putString(
+                        Constants.DOWNLOAD_TYPE_ARTIST,
+                        grouped.get(getBindingAdapterPosition()).artistId
+                    )
+                    click.onArtistClick(bundle)
+                }
+
+                Constants.DOWNLOAD_TYPE_GENRE -> {
+                    bundle.putString(
+                        Constants.DOWNLOAD_TYPE_GENRE,
+                        grouped.get(getBindingAdapterPosition()).genre
+                    )
+                    click.onGenreClick(bundle)
+                }
+
+                Constants.DOWNLOAD_TYPE_YEAR -> {
+                    bundle.putString(
+                        Constants.DOWNLOAD_TYPE_YEAR,
+                        grouped.get(getBindingAdapterPosition()).year.toString()
+                    )
+                    click.onYearClick(bundle)
+                }
+            }
+        }
+
+        private fun onLongClick(): Boolean {
+            val filteredSongs = ArrayList<Child>()
+
+            val bundle = Bundle()
+
+            when (view) {
+                Constants.DOWNLOAD_TYPE_TRACK -> filteredSongs.add(
+                    grouped.get(
+                        getBindingAdapterPosition()
+                    )
+                )
+
+                Constants.DOWNLOAD_TYPE_ALBUM -> filteredSongs.addAll(
+                    filterSong(
+                        Constants.DOWNLOAD_TYPE_ALBUM,
+                        grouped.get(getBindingAdapterPosition()).albumId,
+                        songs
+                    )
+                )
+
+                Constants.DOWNLOAD_TYPE_ARTIST -> filteredSongs.addAll(
+                    filterSong(
+                        Constants.DOWNLOAD_TYPE_ARTIST,
+                        grouped.get(getBindingAdapterPosition()).artistId,
+                        songs
+                    )
+                )
+
+                Constants.DOWNLOAD_TYPE_GENRE -> filteredSongs.addAll(
+                    filterSong(
+                        Constants.DOWNLOAD_TYPE_GENRE,
+                        grouped.get(getBindingAdapterPosition()).genre,
+                        songs
+                    )
+                )
+
+                Constants.DOWNLOAD_TYPE_YEAR -> filteredSongs.addAll(
+                    filterSong(
+                        Constants.DOWNLOAD_TYPE_YEAR,
+                        grouped.get(getBindingAdapterPosition()).year.toString(),
+                        songs
+                    )
+                )
             }
 
-            if (filteredSongs.isEmpty()) return false;
+            if (filteredSongs.isEmpty()) return false
 
-            bundle.putParcelableArrayList(Constants.DOWNLOAD_GROUP, new ArrayList<>(filteredSongs));
-            bundle.putString(Constants.DOWNLOAD_GROUP_TITLE, item.downloadedItemTitleTextView.getText().toString());
-            bundle.putString(Constants.DOWNLOAD_GROUP_SUBTITLE, item.downloadedItemSubtitleTextView.getText().toString());
-            click.onDownloadGroupLongClick(bundle);
+            bundle.putParcelableArrayList(
+                Constants.DOWNLOAD_GROUP,
+                ArrayList<Child?>(filteredSongs)
+            )
+            bundle.putString(
+                Constants.DOWNLOAD_GROUP_TITLE,
+                item.downloadedItemTitleTextView.getText().toString()
+            )
+            bundle.putString(
+                Constants.DOWNLOAD_GROUP_SUBTITLE,
+                item.downloadedItemSubtitleTextView.getText().toString()
+            )
+            click.onDownloadGroupLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

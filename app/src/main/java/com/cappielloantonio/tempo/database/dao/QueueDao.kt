@@ -1,44 +1,41 @@
-package com.cappielloantonio.tempo.database.dao;
+package com.cappielloantonio.tempo.database.dao
 
-import androidx.lifecycle.LiveData;
-import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-
-import com.cappielloantonio.tempo.model.Queue;
-
-import java.util.List;
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.cappielloantonio.tempo.model.Queue
 
 @Dao
-public interface QueueDao {
-    @Query("SELECT * FROM queue")
-    LiveData<List<Queue>> getAll();
+interface QueueDao {
+    @get:Query("SELECT * FROM queue")
+    val all: LiveData<MutableList<Queue?>?>?
 
-    @Query("SELECT * FROM queue")
-    List<Queue> getAllSimple();
+    @get:Query("SELECT * FROM queue")
+    val allSimple: MutableList<Queue?>?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Queue songQueueObject);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insert(songQueueObject: Queue?)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<Queue> songQueueObjects);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insertAll(songQueueObjects: MutableList<Queue?>?)
 
     @Query("DELETE FROM queue WHERE queue.track_order=:position")
-    void delete(int position);
+    fun delete(position: Int)
 
     @Query("DELETE FROM queue")
-    void deleteAll();
+    fun deleteAll()
 
     @Query("SELECT COUNT(*) FROM queue")
-    int count();
+    fun count(): Int
 
     @Query("UPDATE queue SET last_play=:timestamp WHERE id=:id")
-    void setLastPlay(String id, long timestamp);
+    fun setLastPlay(id: String?, timestamp: Long)
 
     @Query("UPDATE queue SET playing_changed=:timestamp WHERE id=:id")
-    void setPlayingChanged(String id, long timestamp);
+    fun setPlayingChanged(id: String?, timestamp: Long)
 
-    @Query("SELECT * FROM queue ORDER BY last_play DESC LIMIT 1")
-    Queue getLastPlayed();
+    @get:Query("SELECT * FROM queue ORDER BY last_play DESC LIMIT 1")
+    val lastPlayed: Queue?
 }

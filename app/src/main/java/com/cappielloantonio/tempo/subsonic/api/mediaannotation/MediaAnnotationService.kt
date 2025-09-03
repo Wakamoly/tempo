@@ -1,24 +1,39 @@
-package com.cappielloantonio.tempo.subsonic.api.mediaannotation;
+package com.cappielloantonio.tempo.subsonic.api.mediaannotation
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface MediaAnnotationService {
+interface MediaAnnotationService {
     @GET("star")
-    Call<ApiResponse> star(@QueryMap Map<String, String> params, @Query("id") String id, @Query("albumId") String albumId, @Query("artistId") String artistId);
+    fun star(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("albumId") albumId: String?,
+        @Query("artistId") artistId: String?
+    ): Call<ApiResponse?>?
 
     @GET("unstar")
-    Call<ApiResponse> unstar(@QueryMap Map<String, String> params, @Query("id") String id, @Query("albumId") String albumId, @Query("artistId") String artistId);
+    fun unstar(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("albumId") albumId: String?,
+        @Query("artistId") artistId: String?
+    ): Call<ApiResponse?>?
 
     @GET("setRating")
-    Call<ApiResponse> setRating(@QueryMap Map<String, String> params, @Query("id") String id, @Query("rating") int rating);
+    fun setRating(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("rating") rating: Int
+    ): Call<ApiResponse?>?
 
     @GET("scrobble")
-    Call<ApiResponse> scrobble(@QueryMap Map<String, String> params, @Query("id") String id, @Query("submission") Boolean submission);
+    fun scrobble(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("submission") submission: Boolean?
+    ): Call<ApiResponse?>?
 }

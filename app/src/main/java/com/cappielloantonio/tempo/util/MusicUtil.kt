@@ -1,334 +1,372 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.Uri;
-import android.text.Html;
-import android.util.Log;
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.Uri
+import android.text.Html
+import android.util.Log
+import com.cappielloantonio.tempo.App.Companion.getContext
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.repository.DownloadRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.MusicUtil.getReadableDurationString
+import com.cappielloantonio.tempo.util.Preferences.askForEstimateContentLength
+import com.cappielloantonio.tempo.util.Preferences.getAudioTranscodeFormatMobile
+import com.cappielloantonio.tempo.util.Preferences.getAudioTranscodeFormatTranscodedDownload
+import com.cappielloantonio.tempo.util.Preferences.getAudioTranscodeFormatWifi
+import com.cappielloantonio.tempo.util.Preferences.getBitrateTranscodedDownload
+import com.cappielloantonio.tempo.util.Preferences.getMaxBitrateMobile
+import com.cappielloantonio.tempo.util.Preferences.getMaxBitrateWifi
+import com.cappielloantonio.tempo.util.Preferences.getMinStarRatingAccepted
+import com.cappielloantonio.tempo.util.Preferences.isServerPrioritized
+import com.cappielloantonio.tempo.util.Preferences.isServerPrioritizedInTranscodedDownload
+import com.cappielloantonio.tempo.util.Preferences.showAudioQuality
+import java.lang.Long
+import java.text.CharacterIterator
+import java.text.DecimalFormat
+import java.text.StringCharacterIterator
+import java.util.Locale
+import java.util.function.IntFunction
+import java.util.stream.Collectors
+import kotlin.Boolean
+import kotlin.Int
+import kotlin.String
+import kotlin.compareTo
+import kotlin.div
+import kotlin.math.abs
+import kotlin.math.min
+import kotlin.rem
+import kotlin.shr
+import kotlin.text.StringBuilder
+import kotlin.text.format
+import kotlin.text.isEmpty
+import kotlin.text.replace
+import kotlin.text.toRegex
+import kotlin.times
+import kotlin.toString
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.repository.DownloadRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
+object MusicUtil {
+    private const val TAG = "MusicUtil"
 
-import java.text.CharacterIterator;
-import java.text.DecimalFormat;
-import java.text.StringCharacterIterator;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.stream.Collectors;
+    fun getStreamUri(id: String?): Uri? {
+        val params = getSubsonicClientInstance(false).getParams()
 
-public class MusicUtil {
-    private static final String TAG = "MusicUtil";
+        val uri = StringBuilder()
 
-    public static Uri getStreamUri(String id) {
-        Map<String, String> params = App.getSubsonicClientInstance(false).getParams();
+        uri.append(getSubsonicClientInstance(false).getUrl())
+        uri.append("stream")
 
-        StringBuilder uri = new StringBuilder();
+        if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
+            .append(Util.encode(params.get("u")))
+        if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
+            .append(params.get("p"))
+        if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
+            .append(params.get("s"))
+        if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
+            .append(params.get("t"))
+        if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
+            .append(params.get("v"))
+        if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
+            .append(params.get("c"))
 
-        uri.append(App.getSubsonicClientInstance(false).getUrl());
-        uri.append("stream");
+        if (!isServerPrioritized()) uri.append("&maxBitRate=").append(
+            bitratePreference
+        )
+        if (!isServerPrioritized()) uri.append("&format=").append(
+            transcodingFormatPreference
+        )
+        if (askForEstimateContentLength()) uri.append("&estimateContentLength=true")
 
-        if (params.containsKey("u") && params.get("u") != null)
-            uri.append("?u=").append(Util.encode(params.get("u")));
-        if (params.containsKey("p") && params.get("p") != null)
-            uri.append("&p=").append(params.get("p"));
-        if (params.containsKey("s") && params.get("s") != null)
-            uri.append("&s=").append(params.get("s"));
-        if (params.containsKey("t") && params.get("t") != null)
-            uri.append("&t=").append(params.get("t"));
-        if (params.containsKey("v") && params.get("v") != null)
-            uri.append("&v=").append(params.get("v"));
-        if (params.containsKey("c") && params.get("c") != null)
-            uri.append("&c=").append(params.get("c"));
+        uri.append("&id=").append(id)
 
-        if (!Preferences.isServerPrioritized())
-            uri.append("&maxBitRate=").append(getBitratePreference());
-        if (!Preferences.isServerPrioritized())
-            uri.append("&format=").append(getTranscodingFormatPreference());
-        if (Preferences.askForEstimateContentLength())
-            uri.append("&estimateContentLength=true");
+        Log.d(TAG, "getStreamUri: " + uri)
 
-        uri.append("&id=").append(id);
-
-        Log.d(TAG, "getStreamUri: " + uri);
-
-        return Uri.parse(uri.toString());
+        return Uri.parse(uri.toString())
     }
 
-    public static Uri getDownloadUri(String id) {
-        StringBuilder uri = new StringBuilder();
+    fun getDownloadUri(id: String?): Uri? {
+        val uri = StringBuilder()
 
-        Download download = new DownloadRepository().getDownload(id);
+        val download = DownloadRepository().getDownload(id)
 
-        if (download == null || download.getDownloadUri().isEmpty()) {
-            Map<String, String> params = App.getSubsonicClientInstance(false).getParams();
+        if (download == null || download.downloadUri!!.isEmpty()) {
+            val params = getSubsonicClientInstance(false).getParams()
 
-            uri.append(App.getSubsonicClientInstance(false).getUrl());
-            uri.append("download");
+            uri.append(getSubsonicClientInstance(false).getUrl())
+            uri.append("download")
 
-            if (params.containsKey("u") && params.get("u") != null)
-                uri.append("?u=").append(Util.encode(params.get("u")));
-            if (params.containsKey("p") && params.get("p") != null)
-                uri.append("&p=").append(params.get("p"));
-            if (params.containsKey("s") && params.get("s") != null)
-                uri.append("&s=").append(params.get("s"));
-            if (params.containsKey("t") && params.get("t") != null)
-                uri.append("&t=").append(params.get("t"));
-            if (params.containsKey("v") && params.get("v") != null)
-                uri.append("&v=").append(params.get("v"));
-            if (params.containsKey("c") && params.get("c") != null)
-                uri.append("&c=").append(params.get("c"));
+            if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
+                .append(Util.encode(params.get("u")))
+            if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
+                .append(params.get("p"))
+            if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
+                .append(params.get("s"))
+            if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
+                .append(params.get("t"))
+            if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
+                .append(params.get("v"))
+            if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
+                .append(params.get("c"))
 
-            uri.append("&id=").append(id);
+            uri.append("&id=").append(id)
         } else {
-            uri.append(download.getDownloadUri());
+            uri.append(download.downloadUri)
         }
 
-        Log.d(TAG, "getDownloadUri: " + uri);
+        Log.d(TAG, "getDownloadUri: " + uri)
 
-        return Uri.parse(uri.toString());
+        return Uri.parse(uri.toString())
     }
 
-    public static Uri getTranscodedDownloadUri(String id) {
-        Map<String, String> params = App.getSubsonicClientInstance(false).getParams();
+    fun getTranscodedDownloadUri(id: String?): Uri? {
+        val params = getSubsonicClientInstance(false).getParams()
 
-        StringBuilder uri = new StringBuilder();
+        val uri = StringBuilder()
 
-        uri.append(App.getSubsonicClientInstance(false).getUrl());
-        uri.append("stream");
+        uri.append(getSubsonicClientInstance(false).getUrl())
+        uri.append("stream")
 
-        if (params.containsKey("u") && params.get("u") != null)
-            uri.append("?u=").append(Util.encode(params.get("u")));
-        if (params.containsKey("p") && params.get("p") != null)
-            uri.append("&p=").append(params.get("p"));
-        if (params.containsKey("s") && params.get("s") != null)
-            uri.append("&s=").append(params.get("s"));
-        if (params.containsKey("t") && params.get("t") != null)
-            uri.append("&t=").append(params.get("t"));
-        if (params.containsKey("v") && params.get("v") != null)
-            uri.append("&v=").append(params.get("v"));
-        if (params.containsKey("c") && params.get("c") != null)
-            uri.append("&c=").append(params.get("c"));
+        if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
+            .append(Util.encode(params.get("u")))
+        if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
+            .append(params.get("p"))
+        if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
+            .append(params.get("s"))
+        if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
+            .append(params.get("t"))
+        if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
+            .append(params.get("v"))
+        if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
+            .append(params.get("c"))
 
-        if (!Preferences.isServerPrioritizedInTranscodedDownload())
-            uri.append("&maxBitRate=").append(getBitratePreferenceForDownload());
-        if (!Preferences.isServerPrioritizedInTranscodedDownload())
-            uri.append("&format=").append(getTranscodingFormatPreferenceForDownload());
+        if (!isServerPrioritizedInTranscodedDownload()) uri.append("&maxBitRate=").append(
+            bitratePreferenceForDownload
+        )
+        if (!isServerPrioritizedInTranscodedDownload()) uri.append("&format=").append(
+            transcodingFormatPreferenceForDownload
+        )
 
-        uri.append("&id=").append(id);
+        uri.append("&id=").append(id)
 
-        Log.d(TAG, "getTranscodedDownloadUri: " + uri);
+        Log.d(TAG, "getTranscodedDownloadUri: " + uri)
 
-        return Uri.parse(uri.toString());
+        return Uri.parse(uri.toString())
     }
 
 
-    public static String getReadableDurationString(Long duration, boolean millis) {
-        long lenght = duration != null ? duration : 0;
+    fun getReadableDurationString(duration: Long?, millis: Boolean): String {
+        val lenght = if (duration != null) duration else 0
 
-        long minutes;
-        long seconds;
+        var minutes: Long
+        val seconds: Long
 
         if (millis) {
-            minutes = (lenght / 1000) / 60;
-            seconds = (lenght / 1000) % 60;
+            minutes = (lenght / 1000) / 60
+            seconds = (lenght / 1000) % 60
         } else {
-            minutes = lenght / 60;
-            seconds = lenght % 60;
+            minutes = lenght / 60
+            seconds = lenght % 60
         }
 
         if (minutes < 60) {
-            return String.format(Locale.getDefault(), "%01d:%02d", minutes, seconds);
+            return String.format(Locale.getDefault(), "%01d:%02d", minutes, seconds)
         } else {
-            long hours = minutes / 60;
-            minutes = minutes % 60;
-            return String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds);
+            val hours = minutes / 60
+            minutes = minutes % 60
+            return String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds)
         }
     }
 
-    public static String getReadableDurationString(Integer duration, boolean millis) {
-        long lenght = duration != null ? duration : 0;
-        return getReadableDurationString(lenght, millis);
+    fun getReadableDurationString(duration: Int?, millis: Boolean): String {
+        val lenght = (if (duration != null) duration else 0).toLong()
+        return getReadableDurationString(lenght, millis)
     }
 
-    public static String getReadableAudioQualityString(Child child) {
-        if (!Preferences.showAudioQuality() || child.getBitrate() == null) return "";
+    fun getReadableAudioQualityString(child: Child): String {
+        if (!showAudioQuality() || child.bitrate == null) return ""
 
         return "•" +
                 " " +
-                child.getBitrate() +
+                child.bitrate +
                 "kbps" +
                 " • " +
-                (child.getBitDepth() != null && child.getBitDepth() != 0
-                        ? child.getBitDepth() + "/" + (child.getSamplingRate() != null ? child.getSamplingRate() / 1000 : "")
-                        : (child.getSamplingRate() != null
-                        ? new DecimalFormat("0.#").format(child.getSamplingRate() / 1000.0) + "kHz"
-                        : "")) +
+                (if (child.bitDepth != null && child.bitDepth != 0)
+                    child.bitDepth.toString() + "/" + (if (child.samplingRate != null) child.samplingRate!! / 1000 else "")
+                else
+                    (if (child.samplingRate != null)
+                        DecimalFormat("0.#").format(child.samplingRate!! / 1000.0) + "kHz"
+                    else
+                        "")) +
                 " " +
-                child.getSuffix();
+                child.suffix
     }
 
-    public static String getReadablePodcastDurationString(long duration) {
-        long minutes = duration / 60;
+    fun getReadablePodcastDurationString(duration: Long): String {
+        var minutes = duration / 60
 
         if (minutes < 60) {
-            return String.format(Locale.getDefault(), "%01d min", minutes);
+            return String.format(Locale.getDefault(), "%01d min", minutes)
         } else {
-            long hours = minutes / 60;
-            minutes = minutes % 60;
-            return String.format(Locale.getDefault(), "%d h %02d min", hours, minutes);
+            val hours = minutes / 60
+            minutes = minutes % 60
+            return String.format(Locale.getDefault(), "%d h %02d min", hours, minutes)
         }
     }
 
-    public static String getReadableTrackNumber(Context context, Integer trackNumber) {
+    fun getReadableTrackNumber(context: Context, trackNumber: Int?): String {
         if (trackNumber != null) {
-            return String.valueOf(trackNumber);
+            return trackNumber.toString()
         }
 
-        return context.getString(R.string.label_placeholder);
+        return context.getString(R.string.label_placeholder)
     }
 
-    public static String getReadableString(String string) {
+    fun getReadableString(string: String?): String {
         if (string != null) {
-            return Html.fromHtml(string, Html.FROM_HTML_MODE_COMPACT).toString();
+            return Html.fromHtml(string, Html.FROM_HTML_MODE_COMPACT).toString()
         }
 
-        return "";
+        return ""
     }
 
-    public static String forceReadableString(String string) {
+    fun forceReadableString(string: String?): String {
         if (string != null) {
             return getReadableString(string)
-                    .replaceAll("&#34;", "\"")
-                    .replaceAll("&#39;", "'")
-                    .replaceAll("&amp;", "'")
-                    .replaceAll("<a\\s+([^>]+)>((?:.(?!</a>))*.)</a>", "");
+                .replace("&#34;".toRegex(), "\"")
+                .replace("&#39;".toRegex(), "'")
+                .replace("&amp;".toRegex(), "'")
+                .replace("<a\\s+([^>]+)>((?:.(?!</a>))*.)</a>".toRegex(), "")
         }
 
-        return "";
+        return ""
     }
 
-    public static String getReadableLyrics(String string) {
+    fun getReadableLyrics(string: String?): String {
         if (string != null) {
             return string
-                    .replaceAll("&#34;", "\"")
-                    .replaceAll("&#39;", "'")
-                    .replaceAll("&amp;", "'")
-                    .replaceAll("&#xA;", "\n");
+                .replace("&#34;".toRegex(), "\"")
+                .replace("&#39;".toRegex(), "'")
+                .replace("&amp;".toRegex(), "'")
+                .replace("&#xA;".toRegex(), "\n")
         }
 
-        return "";
+        return ""
     }
 
-    public static String getReadableByteCount(long bytes) {
-        long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
+    fun getReadableByteCount(bytes: Long): String {
+        val absB = if (bytes == Long.Companion.MIN_VALUE) Long.Companion.MAX_VALUE else abs(bytes)
 
         if (absB < 1024) {
-            return bytes + " B";
+            return bytes.toString() + " B"
         }
 
-        long value = absB;
+        var value = absB
 
-        CharacterIterator ci = new StringCharacterIterator("KMGTPE");
+        val ci: CharacterIterator = StringCharacterIterator("KMGTPE")
 
-        for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
-            value >>= 10;
-            ci.next();
+        var i = 40
+        while (i >= 0 && absB > 0xfffccccccccccccL shr i) {
+            value = value shr 10
+            ci.next()
+            i -= 10
         }
 
-        value *= Long.signum(bytes);
+        value *= Long.signum(bytes).toLong()
 
-        return String.format("%.1f %ciB", value / 1024.0, ci.current());
+        return String.format("%.1f %ciB", value / 1024.0, ci.current())
     }
 
-    public static String passwordHexEncoding(String plainPassword) {
-        return "enc:" + plainPassword.chars().mapToObj(Integer::toHexString).collect(Collectors.joining());
+    fun passwordHexEncoding(plainPassword: String): String {
+        return "enc:" + plainPassword.chars()
+            .mapToObj<String?>(IntFunction { i: Int -> Integer.toHexString(i) })
+            .collect(Collectors.joining())
     }
 
-    public static String getBitratePreference() {
-        Network network = getConnectivityManager().getActiveNetwork();
-        NetworkCapabilities networkCapabilities = getConnectivityManager().getNetworkCapabilities(network);
-        String audioTranscodeFormat = getTranscodingFormatPreference();
+    val bitratePreference: String
+        get() {
+            val network: Network? = connectivityManager!!.activeNetwork
+            val networkCapabilities: NetworkCapabilities? =
+                connectivityManager!!.getNetworkCapabilities(network)
+            val audioTranscodeFormat: String = transcodingFormatPreference
 
-        if (audioTranscodeFormat.equals("raw") || network == null || networkCapabilities == null)
-            return "0";
+            if (audioTranscodeFormat == "raw" || network == null || networkCapabilities == null) return "0"
 
-        if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-            return Preferences.getMaxBitrateWifi();
-        } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-            return Preferences.getMaxBitrateMobile();
-        } else {
-            return Preferences.getMaxBitrateWifi();
-        }
-    }
-
-    public static String getTranscodingFormatPreference() {
-        Network network = getConnectivityManager().getActiveNetwork();
-        NetworkCapabilities networkCapabilities = getConnectivityManager().getNetworkCapabilities(network);
-
-        if (network == null || networkCapabilities == null) return "raw";
-
-        if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
-            return Preferences.getAudioTranscodeFormatWifi();
-        } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
-            return Preferences.getAudioTranscodeFormatMobile();
-        } else {
-            return Preferences.getAudioTranscodeFormatWifi();
-        }
-    }
-
-    public static String getBitratePreferenceForDownload() {
-        String audioTranscodeFormat = getTranscodingFormatPreferenceForDownload();
-
-        if (audioTranscodeFormat.equals("raw"))
-            return "0";
-
-        return Preferences.getBitrateTranscodedDownload();
-    }
-
-    public static String getTranscodingFormatPreferenceForDownload() {
-        return Preferences.getAudioTranscodeFormatTranscodedDownload();
-    }
-
-    public static List<Child> limitPlayableMedia(List<Child> toLimit, int position) {
-        if (!toLimit.isEmpty() && toLimit.size() > Constants.PLAYABLE_MEDIA_LIMIT) {
-            int from = position < Constants.PRE_PLAYABLE_MEDIA ? 0 : position - Constants.PRE_PLAYABLE_MEDIA;
-            int to = Math.min(from + Constants.PLAYABLE_MEDIA_LIMIT, toLimit.size());
-
-            return toLimit.subList(from, to);
+            if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return getMaxBitrateWifi()
+            } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return getMaxBitrateMobile()
+            } else {
+                return getMaxBitrateWifi()
+            }
         }
 
-        return toLimit;
-    }
+    val transcodingFormatPreference: String
+        get() {
+            val network: Network? = connectivityManager!!.activeNetwork
+            val networkCapabilities: NetworkCapabilities? =
+                connectivityManager!!.getNetworkCapabilities(network)
 
-    public static int getPlayableMediaPosition(List<Child> toLimit, int position) {
-        if (!toLimit.isEmpty() && toLimit.size() > Constants.PLAYABLE_MEDIA_LIMIT) {
-            return Math.min(position, Constants.PRE_PLAYABLE_MEDIA);
+            if (network == null || networkCapabilities == null) return "raw"
+
+            if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)) {
+                return getAudioTranscodeFormatWifi()
+            } else if (networkCapabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)) {
+                return getAudioTranscodeFormatMobile()
+            } else {
+                return getAudioTranscodeFormatWifi()
+            }
         }
 
-        return position;
+    val bitratePreferenceForDownload: String
+        get() {
+            val audioTranscodeFormat: String =
+                transcodingFormatPreferenceForDownload
+
+            if (audioTranscodeFormat == "raw") return "0"
+
+            return getBitrateTranscodedDownload()
+        }
+
+    val transcodingFormatPreferenceForDownload: String
+        get() = getAudioTranscodeFormatTranscodedDownload()
+
+    fun limitPlayableMedia(toLimit: MutableList<Child?>, position: Int): MutableList<Child?> {
+        if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
+            val from =
+                if (position < Constants.PRE_PLAYABLE_MEDIA) 0 else position - Constants.PRE_PLAYABLE_MEDIA
+            val to = min(from + Constants.PLAYABLE_MEDIA_LIMIT, toLimit.size)
+
+            return toLimit.subList(from, to)
+        }
+
+        return toLimit
     }
 
-    private static ConnectivityManager getConnectivityManager() {
-        return (ConnectivityManager) App.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+    fun getPlayableMediaPosition(toLimit: MutableList<Child?>, position: Int): Int {
+        if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
+            return min(position, Constants.PRE_PLAYABLE_MEDIA)
+        }
+
+        return position
     }
 
-    public static void ratingFilter(List<Child> toFilter) {
-        if (toFilter == null || toFilter.isEmpty()) return;
+    private val connectivityManager: ConnectivityManager?
+        get() = getContext()
+            .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
 
-        List<Child> filtered = toFilter
-                .stream()
-                .filter(child -> (child.getUserRating() != null && child.getUserRating() >= Preferences.getMinStarRatingAccepted()) || (child.getUserRating() == null))
-                .collect(Collectors.toList());
+    fun ratingFilter(toFilter: MutableList<Child?>?) {
+        if (toFilter == null || toFilter.isEmpty()) return
 
-        toFilter.clear();
+        val filtered = toFilter
+            .stream()
+            .filter { child: Child? -> (child!!.userRating != null && child.userRating!! >= getMinStarRatingAccepted()) || (child.userRating == null) }
+            .collect(Collectors.toList())
 
-        toFilter.addAll(filtered);
+        toFilter.clear()
+
+        toFilter.addAll(filtered)
     }
 }

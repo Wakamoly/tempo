@@ -1,88 +1,85 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.content.Context;
-import android.os.Bundle;
-import android.widget.Button;
+import android.app.Dialog
+import android.content.Context
+import android.os.Bundle
+import android.view.View
+import androidx.annotation.OptIn
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogStarredAlbumSyncBinding
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.Preferences.setStarredAlbumsSyncEnabled
+import com.cappielloantonio.tempo.viewmodel.StarredAlbumsSyncViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.stream.Collectors
 
-import androidx.annotation.NonNull;
-import androidx.annotation.OptIn;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
+@OptIn(markerClass = UnstableApi::class)
+class StarredAlbumSyncDialog(private val onCancel: Runnable?) : DialogFragment() {
+    private var starredAlbumsSyncViewModel: StarredAlbumsSyncViewModel? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogStarredAlbumSyncBinding;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.StarredAlbumsSyncViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        val bind = DialogStarredAlbumSyncBinding.inflate(getLayoutInflater())
 
-import java.util.stream.Collectors;
+        starredAlbumsSyncViewModel =
+            ViewModelProvider(requireActivity()).get<StarredAlbumsSyncViewModel>(
+                StarredAlbumsSyncViewModel::class.java
+            )
 
-@OptIn(markerClass = UnstableApi.class)
-public class StarredAlbumSyncDialog extends DialogFragment {
-    private StarredAlbumsSyncViewModel starredAlbumsSyncViewModel;
-
-    private final Runnable onCancel;
-
-    public StarredAlbumSyncDialog(Runnable onCancel) {
-        this.onCancel = onCancel;
+        return MaterialAlertDialogBuilder(activity!!)
+            .setView(bind.getRoot())
+            .setTitle(R.string.starred_album_sync_dialog_title)
+            .setPositiveButton(R.string.starred_sync_dialog_positive_button, null)
+            .setNeutralButton(R.string.starred_sync_dialog_neutral_button, null)
+            .setNegativeButton(R.string.starred_sync_dialog_negative_button, null)
+            .create()
     }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        DialogStarredAlbumSyncBinding bind = DialogStarredAlbumSyncBinding.inflate(getLayoutInflater());
-
-        starredAlbumsSyncViewModel = new ViewModelProvider(requireActivity()).get(StarredAlbumsSyncViewModel.class);
-
-        return new MaterialAlertDialogBuilder(getActivity())
-                .setView(bind.getRoot())
-                .setTitle(R.string.starred_album_sync_dialog_title)
-                .setPositiveButton(R.string.starred_sync_dialog_positive_button, null)
-                .setNeutralButton(R.string.starred_sync_dialog_neutral_button, null)
-                .setNegativeButton(R.string.starred_sync_dialog_negative_button, null)
-                .create();
+    override fun onResume() {
+        super.onResume()
+        setButtonAction(requireContext())
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        setButtonAction(requireContext());
-    }
-
-    private void setButtonAction(Context context) {
-        androidx.appcompat.app.AlertDialog dialog = (androidx.appcompat.app.AlertDialog) getDialog();
+    private fun setButtonAction(context: Context?) {
+        val dialog = dialog as AlertDialog?
 
         if (dialog != null) {
-            Button positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE);
-            positiveButton.setOnClickListener(v -> {
-                starredAlbumsSyncViewModel.getStarredAlbumSongs(requireActivity()).observe(this, allSongs -> {
-                    if (allSongs != null && !allSongs.isEmpty()) {
-                        DownloadUtil.getDownloadTracker(context).download(
+            val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
+            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
+                starredAlbumsSyncViewModel!!.getStarredAlbumSongs(requireActivity())
+                    .observe(this, Observer { allSongs: MutableList<Child?>? ->
+                        if (allSongs != null && !allSongs.isEmpty()) {
+                            DownloadUtil.getDownloadTracker(context).download(
                                 MappingUtil.mapDownloads(allSongs),
-                                allSongs.stream().map(Download::new).collect(Collectors.toList())
-                        );
-                    }
-                    dialog.dismiss();
-                });
-            });
+                                allSongs.stream()
+                                    .map<Download?> { child: Child? -> Download(child) }.collect(
+                                        Collectors.toList()
+                                    )
+                            )
+                        }
+                        dialog.dismiss()
+                    })
+            })
 
-            Button neutralButton = dialog.getButton(Dialog.BUTTON_NEUTRAL);
-            neutralButton.setOnClickListener(v -> {
-                Preferences.setStarredAlbumsSyncEnabled(true);
-                dialog.dismiss();
-            });
+            val neutralButton = dialog.getButton(Dialog.BUTTON_NEUTRAL)
+            neutralButton.setOnClickListener(View.OnClickListener { v: View? ->
+                setStarredAlbumsSyncEnabled(true)
+                dialog.dismiss()
+            })
 
-            Button negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE);
-            negativeButton.setOnClickListener(v -> {
-                Preferences.setStarredAlbumsSyncEnabled(false);
-                if (onCancel != null) onCancel.run();
-                dialog.dismiss();
-            });
+            val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
+            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
+                setStarredAlbumsSyncEnabled(false)
+                if (onCancel != null) onCancel.run()
+                dialog.dismiss()
+            })
         }
     }
 }

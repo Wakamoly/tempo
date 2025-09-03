@@ -1,26 +1,25 @@
-package com.cappielloantonio.tempo.subsonic.api.open;
+package com.cappielloantonio.tempo.subsonic.api.open
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class OpenClient(private val subsonic: Subsonic) {
+    private val openService: OpenService
 
-import retrofit2.Call;
-
-public class OpenClient {
-    private static final String TAG = "OpenClient";
-
-    private final Subsonic subsonic;
-    private final OpenService openService;
-
-    public OpenClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.openService = new RetrofitClient(subsonic).getRetrofit().create(OpenService.class);
+    init {
+        this.openService =
+            RetrofitClient(subsonic).retrofit.create<OpenService>(OpenService::class.java)
     }
 
-    public Call<ApiResponse> getLyricsBySongId(String id) {
-        Log.d(TAG, "getLyricsBySongId()");
-        return openService.getLyricsBySongId(subsonic.getParams(), id);
+    fun getLyricsBySongId(id: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "getLyricsBySongId()")
+        return openService.getLyricsBySongId(subsonic.getParams(), id)
+    }
+
+    companion object {
+        private const val TAG = "OpenClient"
     }
 }

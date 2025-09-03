@@ -1,48 +1,40 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.PlaylistRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.google.common.collect.Lists
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class PlaylistChooserViewModel(application: Application) : AndroidViewModel(application) {
+    private val playlistRepository: PlaylistRepository
 
-import com.cappielloantonio.tempo.repository.PlaylistRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Playlist;
-import com.google.common.collect.Lists;
+    private val playlists = MutableLiveData<MutableList<Playlist?>?>(null)
+    var songsToAdd: ArrayList<Child?> = ArrayList<Child?>()
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class PlaylistChooserViewModel extends AndroidViewModel {
-    private final PlaylistRepository playlistRepository;
-
-    private final MutableLiveData<List<Playlist>> playlists = new MutableLiveData<>(null);
-    private ArrayList<Child> toAdd = new ArrayList<>();
-
-    public PlaylistChooserViewModel(@NonNull Application application) {
-        super(application);
-
-        playlistRepository = new PlaylistRepository();
+    init {
+        playlistRepository = PlaylistRepository()
     }
 
-    public LiveData<List<Playlist>> getPlaylistList(LifecycleOwner owner) {
-        playlistRepository.getPlaylists(false, -1).observe(owner, playlists::postValue);
-        return playlists;
+    fun getPlaylistList(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
+        playlistRepository.getPlaylists(false, -1).observe(
+            owner,
+            Observer { value: MutableList<Playlist?>? -> playlists.postValue(value) })
+        return playlists
     }
 
-    public void addSongsToPlaylist(String playlistId) {
-        playlistRepository.addSongToPlaylist(playlistId, new ArrayList<>(Lists.transform(toAdd, Child::getId)));
-    }
-
-    public void setSongsToAdd(ArrayList<Child> songs) {
-        toAdd = songs;
-    }
-
-    public ArrayList<Child> getSongsToAdd() {
-        return toAdd;
+    fun addSongsToPlaylist(playlistId: String?) {
+        playlistRepository.addSongToPlaylist(
+            playlistId, ArrayList<String?>(
+                Lists.transform<Child?, String?>(
+                    this.songsToAdd, Child::id
+                )
+            )
+        )
     }
 }

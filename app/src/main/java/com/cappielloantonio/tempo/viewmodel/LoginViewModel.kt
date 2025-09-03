@@ -1,48 +1,32 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.model.Server
+import com.cappielloantonio.tempo.repository.ServerRepository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
+class LoginViewModel(application: Application) : AndroidViewModel(application) {
+    private val serverRepository: ServerRepository
 
-import com.cappielloantonio.tempo.model.Server;
-import com.cappielloantonio.tempo.repository.ServerRepository;
+    var serverToEdit: Server? = null
 
-import java.util.List;
-
-public class LoginViewModel extends AndroidViewModel {
-    private final ServerRepository serverRepository;
-
-    private Server toEdit = null;
-
-    public LoginViewModel(@NonNull Application application) {
-        super(application);
-
-        serverRepository = new ServerRepository();
+    init {
+        serverRepository = ServerRepository()
     }
 
-    public LiveData<List<Server>> getServerList() {
-        return serverRepository.getLiveServer();
+    val serverList: LiveData<MutableList<Server?>?>?
+        get() = serverRepository.getLiveServer()
+
+    fun addServer(server: Server?) {
+        serverRepository.insert(server)
     }
 
-    public void addServer(Server server) {
-        serverRepository.insert(server);
-    }
-
-    public void deleteServer(Server server) {
+    fun deleteServer(server: Server?) {
         if (server != null) {
-            serverRepository.delete(server);
-        } else if (toEdit != null) {
-            serverRepository.delete(toEdit);
+            serverRepository.delete(server)
+        } else if (this.serverToEdit != null) {
+            serverRepository.delete(this.serverToEdit)
         }
-    }
-
-    public void setServerToEdit(Server server) {
-        toEdit = server;
-    }
-
-    public Server getServerToEdit() {
-        return toEdit;
     }
 }

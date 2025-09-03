@@ -1,89 +1,92 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.Directory
+import com.cappielloantonio.tempo.subsonic.models.Indexes
+import com.cappielloantonio.tempo.subsonic.models.MusicFolder
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.Directory;
-import com.cappielloantonio.tempo.subsonic.models.Indexes;
-import com.cappielloantonio.tempo.subsonic.models.MusicFolder;
+class DirectoryRepository {
+    val musicFolders: MutableLiveData<MutableList<MusicFolder?>?>
+        get() {
+            val liveMusicFolders =
+                MutableLiveData<MutableList<MusicFolder?>?>()
 
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class DirectoryRepository {
-    private static final String TAG = "DirectoryRepository";
-
-    public MutableLiveData<List<MusicFolder>> getMusicFolders() {
-        MutableLiveData<List<MusicFolder>> liveMusicFolders = new MutableLiveData<>();
-
-        App.getSubsonicClientInstance(false)
+            getSubsonicClientInstance(false)
                 .getBrowsingClient()
                 .getMusicFolders()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getMusicFolders() != null) {
-                            liveMusicFolders.setValue(response.body().getSubsonicResponse().getMusicFolders().getMusicFolders());
+                .enqueue(object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.musicFolders != null) {
+                            liveMusicFolders.setValue(response.body()!!.subsonicResponse.musicFolders!!.musicFolders)
                         }
                     }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable
+                    ) {
                     }
-                });
+                })
 
-        return liveMusicFolders;
+            return liveMusicFolders
+        }
+
+    fun getIndexes(musicFolderId: String?, ifModifiedSince: Long?): MutableLiveData<Indexes?> {
+        val liveIndexes = MutableLiveData<Indexes?>()
+
+        getSubsonicClientInstance(false)
+            .getBrowsingClient()
+            .getIndexes(musicFolderId, ifModifiedSince)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
+                        liveIndexes.value = response.body()!!.subsonicResponse.indexes
+                    }
+                }
+
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
+
+        return liveIndexes
     }
 
-    public MutableLiveData<Indexes> getIndexes(String musicFolderId, Long ifModifiedSince) {
-        MutableLiveData<Indexes> liveIndexes = new MutableLiveData<>();
+    fun getMusicDirectory(id: String?): MutableLiveData<Directory?> {
+        val liveMusicDirectory = MutableLiveData<Directory?>()
 
-        App.getSubsonicClientInstance(false)
-                .getBrowsingClient()
-                .getIndexes(musicFolderId, ifModifiedSince)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getIndexes() != null) {
-                            liveIndexes.setValue(response.body().getSubsonicResponse().getIndexes());
-                        }
+        getSubsonicClientInstance(false)
+            .getBrowsingClient()
+            .getMusicDirectory(id)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null) {
+                        liveMusicDirectory.value = response.body()!!.subsonicResponse.directory
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    t.printStackTrace()
+                }
+            })
 
-                    }
-                });
-
-        return liveIndexes;
+        return liveMusicDirectory
     }
 
-    public MutableLiveData<Directory> getMusicDirectory(String id) {
-        MutableLiveData<Directory> liveMusicDirectory = new MutableLiveData<>();
-
-        App.getSubsonicClientInstance(false)
-                .getBrowsingClient()
-                .getMusicDirectory(id)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getDirectory() != null) {
-                            liveMusicDirectory.setValue(response.body().getSubsonicResponse().getDirectory());
-                        }
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        t.printStackTrace();
-                    }
-                });
-
-        return liveMusicDirectory;
+    companion object {
+        private const val TAG = "DirectoryRepository"
     }
 }

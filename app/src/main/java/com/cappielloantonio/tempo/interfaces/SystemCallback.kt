@@ -1,9 +1,9 @@
-package com.cappielloantonio.tempo.interfaces;
+package com.cappielloantonio.tempo.interfaces
 
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
 
 @Keep
-public interface SystemCallback {
-    default void onError(Exception exception) {}
-    default void onSuccess(String password, String token, String salt) {}
+interface SystemCallback {
+    fun onError(exception: Exception?) {}
+    fun onSuccess(password: String?, token: String?, salt: String?) {}
 }

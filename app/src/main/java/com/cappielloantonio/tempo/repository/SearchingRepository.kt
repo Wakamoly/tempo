@@ -1,196 +1,168 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.RecentSearchDao
+import com.cappielloantonio.tempo.model.RecentSearch
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.SearchResult2
+import com.cappielloantonio.tempo.subsonic.models.SearchResult3
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.RecentSearchDao;
-import com.cappielloantonio.tempo.model.RecentSearch;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.SearchResult2;
-import com.cappielloantonio.tempo.subsonic.models.SearchResult3;
+class SearchingRepository {
+    private val recentSearchDao: RecentSearchDao =
+        AppDatabase.Companion.getInstance().recentSearchDao()
 
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
-import java.util.List;
+    fun search2(query: String?): MutableLiveData<SearchResult2?> {
+        val result = MutableLiveData<SearchResult2?>()
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class SearchingRepository {
-    private final RecentSearchDao recentSearchDao = AppDatabase.getInstance().recentSearchDao();
-
-    public MutableLiveData<SearchResult2> search2(String query) {
-        MutableLiveData<SearchResult2> result = new MutableLiveData<>();
-
-        App.getSubsonicClientInstance(false)
-                .getSearchingClient()
-                .search3(query, 20, 20, 20)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            result.setValue(response.body().getSubsonicResponse().getSearchResult2());
-                        }
+        getSubsonicClientInstance(false)
+            .getSearchingClient()
+            .search3(query, 20, 20, 20)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        result.value = response.body()!!.subsonicResponse.searchResult2
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return result;
+        return result
     }
 
-    public MutableLiveData<SearchResult3> search3(String query) {
-        MutableLiveData<SearchResult3> result = new MutableLiveData<>();
+    fun search3(query: String?): MutableLiveData<SearchResult3?> {
+        val result = MutableLiveData<SearchResult3?>()
 
-        App.getSubsonicClientInstance(false)
-                .getSearchingClient()
-                .search3(query, 20, 20, 20)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            result.setValue(response.body().getSubsonicResponse().getSearchResult3());
-                        }
+        getSubsonicClientInstance(false)
+            .getSearchingClient()
+            .search3(query, 20, 20, 20)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        result.value = response.body()!!.subsonicResponse.searchResult3
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return result;
+        return result
     }
 
-    public MutableLiveData<List<String>> getSuggestions(String query) {
-        MutableLiveData<List<String>> suggestions = new MutableLiveData<>();
+    fun getSuggestions(query: String?): MutableLiveData<MutableList<String?>?> {
+        val suggestions = MutableLiveData<MutableList<String?>?>()
 
-        App.getSubsonicClientInstance(false)
-                .getSearchingClient()
-                .search3(query, 5, 5, 5)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        List<String> newSuggestions = new ArrayList();
+        getSubsonicClientInstance(false)
+            .getSearchingClient()
+            .search3(query, 5, 5, 5)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    val newSuggestions: MutableList<String?> = ArrayList<Any?>()
 
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getSearchResult3() != null) {
-                            if (response.body().getSubsonicResponse().getSearchResult3().getArtists() != null) {
-                                for (ArtistID3 artistID3 : response.body().getSubsonicResponse().getSearchResult3().getArtists()) {
-                                    newSuggestions.add(artistID3.getName());
-                                }
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
+                        if (response.body()!!.subsonicResponse.searchResult3!!.artists != null) {
+                            for (artistID3 in response.body()!!.subsonicResponse.searchResult3!!.artists!!) {
+                                newSuggestions.add(artistID3.name)
                             }
-
-                            if (response.body().getSubsonicResponse().getSearchResult3().getAlbums() != null) {
-                                for (AlbumID3 albumID3 : response.body().getSubsonicResponse().getSearchResult3().getAlbums()) {
-                                    newSuggestions.add(albumID3.getName());
-                                }
-                            }
-
-                            if (response.body().getSubsonicResponse().getSearchResult3().getSongs() != null) {
-                                for (Child song : response.body().getSubsonicResponse().getSearchResult3().getSongs()) {
-                                    newSuggestions.add(song.getTitle());
-                                }
-                            }
-
-                            LinkedHashSet<String> hashSet = new LinkedHashSet<>(newSuggestions);
-                            ArrayList<String> suggestionsWithoutDuplicates = new ArrayList<>(hashSet);
-
-                            suggestions.setValue(suggestionsWithoutDuplicates);
                         }
+
+                        if (response.body()!!.subsonicResponse.searchResult3!!.albums != null) {
+                            for (albumID3 in response.body()!!.subsonicResponse.searchResult3!!.albums!!) {
+                                newSuggestions.add(albumID3.name)
+                            }
+                        }
+
+                        if (response.body()!!.subsonicResponse.searchResult3!!.songs != null) {
+                            for (song in response.body()!!.subsonicResponse.searchResult3!!.songs!!) {
+                                newSuggestions.add(song.title)
+                            }
+                        }
+
+                        val hashSet = LinkedHashSet<String?>(newSuggestions)
+                        val suggestionsWithoutDuplicates = ArrayList<String?>(hashSet)
+
+                        suggestions.value = suggestionsWithoutDuplicates
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return suggestions;
+        return suggestions
     }
 
-    public void insert(RecentSearch recentSearch) {
-        InsertThreadSafe insert = new InsertThreadSafe(recentSearchDao, recentSearch);
-        Thread thread = new Thread(insert);
-        thread.start();
+    fun insert(recentSearch: RecentSearch?) {
+        val insert = InsertThreadSafe(recentSearchDao, recentSearch)
+        val thread = Thread(insert)
+        thread.start()
     }
 
-    public void delete(RecentSearch recentSearch) {
-        DeleteThreadSafe delete = new DeleteThreadSafe(recentSearchDao, recentSearch);
-        Thread thread = new Thread(delete);
-        thread.start();
+    fun delete(recentSearch: RecentSearch?) {
+        val delete = DeleteThreadSafe(recentSearchDao, recentSearch)
+        val thread = Thread(delete)
+        thread.start()
     }
 
-    public List<String> getRecentSearchSuggestion() {
-        List<String> recent = new ArrayList<>();
+    val recentSearchSuggestion: MutableList<String?>?
+        get() {
+            var recent: MutableList<String?>? =
+                ArrayList<String?>()
 
-        RecentThreadSafe suggestionsThread = new RecentThreadSafe(recentSearchDao);
-        Thread thread = new Thread(suggestionsThread);
-        thread.start();
+            val suggestionsThread = RecentThreadSafe(recentSearchDao)
+            val thread = Thread(suggestionsThread)
+            thread.start()
 
-        try {
-            thread.join();
-            recent = suggestionsThread.getRecent();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            try {
+                thread.join()
+                recent = suggestionsThread.recent
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+
+            return recent
         }
 
-        return recent;
-    }
-
-    private static class DeleteThreadSafe implements Runnable {
-        private final RecentSearchDao recentSearchDao;
-        private final RecentSearch recentSearch;
-
-        public DeleteThreadSafe(RecentSearchDao recentSearchDao, RecentSearch recentSearch) {
-            this.recentSearchDao = recentSearchDao;
-            this.recentSearch = recentSearch;
-        }
-
-        @Override
-        public void run() {
-            recentSearchDao.delete(recentSearch);
+    private class DeleteThreadSafe(
+        private val recentSearchDao: RecentSearchDao,
+        private val recentSearch: RecentSearch?
+    ) : Runnable {
+        override fun run() {
+            recentSearchDao.delete(recentSearch)
         }
     }
 
-    private static class InsertThreadSafe implements Runnable {
-        private final RecentSearchDao recentSearchDao;
-        private final RecentSearch recentSearch;
-
-        public InsertThreadSafe(RecentSearchDao recentSearchDao, RecentSearch recentSearch) {
-            this.recentSearchDao = recentSearchDao;
-            this.recentSearch = recentSearch;
-        }
-
-        @Override
-        public void run() {
-            recentSearchDao.insert(recentSearch);
+    private class InsertThreadSafe(
+        private val recentSearchDao: RecentSearchDao,
+        private val recentSearch: RecentSearch?
+    ) : Runnable {
+        override fun run() {
+            recentSearchDao.insert(recentSearch)
         }
     }
 
-    private static class RecentThreadSafe implements Runnable {
-        private final RecentSearchDao recentSearchDao;
-        private List<String> recent = new ArrayList<>();
+    private class RecentThreadSafe(private val recentSearchDao: RecentSearchDao) : Runnable {
+        var recent: MutableList<String?>? = ArrayList<String?>()
+            private set
 
-        public RecentThreadSafe(RecentSearchDao recentSearchDao) {
-            this.recentSearchDao = recentSearchDao;
-        }
-
-        @Override
-        public void run() {
-            recent = recentSearchDao.getRecent();
-        }
-
-        public List<String> getRecent() {
-            return recent;
+        override fun run() {
+            recent = recentSearchDao.getRecent()
         }
     }
 }

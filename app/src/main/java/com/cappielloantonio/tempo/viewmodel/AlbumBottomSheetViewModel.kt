@@ -1,132 +1,121 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
-import android.content.Context;
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.interfaces.StarCallback
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.FavoriteRepository
+import com.cappielloantonio.tempo.repository.SharingRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.NetworkUtil
+import com.cappielloantonio.tempo.util.Preferences.isStarredAlbumsSyncEnabled
+import java.util.Date
+import java.util.stream.Collectors
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.Observer;
+class AlbumBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+    private val albumRepository: AlbumRepository
+    private val artistRepository: ArtistRepository
+    private val favoriteRepository: FavoriteRepository
+    private val sharingRepository: SharingRepository
 
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.interfaces.StarCallback;
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.FavoriteRepository;
-import com.cappielloantonio.tempo.repository.SharingRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Share;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.NetworkUtil;
-import com.cappielloantonio.tempo.util.Preferences;
+    private var album: AlbumID3? = null
 
-import java.util.Date;
-import java.util.List;
-import java.util.stream.Collectors;
-
-public class AlbumBottomSheetViewModel extends AndroidViewModel {
-    private final AlbumRepository albumRepository;
-    private final ArtistRepository artistRepository;
-    private final FavoriteRepository favoriteRepository;
-    private final SharingRepository sharingRepository;
-
-    private AlbumID3 album;
-
-    public AlbumBottomSheetViewModel(@NonNull Application application) {
-        super(application);
-
-        albumRepository = new AlbumRepository();
-        artistRepository = new ArtistRepository();
-        favoriteRepository = new FavoriteRepository();
-        sharingRepository = new SharingRepository();
+    init {
+        albumRepository = AlbumRepository()
+        artistRepository = ArtistRepository()
+        favoriteRepository = FavoriteRepository()
+        sharingRepository = SharingRepository()
     }
 
-    public AlbumID3 getAlbum() {
-        return album;
+    fun getAlbum(): AlbumID3 {
+        return album!!
     }
 
-    public void setAlbum(AlbumID3 album) {
-        this.album = album;
+    fun setAlbum(album: AlbumID3) {
+        this.album = album
     }
 
-    public LiveData<ArtistID3> getArtist() {
-        return artistRepository.getArtist(album.getArtistId());
-    }
+    val artist: LiveData<ArtistID3?>?
+        get() = artistRepository.getArtist(album!!.artistId)
 
-    public MutableLiveData<List<Child>> getAlbumTracks() {
-        return albumRepository.getAlbumTracks(album.getId());
-    }
+    val albumTracks: MutableLiveData<MutableList<Child?>?>
+        get() = albumRepository.getAlbumTracks(album!!.id)
 
-    public void setFavorite(Context context) {
-        if (album.getStarred() != null) {
+    fun setFavorite(context: Context?) {
+        if (album!!.starred != null) {
             if (NetworkUtil.isOffline()) {
-                removeFavoriteOffline();
+                removeFavoriteOffline()
             } else {
-                removeFavoriteOnline();
+                removeFavoriteOnline()
             }
         } else {
             if (NetworkUtil.isOffline()) {
-                setFavoriteOffline();
+                setFavoriteOffline()
             } else {
-                setFavoriteOnline(context);
+                setFavoriteOnline(context)
             }
         }
     }
 
-    public MutableLiveData<Share> shareAlbum() {
-        return sharingRepository.createShare(album.getId(), album.getName(), null);
+    fun shareAlbum(): MutableLiveData<Share?>? {
+        return sharingRepository.createShare(album!!.id, album!!.name, null)
     }
 
-    private void removeFavoriteOffline() {
-        favoriteRepository.starLater(null, album.getId(), null, false);
-        album.setStarred(null);
+    private fun removeFavoriteOffline() {
+        favoriteRepository.starLater(null, album!!.id, null, false)
+        album!!.starred = null
     }
 
-    private void removeFavoriteOnline() {
-        favoriteRepository.unstar(null, album.getId(), null, new StarCallback() {
-            @Override
-            public void onError() {
-                favoriteRepository.starLater(null, album.getId(), null, false);
+    private fun removeFavoriteOnline() {
+        favoriteRepository.unstar(null, album!!.id, null, object : StarCallback {
+            override fun onError() {
+                favoriteRepository.starLater(null, album!!.id, null, false)
             }
-        });
+        })
 
-        album.setStarred(null);
+        album!!.starred = null
     }
 
-    private void setFavoriteOffline() {
-        favoriteRepository.starLater(null, album.getId(), null, true);
-        album.setStarred(new Date());
+    private fun setFavoriteOffline() {
+        favoriteRepository.starLater(null, album!!.id, null, true)
+        album!!.starred = Date()
     }
 
-    private void setFavoriteOnline(Context context) {
-        favoriteRepository.star(null, album.getId(), null, new StarCallback() {
-            @Override
-            public void onError() {
-                favoriteRepository.starLater(null, album.getId(), null, true);
+    private fun setFavoriteOnline(context: Context?) {
+        favoriteRepository.star(null, album!!.id, null, object : StarCallback {
+            override fun onError() {
+                favoriteRepository.starLater(null, album!!.id, null, true)
             }
-        });
+        })
 
-        album.setStarred(new Date());
-        if (Preferences.isStarredAlbumsSyncEnabled()) {
-                AlbumRepository albumRepository = new AlbumRepository();
-                MutableLiveData<List<Child>> tracksLiveData = albumRepository.getAlbumTracks(album.getId());
-                
-                tracksLiveData.observeForever(new Observer<List<Child>>() {
-                    @Override
-                    public void onChanged(List<Child> songs) {
-                        if (songs != null && !songs.isEmpty()) {
-                            DownloadUtil.getDownloadTracker(context).download(
-                                    MappingUtil.mapDownloads(songs),
-                                    songs.stream().map(Download::new).collect(Collectors.toList())
-                            );
-                        }
-                        tracksLiveData.removeObserver(this);
+        album!!.starred = Date()
+        if (isStarredAlbumsSyncEnabled()) {
+            val albumRepository = AlbumRepository()
+            val tracksLiveData = albumRepository.getAlbumTracks(album!!.id)
+
+            tracksLiveData.observeForever(object : Observer<MutableList<Child?>?> {
+                override fun onChanged(songs: MutableList<Child?>?) {
+                    if (songs != null && !songs.isEmpty()) {
+                        DownloadUtil.getDownloadTracker(context).download(
+                            MappingUtil.mapDownloads(songs),
+                            songs.stream().map<Download?> { child: Child? -> Download(child) }
+                                .collect(Collectors.toList())
+                        )
                     }
-                });
-            }
+                    tracksLiveData.removeObserver(this)
+                }
+            })
+        }
     }
 }

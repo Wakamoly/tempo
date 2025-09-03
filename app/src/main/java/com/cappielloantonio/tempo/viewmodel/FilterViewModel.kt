@@ -1,48 +1,31 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.repository.GenreRepository
+import com.cappielloantonio.tempo.subsonic.models.Genre
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
+class FilterViewModel(application: Application) : AndroidViewModel(application) {
+    private val genreRepository: GenreRepository
 
-import com.cappielloantonio.tempo.repository.GenreRepository;
-import com.cappielloantonio.tempo.subsonic.models.Genre;
+    val filters: ArrayList<String?> = ArrayList<String?>()
+    val filterNames: ArrayList<String?> = ArrayList<String?>()
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class FilterViewModel extends AndroidViewModel {
-    private final GenreRepository genreRepository;
-
-    private final ArrayList<String> selectedFiltersID = new ArrayList<>();
-    private final ArrayList<String> selectedFilters = new ArrayList<>();
-
-    public FilterViewModel(@NonNull Application application) {
-        super(application);
-
-        genreRepository = new GenreRepository();
+    init {
+        genreRepository = GenreRepository()
     }
 
-    public LiveData<List<Genre>> getGenreList() {
-        return genreRepository.getGenres(false, -1);
+    val genreList: LiveData<MutableList<Genre?>?>?
+        get() = genreRepository.getGenres(false, -1)
+
+    fun addFilter(filterID: String?, filterName: String?) {
+        filters.add(filterID)
+        filterNames.add(filterName)
     }
 
-    public void addFilter(String filterID, String filterName) {
-        selectedFiltersID.add(filterID);
-        selectedFilters.add(filterName);
-    }
-
-    public void removeFilter(String filterID, String filterName) {
-        selectedFiltersID.remove(filterID);
-        selectedFilters.remove(filterName);
-    }
-
-    public ArrayList<String> getFilters() {
-        return selectedFiltersID;
-    }
-
-    public ArrayList<String> getFilterNames() {
-        return selectedFilters;
+    fun removeFilter(filterID: String?, filterName: String?) {
+        filters.remove(filterID)
+        filterNames.remove(filterName)
     }
 }

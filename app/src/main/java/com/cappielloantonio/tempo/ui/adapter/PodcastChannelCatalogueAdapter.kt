@@ -1,143 +1,142 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.widget.Filter;
-import android.widget.Filterable;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHomeCataloguePodcastChannelBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Locale
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<PodcastChannelCatalogueAdapter.ViewHolder?>(), Filterable {
+    private val filtering: Filter = object : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            val filteredList: MutableList<PodcastChannel?> = ArrayList<PodcastChannel?>()
 
-import com.cappielloantonio.tempo.databinding.ItemHomeCataloguePodcastChannelBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class PodcastChannelCatalogueAdapter extends RecyclerView.Adapter<PodcastChannelCatalogueAdapter.ViewHolder> implements Filterable {
-    private final ClickCallback click;
-    private final Filter filtering = new Filter() {
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            List<PodcastChannel> filteredList = new ArrayList<>();
-
-            if (constraint == null || constraint.length() == 0) {
-                filteredList.addAll(podcastChannelsFull);
+            if (constraint == null || constraint.length == 0) {
+                filteredList.addAll(podcastChannelsFull!!)
             } else {
-                String filterPattern = constraint.toString().toLowerCase().trim();
+                val filterPattern =
+                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
 
-                for (PodcastChannel item : podcastChannelsFull) {
-                    if (item.getTitle().toLowerCase().contains(filterPattern)) {
-                        filteredList.add(item);
+                for (item in podcastChannelsFull!!) {
+                    if (item.title!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                        filteredList.add(item)
                     }
                 }
             }
 
-            FilterResults results = new FilterResults();
-            results.values = filteredList;
+            val results = FilterResults()
+            results.values = filteredList
 
-            return results;
+            return results
         }
 
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            podcastChannels.clear();
-            if (results.count > 0) podcastChannels.addAll((List) results.values);
-            notifyDataSetChanged();
+        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
+            podcastChannels.clear()
+            if (results.count > 0) podcastChannels.addAll(results.values as MutableList<*>?)
+            notifyDataSetChanged()
         }
-    };
-
-    private List<PodcastChannel> podcastChannels;
-    private List<PodcastChannel> podcastChannelsFull;
-
-    public PodcastChannelCatalogueAdapter(ClickCallback click) {
-        this.click = click;
-        this.podcastChannels = Collections.emptyList();
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeCataloguePodcastChannelBinding view = ItemHomeCataloguePodcastChannelBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    private var podcastChannels: MutableList<PodcastChannel>
+    private var podcastChannelsFull: MutableList<PodcastChannel>? = null
+
+    init {
+        this.podcastChannels = mutableListOf<PodcastChannel?>()
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        PodcastChannel podcastChannel = podcastChannels.get(position);
-
-        holder.item.podcastChannelTitleLabel.setText(podcastChannel.getTitle());
-
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), podcastChannel.getCoverArtId(), CustomGlideRequest.ResourceType.Podcast)
-                .build()
-                .into(holder.item.podcastChannelCatalogueCoverImageView);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomeCataloguePodcastChannelBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return PodcastChannelCatalogueAdapter.ViewHolder(view)
     }
 
-    @Override
-    public int getItemCount() {
-        return podcastChannels.size();
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val podcastChannel = podcastChannels.get(position)
+
+        holder.item.podcastChannelTitleLabel.text = podcastChannel.title
+
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            podcastChannel.coverArtId,
+            CustomGlideRequest.ResourceType.Podcast
+        )
+            .build()
+            .into(holder.item.podcastChannelCatalogueCoverImageView)
     }
 
-    public PodcastChannel getItem(int position) {
-        return podcastChannels.get(position);
+    override fun getItemCount(): Int {
+        return podcastChannels.size
     }
 
-    public void setItems(List<PodcastChannel> podcastChannels) {
-        this.podcastChannels = podcastChannels;
-        this.podcastChannelsFull = new ArrayList<>(podcastChannels);
-        notifyDataSetChanged();
+    fun getItem(position: Int): PodcastChannel? {
+        return podcastChannels.get(position)
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return position;
+    fun setItems(podcastChannels: MutableList<PodcastChannel>) {
+        this.podcastChannels = podcastChannels
+        this.podcastChannelsFull = ArrayList<PodcastChannel>(podcastChannels)
+        notifyDataSetChanged()
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
+    override fun getItemViewType(position: Int): Int {
+        return position
     }
 
-    @Override
-    public Filter getFilter() {
-        return filtering;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeCataloguePodcastChannelBinding item;
+    override fun getFilter(): Filter {
+        return filtering
+    }
 
-        ViewHolder(ItemHomeCataloguePodcastChannelBinding item) {
-            super(item.getRoot());
+    inner class ViewHolder internal constructor(var item: ItemHomeCataloguePodcastChannelBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.podcastChannelTitleLabel.setSelected(true)
 
-            this.item = item;
-
-            item.podcastChannelTitleLabel.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
         }
 
-        private void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.PODCAST_CHANNEL_OBJECT, podcastChannels.get(getBindingAdapterPosition()));
+        private fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.PODCAST_CHANNEL_OBJECT,
+                podcastChannels.get(getBindingAdapterPosition())
+            )
 
-            click.onPodcastChannelClick(bundle);
+            click.onPodcastChannelClick(bundle)
         }
 
-        private boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.PODCAST_CHANNEL_OBJECT, podcastChannels.get(getBindingAdapterPosition()));
+        private fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.PODCAST_CHANNEL_OBJECT,
+                podcastChannels.get(getBindingAdapterPosition())
+            )
 
-            click.onPodcastChannelLongClick(bundle);
+            click.onPodcastChannelLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

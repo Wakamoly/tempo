@@ -1,41 +1,43 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension;
-import com.google.common.reflect.TypeToken;
-import com.google.gson.Gson;
+import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension
+import com.cappielloantonio.tempo.util.Preferences.getOpenSubsonicExtensions
+import com.cappielloantonio.tempo.util.Preferences.isOpenSubsonic
+import com.google.common.reflect.TypeToken
+import com.google.gson.Gson
 
-import java.util.List;
+object OpenSubsonicExtensionsUtil {
+    private val openSubsonicExtensions: MutableList<OpenSubsonicExtension?>?
+        get() {
+            var extensions: MutableList<OpenSubsonicExtension?>? = null
 
-public class OpenSubsonicExtensionsUtil {
-    private static List<OpenSubsonicExtension> getOpenSubsonicExtensions() {
-        List<OpenSubsonicExtension> extensions = null;
+            if (isOpenSubsonic() && getOpenSubsonicExtensions() != null) {
+                extensions = Gson()
+                    .fromJson<MutableList<OpenSubsonicExtension?>?>(
+                        getOpenSubsonicExtensions(),
+                        object :
+                            TypeToken<MutableList<OpenSubsonicExtension?>?>() {
+                        }.type
+                    )
+            }
 
-        if (Preferences.isOpenSubsonic() && Preferences.getOpenSubsonicExtensions() != null) {
-            extensions = new Gson().fromJson(
-                    Preferences.getOpenSubsonicExtensions(),
-                    new TypeToken<List<OpenSubsonicExtension>>() {
-                    }.getType()
-            );
+            return extensions
         }
 
-        return extensions;
+    private fun getOpenSubsonicExtension(extensionName: String?): OpenSubsonicExtension? {
+        if (openSubsonicExtensions == null) return null
+
+        return openSubsonicExtensions!!.stream()
+            .filter { openSubsonicExtension: OpenSubsonicExtension? -> openSubsonicExtension!!.name == extensionName }
+            .findAny().orElse(null)
     }
 
-    private static OpenSubsonicExtension getOpenSubsonicExtension(String extensionName) {
-        if (getOpenSubsonicExtensions() == null) return null;
+    val isTranscodeOffsetExtensionAvailable: Boolean
+        get() = getOpenSubsonicExtension("transcodeOffset") != null
 
-        return getOpenSubsonicExtensions().stream().filter(openSubsonicExtension -> openSubsonicExtension.getName().equals(extensionName)).findAny().orElse(null);
-    }
+    val isFormPostExtensionAvailable: Boolean
+        get() = getOpenSubsonicExtension("formPost") != null
 
-    public static boolean isTranscodeOffsetExtensionAvailable() {
-        return getOpenSubsonicExtension("transcodeOffset") != null;
-    }
-
-    public static boolean isFormPostExtensionAvailable() {
-        return getOpenSubsonicExtension("formPost") != null;
-    }
-
-    public static boolean isSongLyricsExtensionAvailable() {
-        return getOpenSubsonicExtension("songLyrics") != null;
-    }
+    val isSongLyricsExtensionAvailable: Boolean
+        get() = getOpenSubsonicExtension("songLyrics") != null
 }

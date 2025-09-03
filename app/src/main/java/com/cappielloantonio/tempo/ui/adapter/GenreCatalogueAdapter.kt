@@ -1,128 +1,114 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.widget.Filter;
-import android.widget.Filterable;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.ItemLibraryCatalogueGenreBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Genre
+import com.cappielloantonio.tempo.util.Constants
+import java.util.Collections
+import java.util.Locale
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class GenreCatalogueAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<GenreCatalogueAdapter.ViewHolder?>(), Filterable {
+    private val filtering: Filter = object : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            val filteredList: MutableList<Genre?> = ArrayList<Genre?>()
 
-import com.cappielloantonio.tempo.databinding.ItemLibraryCatalogueGenreBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Genre;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-public class GenreCatalogueAdapter extends RecyclerView.Adapter<GenreCatalogueAdapter.ViewHolder> implements Filterable {
-    private final ClickCallback click;
-
-    private final Filter filtering = new Filter() {
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            List<Genre> filteredList = new ArrayList<>();
-
-            if (constraint == null || constraint.length() == 0) {
-                filteredList.addAll(genresFull);
+            if (constraint == null || constraint.length == 0) {
+                filteredList.addAll(genresFull!!)
             } else {
-                String filterPattern = constraint.toString().toLowerCase().trim();
+                val filterPattern =
+                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
 
-                for (Genre item : genresFull) {
-                    if (item.getGenre().toLowerCase().contains(filterPattern)) {
-                        filteredList.add(item);
+                for (item in genresFull!!) {
+                    if (item.genre!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                        filteredList.add(item)
                     }
                 }
             }
 
-            FilterResults results = new FilterResults();
-            results.values = filteredList;
+            val results = FilterResults()
+            results.values = filteredList
 
-            return results;
+            return results
         }
 
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            genres.clear();
-            if (results.count > 0) genres.addAll((List) results.values);
-            notifyDataSetChanged();
-        }
-    };
-
-    private List<Genre> genres;
-    private List<Genre> genresFull;
-
-    public GenreCatalogueAdapter(ClickCallback click) {
-        this.click = click;
-        this.genres = Collections.emptyList();
-    }
-
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryCatalogueGenreBinding view = ItemLibraryCatalogueGenreBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Genre genre = genres.get(position);
-
-        holder.item.genreLabel.setText(genre.getGenre());
-    }
-
-    @Override
-    public int getItemCount() {
-        return genres.size();
-    }
-
-    public Genre getItem(int position) {
-        return genres.get(position);
-    }
-
-    public void setItems(List<Genre> genres) {
-        this.genres = genres;
-        this.genresFull = new ArrayList<>(genres);
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public Filter getFilter() {
-        return filtering;
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryCatalogueGenreBinding item;
-
-        ViewHolder(ItemLibraryCatalogueGenreBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> {
-                Bundle bundle = new Bundle();
-                bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE);
-                bundle.putParcelable(Constants.GENRE_OBJECT, genres.get(getBindingAdapterPosition()));
-
-                click.onGenreClick(bundle);
-            });
+        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
+            genres.clear()
+            if (results.count > 0) genres.addAll(results.values as MutableList<*>?)
+            notifyDataSetChanged()
         }
     }
 
-    public void sort(String order) {
-        switch (order) {
-            case Constants.GENRE_ORDER_BY_NAME:
-                genres.sort(Comparator.comparing(Genre::getGenre));
-                break;
-            case Constants.GENRE_ORDER_BY_RANDOM:
-                Collections.shuffle(genres);
-                break;
+    private var genres: MutableList<Genre>
+    private var genresFull: MutableList<Genre>? = null
+
+    init {
+        this.genres = mutableListOf<Genre?>()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryCatalogueGenreBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return GenreCatalogueAdapter.ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val genre = genres.get(position)
+
+        holder.item.genreLabel.text = genre.genre
+    }
+
+    override fun getItemCount(): Int {
+        return genres.size
+    }
+
+    fun getItem(position: Int): Genre? {
+        return genres.get(position)
+    }
+
+    fun setItems(genres: MutableList<Genre>) {
+        this.genres = genres
+        this.genresFull = ArrayList<Genre>(genres)
+        notifyDataSetChanged()
+    }
+
+    override fun getFilter(): Filter {
+        return filtering
+    }
+
+    inner class ViewHolder internal constructor(var item: ItemLibraryCatalogueGenreBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? ->
+                val bundle = Bundle()
+                bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE)
+                bundle.putParcelable(
+                    Constants.GENRE_OBJECT,
+                    genres.get(getBindingAdapterPosition())
+                )
+                click.onGenreClick(bundle)
+            })
+        }
+    }
+
+    fun sort(order: String) {
+        when (order) {
+            Constants.GENRE_ORDER_BY_NAME -> genres.sort(Comparator.comparing<Genre?, String?>(Genre::genre))
+            Constants.GENRE_ORDER_BY_RANDOM -> Collections.shuffle(genres)
         }
 
-        notifyDataSetChanged();
+        notifyDataSetChanged()
     }
 }

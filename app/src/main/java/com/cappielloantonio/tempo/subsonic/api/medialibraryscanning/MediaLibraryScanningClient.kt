@@ -1,31 +1,33 @@
-package com.cappielloantonio.tempo.subsonic.api.medialibraryscanning;
+package com.cappielloantonio.tempo.subsonic.api.medialibraryscanning
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class MediaLibraryScanningClient(private val subsonic: Subsonic) {
+    private val mediaLibraryScanningService: MediaLibraryScanningService
 
-import retrofit2.Call;
-
-public class MediaLibraryScanningClient {
-    private static final String TAG = "MediaLibraryScanningClient";
-
-    private final Subsonic subsonic;
-    private final MediaLibraryScanningService mediaLibraryScanningService;
-
-    public MediaLibraryScanningClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.mediaLibraryScanningService = new RetrofitClient(subsonic).getRetrofit().create(MediaLibraryScanningService.class);
+    init {
+        this.mediaLibraryScanningService =
+            RetrofitClient(subsonic).retrofit.create<MediaLibraryScanningService>(
+                MediaLibraryScanningService::class.java
+            )
     }
 
-    public Call<ApiResponse> startScan() {
-        Log.d(TAG, "startScan()");
-        return mediaLibraryScanningService.startScan(subsonic.getParams());
+    fun startScan(): Call<ApiResponse?>? {
+        Log.d(TAG, "startScan()")
+        return mediaLibraryScanningService.startScan(subsonic.getParams())
     }
 
-    public Call<ApiResponse> getScanStatus() {
-        Log.d(TAG, "getScanStatus()");
-        return mediaLibraryScanningService.getScanStatus(subsonic.getParams());
+    val scanStatus: Call<ApiResponse?>?
+        get() {
+            Log.d(TAG, "getScanStatus()")
+            return mediaLibraryScanningService.getScanStatus(subsonic.getParams())
+        }
+
+    companion object {
+        private const val TAG = "MediaLibraryScanningClient"
     }
 }

@@ -1,295 +1,326 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.os.Bundle;
-import android.os.Handler;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentLibraryBinding;
-import com.cappielloantonio.tempo.helper.recyclerview.CustomLinearSnapHelper;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.interfaces.PlaylistCallback;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.AlbumAdapter;
-import com.cappielloantonio.tempo.ui.adapter.ArtistAdapter;
-import com.cappielloantonio.tempo.ui.adapter.GenreAdapter;
-import com.cappielloantonio.tempo.ui.adapter.MusicFolderAdapter;
-import com.cappielloantonio.tempo.ui.adapter.PlaylistHorizontalAdapter;
-import com.cappielloantonio.tempo.ui.dialog.PlaylistEditorDialog;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.LibraryViewModel;
-import com.google.android.material.appbar.MaterialToolbar;
-
-import java.util.Objects;
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.navigation.Navigation.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentLibraryBinding
+import com.cappielloantonio.tempo.helper.recyclerview.CustomLinearSnapHelper
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.interfaces.PlaylistCallback
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Genre
+import com.cappielloantonio.tempo.subsonic.models.MusicFolder
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.AlbumAdapter
+import com.cappielloantonio.tempo.ui.adapter.ArtistAdapter
+import com.cappielloantonio.tempo.ui.adapter.GenreAdapter
+import com.cappielloantonio.tempo.ui.adapter.MusicFolderAdapter
+import com.cappielloantonio.tempo.ui.adapter.PlaylistHorizontalAdapter
+import com.cappielloantonio.tempo.ui.dialog.PlaylistEditorDialog
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.Preferences.isMusicDirectorySectionVisible
+import com.cappielloantonio.tempo.viewmodel.LibraryViewModel
+import com.google.android.material.appbar.MaterialToolbar
+import java.util.Objects
 
 @UnstableApi
-public class LibraryFragment extends Fragment implements ClickCallback {
-    private static final String TAG = "LibraryFragment";
+class LibraryFragment : Fragment(), ClickCallback {
+    private var bind: FragmentLibraryBinding? = null
+    private var activity: MainActivity? = null
+    private var libraryViewModel: LibraryViewModel? = null
 
-    private FragmentLibraryBinding bind;
-    private MainActivity activity;
-    private LibraryViewModel libraryViewModel;
+    private var musicFolderAdapter: MusicFolderAdapter? = null
+    private var albumAdapter: AlbumAdapter? = null
+    private var artistAdapter: ArtistAdapter? = null
+    private var genreAdapter: GenreAdapter? = null
+    private var playlistHorizontalAdapter: PlaylistHorizontalAdapter? = null
 
-    private MusicFolderAdapter musicFolderAdapter;
-    private AlbumAdapter albumAdapter;
-    private ArtistAdapter artistAdapter;
-    private GenreAdapter genreAdapter;
-    private PlaylistHorizontalAdapter playlistHorizontalAdapter;
+    private var materialToolbar: MaterialToolbar? = null
 
-    private MaterialToolbar materialToolbar;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        activity = activity as MainActivity?
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+        bind = FragmentLibraryBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
+        libraryViewModel =
+            ViewModelProvider(requireActivity()).get<LibraryViewModel?>(LibraryViewModel::class.java)
 
-        bind = FragmentLibraryBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-        libraryViewModel = new ViewModelProvider(requireActivity()).get(LibraryViewModel.class);
+        init()
 
-        init();
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        initAppBar();
-        initMusicFolderView();
-        initAlbumView();
-        initArtistView();
-        initGenreView();
-        initPlaylistView();
+        initAppBar()
+        initMusicFolderView()
+        initAlbumView()
+        initArtistView()
+        initGenreView()
+        initPlaylistView()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        activity.setBottomNavigationBarVisibility(true);
+    override fun onStart() {
+        super.onStart()
+        activity!!.setBottomNavigationBarVisibility(true)
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        refreshPlaylistView();
+    override fun onResume() {
+        super.onResume()
+        refreshPlaylistView()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void init() {
-        bind.albumCatalogueTextViewClickable.setOnClickListener(v -> activity.navController.navigate(R.id.action_libraryFragment_to_albumCatalogueFragment));
-        bind.artistCatalogueTextViewClickable.setOnClickListener(v -> activity.navController.navigate(R.id.action_libraryFragment_to_artistCatalogueFragment));
-        bind.genreCatalogueTextViewClickable.setOnClickListener(v -> activity.navController.navigate(R.id.action_libraryFragment_to_genreCatalogueFragment));
-        bind.playlistCatalogueTextViewClickable.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.PLAYLIST_ALL, Constants.PLAYLIST_ALL);
-            activity.navController.navigate(R.id.action_libraryFragment_to_playlistCatalogueFragment, bundle);
-        });
+    private fun init() {
+        bind!!.albumCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
+            activity!!.navController.navigate(
+                R.id.action_libraryFragment_to_albumCatalogueFragment
+            )
+        })
+        bind!!.artistCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
+            activity!!.navController.navigate(
+                R.id.action_libraryFragment_to_artistCatalogueFragment
+            )
+        })
+        bind!!.genreCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
+            activity!!.navController.navigate(
+                R.id.action_libraryFragment_to_genreCatalogueFragment
+            )
+        })
+        bind!!.playlistCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
+            val bundle = Bundle()
+            bundle.putString(Constants.PLAYLIST_ALL, Constants.PLAYLIST_ALL)
+            activity!!.navController.navigate(
+                R.id.action_libraryFragment_to_playlistCatalogueFragment,
+                bundle
+            )
+        })
 
-        bind.albumCatalogueSampleTextViewRefreshable.setOnLongClickListener(view -> {
-            libraryViewModel.refreshAlbumSample(getViewLifecycleOwner());
-            return true;
-        });
-        bind.artistCatalogueSampleTextViewRefreshable.setOnLongClickListener(view -> {
-            libraryViewModel.refreshArtistSample(getViewLifecycleOwner());
-            return true;
-        });
-        bind.genreCatalogueSampleTextViewRefreshable.setOnLongClickListener(view -> {
-            libraryViewModel.refreshGenreSample(getViewLifecycleOwner());
-            return true;
-        });
-        bind.playlistCatalogueSampleTextViewRefreshable.setOnLongClickListener(view -> {
-            libraryViewModel.refreshPlaylistSample(getViewLifecycleOwner());
-            return true;
-        });
+        bind!!.albumCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
+            libraryViewModel!!.refreshAlbumSample(getViewLifecycleOwner())
+            true
+        })
+        bind!!.artistCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
+            libraryViewModel!!.refreshArtistSample(getViewLifecycleOwner())
+            true
+        })
+        bind!!.genreCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
+            libraryViewModel!!.refreshGenreSample(getViewLifecycleOwner())
+            true
+        })
+        bind!!.playlistCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
+            libraryViewModel!!.refreshPlaylistSample(getViewLifecycleOwner())
+            true
+        })
     }
 
-    private void initAppBar() {
-        materialToolbar = bind.getRoot().findViewById(R.id.toolbar);
+    private fun initAppBar() {
+        materialToolbar = bind!!.getRoot().findViewById<MaterialToolbar>(R.id.toolbar)
 
-        activity.setSupportActionBar(materialToolbar);
-        Objects.requireNonNull(materialToolbar.getOverflowIcon()).setTint(requireContext().getResources().getColor(R.color.titleTextColor, null));
+        activity!!.setSupportActionBar(materialToolbar)
+        Objects.requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
+            .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
     }
 
-    private void initMusicFolderView() {
-        if (!Preferences.isMusicDirectorySectionVisible()) {
-            bind.libraryMusicFolderSector.setVisibility(View.GONE);
-            return;
+    private fun initMusicFolderView() {
+        if (!isMusicDirectorySectionVisible()) {
+            bind!!.libraryMusicFolderSector.visibility = View.GONE
+            return
         }
 
-        bind.musicFolderRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.musicFolderRecyclerView.setHasFixedSize(true);
+        bind!!.musicFolderRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.musicFolderRecyclerView.setHasFixedSize(true)
 
-        musicFolderAdapter = new MusicFolderAdapter(this);
-        bind.musicFolderRecyclerView.setAdapter(musicFolderAdapter);
-        libraryViewModel.getMusicFolders(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), musicFolders -> {
-            if (musicFolders == null) {
-                if (bind != null) bind.libraryMusicFolderSector.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.libraryMusicFolderSector.setVisibility(!musicFolders.isEmpty() ? View.VISIBLE : View.GONE);
+        musicFolderAdapter = MusicFolderAdapter(this)
+        bind!!.musicFolderRecyclerView.setAdapter(musicFolderAdapter)
+        libraryViewModel!!.getMusicFolders(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { musicFolders: MutableList<MusicFolder?>? ->
+                if (musicFolders == null) {
+                    if (bind != null) bind!!.libraryMusicFolderSector.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.libraryMusicFolderSector.visibility = if (!musicFolders.isEmpty()) View.VISIBLE else View.GONE
 
-                musicFolderAdapter.setItems(musicFolders);
+                    musicFolderAdapter!!.setItems(musicFolders)
+                }
+            })
+    }
+
+    private fun initAlbumView() {
+        bind!!.albumRecyclerView.setLayoutManager(
+            LinearLayoutManager(
+                requireContext(),
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+        )
+        bind!!.albumRecyclerView.setHasFixedSize(true)
+
+        albumAdapter = AlbumAdapter(this)
+        bind!!.albumRecyclerView.setAdapter(albumAdapter)
+        libraryViewModel!!.getAlbumSample(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<AlbumID3?>? ->
+                if (albums == null) {
+                    if (bind != null) bind!!.libraryAlbumSector.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.libraryAlbumSector.visibility = if (!albums.isEmpty()) View.VISIBLE else View.GONE
+
+                    albumAdapter!!.setItems(albums)
+                }
+            })
+
+        val albumSnapHelper = CustomLinearSnapHelper()
+        albumSnapHelper.attachToRecyclerView(bind!!.albumRecyclerView)
+    }
+
+    private fun initArtistView() {
+        bind!!.artistRecyclerView.setLayoutManager(
+            LinearLayoutManager(
+                requireContext(),
+                LinearLayoutManager.HORIZONTAL,
+                false
+            )
+        )
+        bind!!.artistRecyclerView.setHasFixedSize(true)
+
+        artistAdapter = ArtistAdapter(this, false, false)
+        bind!!.artistRecyclerView.setAdapter(artistAdapter)
+        libraryViewModel!!.getArtistSample(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { artists: MutableList<ArtistID3?>? ->
+                if (artists == null) {
+                    if (bind != null) bind!!.libraryArtistSector.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.libraryArtistSector.visibility = if (!artists.isEmpty()) View.VISIBLE else View.GONE
+
+                    artistAdapter!!.setItems(artists)
+                }
+            })
+
+        val artistSnapHelper = CustomLinearSnapHelper()
+        artistSnapHelper.attachToRecyclerView(bind!!.artistRecyclerView)
+    }
+
+    private fun initGenreView() {
+        bind!!.genreRecyclerView.setLayoutManager(
+            GridLayoutManager(
+                requireContext(),
+                3,
+                GridLayoutManager.HORIZONTAL,
+                false
+            )
+        )
+        bind!!.genreRecyclerView.setHasFixedSize(true)
+
+        genreAdapter = GenreAdapter(this)
+        bind!!.genreRecyclerView.setAdapter(genreAdapter)
+
+        libraryViewModel!!.getGenreSample(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { genres: MutableList<Genre?>? ->
+                if (genres == null) {
+                    if (bind != null) bind!!.libraryGenresSector.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.libraryGenresSector.visibility = if (!genres.isEmpty()) View.VISIBLE else View.GONE
+
+                    genreAdapter!!.setItems(genres)
+                }
+            })
+
+        val genreSnapHelper = CustomLinearSnapHelper()
+        genreSnapHelper.attachToRecyclerView(bind!!.genreRecyclerView)
+    }
+
+    private fun initPlaylistView() {
+        bind!!.playlistRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.playlistRecyclerView.setHasFixedSize(true)
+
+        playlistHorizontalAdapter = PlaylistHorizontalAdapter(this)
+        bind!!.playlistRecyclerView.setAdapter(playlistHorizontalAdapter)
+        libraryViewModel!!.getPlaylistSample(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { playlists: MutableList<Playlist?>? ->
+                if (playlists == null) {
+                    if (bind != null) bind!!.libraryPlaylistSector.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.libraryPlaylistSector.visibility = if (!playlists.isEmpty()) View.VISIBLE else View.GONE
+
+                    playlistHorizontalAdapter!!.setItems(playlists)
+                }
+            })
+    }
+
+    private fun refreshPlaylistView() {
+        val handler = Handler()
+
+        val runnable = Runnable {
+            if (view != null && bind != null && libraryViewModel != null) libraryViewModel!!.refreshPlaylistSample(
+                getViewLifecycleOwner()
+            )
+        }
+
+        handler.postDelayed(runnable, 100)
+    }
+
+    override fun onAlbumClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.albumPageFragment, bundle)
+    }
+
+    override fun onAlbumLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.albumBottomSheetDialog, bundle)
+    }
+
+    override fun onArtistClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.artistPageFragment, bundle)
+    }
+
+    override fun onArtistLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.artistBottomSheetDialog, bundle)
+    }
+
+    override fun onGenreClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.songListPageFragment, bundle)
+    }
+
+    override fun onPlaylistClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.playlistPageFragment, bundle)
+    }
+
+    override fun onPlaylistLongClick(bundle: Bundle?) {
+        val dialog = PlaylistEditorDialog(object : PlaylistCallback {
+            override fun onDismiss() {
+                refreshPlaylistView()
             }
-        });
+        })
+
+        dialog.setArguments(bundle)
+        dialog.show(activity!!.supportFragmentManager, null)
     }
 
-    private void initAlbumView() {
-        bind.albumRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        bind.albumRecyclerView.setHasFixedSize(true);
-
-        albumAdapter = new AlbumAdapter(this);
-        bind.albumRecyclerView.setAdapter(albumAdapter);
-        libraryViewModel.getAlbumSample(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), albums -> {
-            if (albums == null) {
-                if (bind != null) bind.libraryAlbumSector.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.libraryAlbumSector.setVisibility(!albums.isEmpty() ? View.VISIBLE : View.GONE);
-
-                albumAdapter.setItems(albums);
-            }
-        });
-
-        CustomLinearSnapHelper albumSnapHelper = new CustomLinearSnapHelper();
-        albumSnapHelper.attachToRecyclerView(bind.albumRecyclerView);
+    override fun onMusicFolderClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.indexFragment, bundle)
     }
 
-    private void initArtistView() {
-        bind.artistRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext(), LinearLayoutManager.HORIZONTAL, false));
-        bind.artistRecyclerView.setHasFixedSize(true);
-
-        artistAdapter = new ArtistAdapter(this, false, false);
-        bind.artistRecyclerView.setAdapter(artistAdapter);
-        libraryViewModel.getArtistSample(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), artists -> {
-            if (artists == null) {
-                if (bind != null) bind.libraryArtistSector.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.libraryArtistSector.setVisibility(!artists.isEmpty() ? View.VISIBLE : View.GONE);
-
-                artistAdapter.setItems(artists);
-            }
-        });
-
-        CustomLinearSnapHelper artistSnapHelper = new CustomLinearSnapHelper();
-        artistSnapHelper.attachToRecyclerView(bind.artistRecyclerView);
-    }
-
-    private void initGenreView() {
-        bind.genreRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 3, GridLayoutManager.HORIZONTAL, false));
-        bind.genreRecyclerView.setHasFixedSize(true);
-
-        genreAdapter = new GenreAdapter(this);
-        bind.genreRecyclerView.setAdapter(genreAdapter);
-
-        libraryViewModel.getGenreSample(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), genres -> {
-            if (genres == null) {
-                if (bind != null) bind.libraryGenresSector.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.libraryGenresSector.setVisibility(!genres.isEmpty() ? View.VISIBLE : View.GONE);
-
-                genreAdapter.setItems(genres);
-            }
-        });
-
-        CustomLinearSnapHelper genreSnapHelper = new CustomLinearSnapHelper();
-        genreSnapHelper.attachToRecyclerView(bind.genreRecyclerView);
-    }
-
-    private void initPlaylistView() {
-        bind.playlistRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.playlistRecyclerView.setHasFixedSize(true);
-
-        playlistHorizontalAdapter = new PlaylistHorizontalAdapter(this);
-        bind.playlistRecyclerView.setAdapter(playlistHorizontalAdapter);
-        libraryViewModel.getPlaylistSample(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), playlists -> {
-            if (playlists == null) {
-                if (bind != null) bind.libraryPlaylistSector.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.libraryPlaylistSector.setVisibility(!playlists.isEmpty() ? View.VISIBLE : View.GONE);
-
-                playlistHorizontalAdapter.setItems(playlists);
-            }
-        });
-    }
-
-    private void refreshPlaylistView() {
-        final Handler handler = new Handler();
-
-        final Runnable runnable = () -> {
-            if (getView() != null && bind != null && libraryViewModel != null)
-                libraryViewModel.refreshPlaylistSample(getViewLifecycleOwner());
-        };
-
-        handler.postDelayed(runnable, 100);
-    }
-
-    @Override
-    public void onAlbumClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.albumPageFragment, bundle);
-    }
-
-    @Override
-    public void onAlbumLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.albumBottomSheetDialog, bundle);
-    }
-
-    @Override
-    public void onArtistClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.artistPageFragment, bundle);
-    }
-
-    @Override
-    public void onArtistLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.artistBottomSheetDialog, bundle);
-    }
-
-    @Override
-    public void onGenreClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.songListPageFragment, bundle);
-    }
-
-    @Override
-    public void onPlaylistClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.playlistPageFragment, bundle);
-    }
-
-    @Override
-    public void onPlaylistLongClick(Bundle bundle) {
-        PlaylistEditorDialog dialog = new PlaylistEditorDialog(new PlaylistCallback() {
-            @Override
-            public void onDismiss() {
-                refreshPlaylistView();
-            }
-        });
-
-        dialog.setArguments(bundle);
-        dialog.show(activity.getSupportFragmentManager(), null);
-    }
-
-    @Override
-    public void onMusicFolderClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.indexFragment, bundle);
+    companion object {
+        private const val TAG = "LibraryFragment"
     }
 }

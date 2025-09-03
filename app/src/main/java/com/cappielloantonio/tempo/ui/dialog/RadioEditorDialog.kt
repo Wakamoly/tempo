@@ -1,111 +1,122 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.os.Bundle;
-import android.text.TextUtils;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.os.Parcelable
+import android.text.Editable
+import android.text.TextUtils
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProvider
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogRadioEditorBinding
+import com.cappielloantonio.tempo.interfaces.RadioCallback
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.viewmodel.RadioEditorViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
+class RadioEditorDialog(private val radioCallback: RadioCallback) : DialogFragment() {
+    private var bind: DialogRadioEditorBinding? = null
+    private var radioEditorViewModel: RadioEditorViewModel? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogRadioEditorBinding;
-import com.cappielloantonio.tempo.interfaces.RadioCallback;
-import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.viewmodel.RadioEditorViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    private var radioName: String? = null
+    private var radioStreamURL: String? = null
+    private var radioHomepageURL: String? = null
 
-import java.util.Objects;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        bind = DialogRadioEditorBinding.inflate(getLayoutInflater())
 
-public class RadioEditorDialog extends DialogFragment {
-    private DialogRadioEditorBinding bind;
-    private RadioEditorViewModel radioEditorViewModel;
+        radioEditorViewModel =
+            ViewModelProvider(requireActivity()).get<RadioEditorViewModel>(RadioEditorViewModel::class.java)
 
-    private final RadioCallback radioCallback;
-
-    private String radioName;
-    private String radioStreamURL;
-    private String radioHomepageURL;
-
-    public RadioEditorDialog(RadioCallback radioCallback) {
-        this.radioCallback = radioCallback;
-    }
-
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        bind = DialogRadioEditorBinding.inflate(getLayoutInflater());
-
-        radioEditorViewModel = new ViewModelProvider(requireActivity()).get(RadioEditorViewModel.class);
-
-        return new MaterialAlertDialogBuilder(requireContext())
-                .setView(bind.getRoot())
-                .setTitle(R.string.radio_editor_dialog_title)
-                .setPositiveButton(R.string.radio_editor_dialog_positive_button, (dialog, id) -> {
-                    if (validateInput()) {
-                        if (radioEditorViewModel.getRadioToEdit() == null) {
-                            radioEditorViewModel.createRadio(radioName, radioStreamURL, radioHomepageURL.isEmpty() ? null : radioHomepageURL);
-                        } else {
-                            radioEditorViewModel.updateRadio(radioName, radioStreamURL, radioHomepageURL.isEmpty() ? null : radioHomepageURL);
-                        }
-                        dismissDialog();
+        return MaterialAlertDialogBuilder(requireContext())
+            .setView(bind!!.getRoot())
+            .setTitle(R.string.radio_editor_dialog_title)
+            .setPositiveButton(
+                R.string.radio_editor_dialog_positive_button
+            ) { dialog: DialogInterface?, id: Int ->
+                if (validateInput()) {
+                    if (radioEditorViewModel!!.getRadioToEdit() == null) {
+                        radioEditorViewModel!!.createRadio(
+                            radioName,
+                            radioStreamURL,
+                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL
+                        )
+                    } else {
+                        radioEditorViewModel!!.updateRadio(
+                            radioName,
+                            radioStreamURL,
+                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL
+                        )
                     }
-                })
-                .setNeutralButton(R.string.radio_editor_dialog_neutral_button, (dialog, id) -> {
-                    radioEditorViewModel.deleteRadio();
-                    dismissDialog();
-                })
-                .setNegativeButton(R.string.radio_editor_dialog_negative_button, (dialog, id) -> {
-                    dialog.cancel();
-                })
-                .create();
+                    dismissDialog()
+                }
+            }
+            .setNeutralButton(
+                R.string.radio_editor_dialog_neutral_button
+            ) { dialog: DialogInterface?, id: Int ->
+                radioEditorViewModel!!.deleteRadio()
+                dismissDialog()
+            }
+            .setNegativeButton(
+                R.string.radio_editor_dialog_negative_button
+            ) { dialog: DialogInterface?, id: Int ->
+                dialog!!.cancel()
+            }
+            .create()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        setParameterInfo();
+    override fun onStart() {
+        super.onStart()
+        setParameterInfo()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void setParameterInfo() {
-        if (getArguments() != null && getArguments().getParcelable(Constants.INTERNET_RADIO_STATION_OBJECT) != null) {
-            InternetRadioStation toEdit = requireArguments().getParcelable(Constants.INTERNET_RADIO_STATION_OBJECT);
+    private fun setParameterInfo() {
+        if (arguments != null && requireArguments().getParcelable<Parcelable?>(Constants.INTERNET_RADIO_STATION_OBJECT) != null) {
+            val toEdit =
+                requireArguments().getParcelable<InternetRadioStation?>(Constants.INTERNET_RADIO_STATION_OBJECT)
 
-            radioEditorViewModel.setRadioToEdit(toEdit);
+            radioEditorViewModel!!.setRadioToEdit(toEdit)
 
-            bind.internetRadioStationNameTextView.setText(toEdit.getName());
-            bind.internetRadioStationStreamUrlTextView.setText(toEdit.getStreamUrl());
-            bind.internetRadioStationHomepageUrlTextView.setText(toEdit.getHomePageUrl());
+            bind!!.internetRadioStationNameTextView.setText(toEdit!!.name)
+            bind!!.internetRadioStationStreamUrlTextView.setText(toEdit.streamUrl)
+            bind!!.internetRadioStationHomepageUrlTextView.setText(toEdit.homePageUrl)
         }
     }
 
-    private boolean validateInput() {
-        radioName = Objects.requireNonNull(bind.internetRadioStationNameTextView.getText()).toString().trim();
-        radioStreamURL = Objects.requireNonNull(bind.internetRadioStationStreamUrlTextView.getText()).toString().trim();
-        radioHomepageURL = Objects.requireNonNull(bind.internetRadioStationHomepageUrlTextView.getText()).toString().trim();
+    private fun validateInput(): Boolean {
+        radioName =
+            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationNameTextView.getText())
+                .toString().trim { it <= ' ' }
+        radioStreamURL =
+            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationStreamUrlTextView.getText())
+                .toString().trim { it <= ' ' }
+        radioHomepageURL =
+            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationHomepageUrlTextView.getText())
+                .toString().trim { it <= ' ' }
 
         if (TextUtils.isEmpty(radioName)) {
-            bind.internetRadioStationNameTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.internetRadioStationNameTextView.error = getString(R.string.error_required)
+            return false
         }
 
         if (TextUtils.isEmpty(radioStreamURL)) {
-            bind.internetRadioStationStreamUrlTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.internetRadioStationStreamUrlTextView.error = getString(R.string.error_required)
+            return false
         }
 
-        return true;
+        return true
     }
 
-    private void dismissDialog() {
-        radioCallback.onDismiss();
-        Objects.requireNonNull(getDialog()).dismiss();
+    private fun dismissDialog() {
+        radioCallback.onDismiss()
+        Objects.requireNonNull<Dialog?>(dialog).dismiss()
     }
 }

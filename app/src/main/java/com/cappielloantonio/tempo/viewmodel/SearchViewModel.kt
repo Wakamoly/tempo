@@ -1,68 +1,59 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.model.RecentSearch
+import com.cappielloantonio.tempo.repository.SearchingRepository
+import com.cappielloantonio.tempo.subsonic.models.SearchResult2
+import com.cappielloantonio.tempo.subsonic.models.SearchResult3
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
+class SearchViewModel(application: Application) : AndroidViewModel(application) {
+    var query: String? = ""
+        set(query) {
+            field = query
 
-import com.cappielloantonio.tempo.model.RecentSearch;
-import com.cappielloantonio.tempo.repository.SearchingRepository;
-import com.cappielloantonio.tempo.subsonic.models.SearchResult2;
-import com.cappielloantonio.tempo.subsonic.models.SearchResult3;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class SearchViewModel extends AndroidViewModel {
-    private static final String TAG = "SearchViewModel";
-
-    private String query = "";
-
-    private final SearchingRepository searchingRepository;
-
-    public SearchViewModel(@NonNull Application application) {
-        super(application);
-
-        searchingRepository = new SearchingRepository();
-    }
-
-    public String getQuery() {
-        return query;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
-
-        if (!query.isEmpty()) {
-            insertNewSearch(query);
+            if (!query!!.isEmpty()) {
+                insertNewSearch(query)
+            }
         }
+
+    private val searchingRepository: SearchingRepository
+
+    init {
+        searchingRepository = SearchingRepository()
     }
 
-    public LiveData<SearchResult2> search2(String title) {
-        return searchingRepository.search2(title);
+    fun search2(title: String?): LiveData<SearchResult2?>? {
+        return searchingRepository.search2(title)
     }
 
-    public LiveData<SearchResult3> search3(String title) {
-        return searchingRepository.search3(title);
+    fun search3(title: String?): LiveData<SearchResult3?>? {
+        return searchingRepository.search3(title)
     }
 
-    public void insertNewSearch(String search) {
-        searchingRepository.insert(new RecentSearch(search));
+    fun insertNewSearch(search: String) {
+        searchingRepository.insert(RecentSearch(search))
     }
 
-    public void deleteRecentSearch(String search) {
-        searchingRepository.delete(new RecentSearch(search));
+    fun deleteRecentSearch(search: String) {
+        searchingRepository.delete(RecentSearch(search))
     }
 
-    public LiveData<List<String>> getSearchSuggestion(String query) {
-        return searchingRepository.getSuggestions(query);
+    fun getSearchSuggestion(query: String?): LiveData<MutableList<String?>?>? {
+        return searchingRepository.getSuggestions(query)
     }
 
-    public List<String> getRecentSearchSuggestion() {
-        ArrayList<String> suggestions = new ArrayList<>();
-        suggestions.addAll(searchingRepository.getRecentSearchSuggestion());
+    val recentSearchSuggestion: MutableList<String?>
+        get() {
+            val suggestions =
+                ArrayList<String?>()
+            suggestions.addAll(searchingRepository.getRecentSearchSuggestion())
 
-        return suggestions;
+            return suggestions
+        }
+
+    companion object {
+        private const val TAG = "SearchViewModel"
     }
 }

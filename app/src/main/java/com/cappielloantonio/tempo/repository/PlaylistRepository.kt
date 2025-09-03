@@ -1,215 +1,215 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import static android.provider.Settings.System.getString;
+import android.widget.Toast
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.media3.common.util.UnstableApi
+import com.cappielloantonio.tempo.App.Companion.getContext
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.PlaylistDao
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import java.util.Collections
+import kotlin.math.min
 
-import android.provider.Settings;
-import android.widget.Toast;
+class PlaylistRepository {
+    @UnstableApi
+    private val playlistDao: PlaylistDao = AppDatabase.Companion.getInstance().playlistDao()
+    fun getPlaylists(random: Boolean, size: Int): MutableLiveData<MutableList<Playlist?>?> {
+        val listLivePlaylists = MutableLiveData<MutableList<Playlist?>?>(ArrayList<Playlist?>())
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .getPlaylists()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null && response.body()!!.subsonicResponse.playlists!!.playlists != null) {
+                        val playlists: MutableList<Playlist?>? =
+                            response.body()!!.subsonicResponse.playlists!!.playlists
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.PlaylistDao;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Playlist;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class PlaylistRepository {
-    @androidx.media3.common.util.UnstableApi
-    private final PlaylistDao playlistDao = AppDatabase.getInstance().playlistDao();
-    public MutableLiveData<List<Playlist>> getPlaylists(boolean random, int size) {
-        MutableLiveData<List<Playlist>> listLivePlaylists = new MutableLiveData<>(new ArrayList<>());
-
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .getPlaylists()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getPlaylists() != null && response.body().getSubsonicResponse().getPlaylists().getPlaylists() != null) {
-                            List<Playlist> playlists = response.body().getSubsonicResponse().getPlaylists().getPlaylists();
-
-                            if (random) {
-                                Collections.shuffle(playlists);
-                                listLivePlaylists.setValue(playlists.subList(0, Math.min(playlists.size(), size)));
-                            } else {
-                                listLivePlaylists.setValue(playlists);
-                            }
+                        if (random) {
+                            Collections.shuffle(playlists)
+                            listLivePlaylists.value = playlists!!.subList(
+                                0,
+                                min(playlists.size, size)
+                            )
+                        } else {
+                            listLivePlaylists.value = playlists
                         }
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-        return listLivePlaylists;
+        return listLivePlaylists
     }
 
-    public MutableLiveData<List<Child>> getPlaylistSongs(String id) {
-        MutableLiveData<List<Child>> listLivePlaylistSongs = new MutableLiveData<>();
+    fun getPlaylistSongs(id: String?): MutableLiveData<MutableList<Child?>?> {
+        val listLivePlaylistSongs = MutableLiveData<MutableList<Child?>?>()
 
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .getPlaylist(id)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getPlaylist() != null) {
-                            List<Child> songs = response.body().getSubsonicResponse().getPlaylist().getEntries();
-                            listLivePlaylistSongs.setValue(songs);
-                        }
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .getPlaylist(id)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null) {
+                        val songs: MutableList<Child?>? =
+                            response.body()!!.subsonicResponse.playlist!!.entries
+                        listLivePlaylistSongs.value = songs
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-        return listLivePlaylistSongs;
+        return listLivePlaylistSongs
     }
 
-    public void addSongToPlaylist(String playlistId, ArrayList<String> songsId) {
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .updatePlaylist(playlistId, null, true, songsId, null)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        Toast.makeText(App.getContext(), App.getContext().getString(R.string.playlist_chooser_dialog_toast_add_success), Toast.LENGTH_SHORT).show();
-                    }
+    fun addSongToPlaylist(playlistId: String?, songsId: ArrayList<String?>?) {
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .updatePlaylist(playlistId, null, true, songsId, null)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    Toast.makeText(
+                        getContext(),
+                        getContext().getString(R.string.playlist_chooser_dialog_toast_add_success),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        Toast.makeText(App.getContext(), App.getContext().getString(R.string.playlist_chooser_dialog_toast_add_failure), Toast.LENGTH_SHORT).show();
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    Toast.makeText(
+                        getContext(),
+                        getContext().getString(R.string.playlist_chooser_dialog_toast_add_failure),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }
+            })
     }
 
-    public void createPlaylist(String playlistId, String name, ArrayList<String> songsId) {
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .createPlaylist(playlistId, name, songsId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun createPlaylist(playlistId: String?, name: String?, songsId: ArrayList<String?>?) {
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .createPlaylist(playlistId, name, songsId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void updatePlaylist(String playlistId, String name, ArrayList<String> songsId) {
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .deletePlaylist(playlistId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        createPlaylist(null, name, songsId);
-                    }
+    fun updatePlaylist(playlistId: String?, name: String?, songsId: ArrayList<String?>?) {
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .deletePlaylist(playlistId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    createPlaylist(null, name, songsId)
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void updatePlaylist(String playlistId, String name, boolean isPublic, ArrayList<String> songIdToAdd, ArrayList<Integer> songIndexToRemove) {
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .updatePlaylist(playlistId, name, isPublic, songIdToAdd, songIndexToRemove)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun updatePlaylist(
+        playlistId: String?,
+        name: String?,
+        isPublic: Boolean,
+        songIdToAdd: ArrayList<String?>?,
+        songIndexToRemove: ArrayList<Int?>?
+    ) {
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .updatePlaylist(playlistId, name, isPublic, songIdToAdd, songIndexToRemove)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void deletePlaylist(String playlistId) {
-        App.getSubsonicClientInstance(false)
-                .getPlaylistClient()
-                .deletePlaylist(playlistId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun deletePlaylist(playlistId: String?) {
+        getSubsonicClientInstance(false)
+            .getPlaylistClient()
+            .deletePlaylist(playlistId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
-    }
-    @androidx.media3.common.util.UnstableApi
-    public LiveData<List<Playlist>> getPinnedPlaylists() {
-        return playlistDao.getAll();
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    @androidx.media3.common.util.UnstableApi
-    public void insert(Playlist playlist) {
-        InsertThreadSafe insert = new InsertThreadSafe(playlistDao, playlist);
-        Thread thread = new Thread(insert);
-        thread.start();
+    @get:UnstableApi
+    val pinnedPlaylists: LiveData<MutableList<Playlist?>?>?
+        get() = playlistDao.getAll()
+
+    @UnstableApi
+    fun insert(playlist: Playlist?) {
+        val insert = InsertThreadSafe(playlistDao, playlist)
+        val thread = Thread(insert)
+        thread.start()
     }
 
-    @androidx.media3.common.util.UnstableApi
-    public void delete(Playlist playlist) {
-        DeleteThreadSafe delete = new DeleteThreadSafe(playlistDao, playlist);
-        Thread thread = new Thread(delete);
-        thread.start();
+    @UnstableApi
+    fun delete(playlist: Playlist?) {
+        val delete = DeleteThreadSafe(playlistDao, playlist)
+        val thread = Thread(delete)
+        thread.start()
     }
 
-    private static class InsertThreadSafe implements Runnable {
-        private final PlaylistDao playlistDao;
-        private final Playlist playlist;
-
-        public InsertThreadSafe(PlaylistDao playlistDao, Playlist playlist) {
-            this.playlistDao = playlistDao;
-            this.playlist = playlist;
+    private class InsertThreadSafe(
+        private val playlistDao: PlaylistDao,
+        private val playlist: Playlist?
+    ) : Runnable {
+        override fun run() {
+            playlistDao.insert(playlist)
         }
-
-        @Override
-        public void run() {
-            playlistDao.insert(playlist);
-        }
     }
 
-    private static class DeleteThreadSafe implements Runnable {
-        private final PlaylistDao playlistDao;
-        private final Playlist playlist;
-
-        public DeleteThreadSafe(PlaylistDao playlistDao, Playlist playlist) {
-            this.playlistDao = playlistDao;
-            this.playlist = playlist;
-        }
-
-        @Override
-        public void run() {
-            playlistDao.delete(playlist);
+    private class DeleteThreadSafe(
+        private val playlistDao: PlaylistDao,
+        private val playlist: Playlist?
+    ) : Runnable {
+        override fun run() {
+            playlistDao.delete(playlist)
         }
     }
 }

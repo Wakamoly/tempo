@@ -1,92 +1,88 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHomeSimilarTrackBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class SimilarTrackAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<SimilarTrackAdapter.ViewHolder?>() {
+    private var songs: MutableList<Child>
 
-import com.cappielloantonio.tempo.databinding.ItemHomeSimilarTrackBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class SimilarTrackAdapter extends RecyclerView.Adapter<SimilarTrackAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Child> songs;
-
-    public SimilarTrackAdapter(ClickCallback click) {
-        this.click = click;
-        this.songs = Collections.emptyList();
+    init {
+        this.songs = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeSimilarTrackBinding view = ItemHomeSimilarTrackBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomeSimilarTrackBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return SimilarTrackAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Child song = songs.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val song = songs.get(position)
 
-        holder.item.titleTrackLabel.setText(song.getTitle());
+        holder.item.titleTrackLabel.text = song.title
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.trackCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.trackCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return songs.size();
+    override fun getItemCount(): Int {
+        return songs.size
     }
 
-    public Child getItem(int position) {
-        return songs.get(position);
+    fun getItem(position: Int): Child? {
+        return songs.get(position)
     }
 
-    public void setItems(List<Child> songs) {
-        this.songs = songs;
-        notifyDataSetChanged();
+    fun setItems(songs: MutableList<Child>) {
+        this.songs = songs
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeSimilarTrackBinding item;
-
-        ViewHolder(ItemHomeSimilarTrackBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
+    inner class ViewHolder internal constructor(var item: ItemHomeSimilarTrackBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()));
-            bundle.putBoolean(Constants.MEDIA_MIX, true);
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()))
+            bundle.putBoolean(Constants.MEDIA_MIX, true)
 
-            click.onMediaClick(bundle);
+            click.onMediaClick(bundle)
         }
 
-        public boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()));
+        fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()))
 
-            click.onMediaLongClick(bundle);
+            click.onMediaLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

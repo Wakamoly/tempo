@@ -1,87 +1,90 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.databinding.ItemLibraryMusicIndexBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.helper.recyclerview.FastScrollbar;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Artist;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemLibraryMusicIndexBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.helper.recyclerview.FastScrollbar.BubbleTextGetter
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Artist
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Locale
+import java.util.Objects
 
 @UnstableApi
-public class MusicIndexAdapter extends RecyclerView.Adapter<MusicIndexAdapter.ViewHolder> implements FastScrollbar.BubbleTextGetter {
-    private final ClickCallback click;
+class MusicIndexAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<MusicIndexAdapter.ViewHolder?>(), BubbleTextGetter {
+    private var artists: MutableList<Artist>?
 
-    private List<Artist> artists;
-
-    public MusicIndexAdapter(ClickCallback click) {
-        this.click = click;
-        this.artists = Collections.emptyList();
+    init {
+        this.artists = mutableListOf<Artist?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryMusicIndexBinding view = ItemLibraryMusicIndexBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryMusicIndexBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return MusicIndexAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Artist artist = artists.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val artist = artists!!.get(position)
 
-        holder.item.musicIndexTitleTextView.setText(artist.getName());
+        holder.item.musicIndexTitleTextView.text = artist.name
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), artist.getName(), CustomGlideRequest.ResourceType.Directory)
-                .build()
-                .into(holder.item.musicIndexCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            artist.name,
+            CustomGlideRequest.ResourceType.Directory
+        )
+            .build()
+            .into(holder.item.musicIndexCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return artists.size();
+    override fun getItemCount(): Int {
+        return artists!!.size
     }
 
-    public void setItems(List<Artist> artists) {
-        this.artists = artists;
-        notifyDataSetChanged();
+    fun setItems(artists: MutableList<Artist>?) {
+        this.artists = artists
+        notifyDataSetChanged()
     }
 
-    @Override
-    public String getTextToShowInBubble(int pos) {
-        return artists != null && !artists.isEmpty() ? Character.toString(Objects.requireNonNull(artists.get(pos).getName().toUpperCase()).charAt(0)) : null;
+    override fun getTextToShowInBubble(pos: Int): String? {
+        return if (artists != null && !artists!!.isEmpty()) Objects.requireNonNull<String?>(
+            artists!!.get(pos).name!!.uppercase(
+                Locale.getDefault()
+            )
+        ).get(0).toString() else null
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryMusicIndexBinding item;
+    inner class ViewHolder internal constructor(var item: ItemLibraryMusicIndexBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.musicIndexTitleTextView.setSelected(true)
 
-        ViewHolder(ItemLibraryMusicIndexBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.musicIndexTitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            item.musicIndexMoreButton.setOnClickListener(v -> onClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            item.musicIndexMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.MUSIC_DIRECTORY_ID, artists.get(getBindingAdapterPosition()).getId());
-            click.onMusicIndexClick(bundle);
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putString(
+                Constants.MUSIC_DIRECTORY_ID,
+                artists!!.get(getBindingAdapterPosition()).id
+            )
+            click.onMusicIndexClick(bundle)
         }
     }
 }

@@ -1,34 +1,31 @@
-package com.cappielloantonio.tempo.helper;
+package com.cappielloantonio.tempo.helper
 
-import android.os.Build;
+import android.os.Build
+import androidx.appcompat.app.AppCompatDelegate
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatDelegate;
+object ThemeHelper {
+    private const val TAG = "ThemeHelper"
 
-public class ThemeHelper {
-    private static final String TAG = "ThemeHelper";
+    const val LIGHT_MODE: String = "light"
+    const val DARK_MODE: String = "dark"
+    const val DEFAULT_MODE: String = "default"
 
-    public static final String LIGHT_MODE = "light";
-    public static final String DARK_MODE = "dark";
-    public static final String DEFAULT_MODE = "default";
-
-    public static void applyTheme(@NonNull String themePref) {
-        switch (themePref) {
-            case LIGHT_MODE: {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO);
-                break;
+    fun applyTheme(themePref: String) {
+        when (themePref) {
+            LIGHT_MODE -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_NO)
             }
-            case DARK_MODE: {
-                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES);
-                break;
+
+            DARK_MODE -> {
+                AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_YES)
             }
-            default: {
+
+            else -> {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM);
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM)
                 } else {
-                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY);
+                    AppCompatDelegate.setDefaultNightMode(AppCompatDelegate.MODE_NIGHT_AUTO_BATTERY)
                 }
-                break;
             }
         }
     }

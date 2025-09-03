@@ -1,100 +1,83 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
-import android.text.TextUtils;
+import android.app.Application
+import android.text.TextUtils
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Genre
+import com.cappielloantonio.tempo.util.Constants
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class SongListPageViewModel(application: Application) : AndroidViewModel(application) {
+    private val songRepository: SongRepository
+    private val artistRepository: ArtistRepository
 
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.SongRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Genre;
-import com.cappielloantonio.tempo.util.Constants;
+    var title: String? = null
+    var toolbarTitle: String? = null
+    var genre: Genre? = null
+    var artist: ArtistID3? = null
+    var album: AlbumID3? = null
 
-import java.util.ArrayList;
-import java.util.List;
+    private var songList: MutableLiveData<MutableList<Child?>?>? = null
 
-public class SongListPageViewModel extends AndroidViewModel {
-    private final SongRepository songRepository;
-    private final ArtistRepository artistRepository;
+    var filters: ArrayList<String?> = ArrayList<String?>()
+    var filterNames: ArrayList<String?> = ArrayList<String?>()
 
-    public String title;
-    public String toolbarTitle;
-    public Genre genre;
-    public ArtistID3 artist;
-    public AlbumID3 album;
+    var year: Int = 0
+    var maxNumberByYear: Int = 500
+    var maxNumberByGenre: Int = 100
 
-    private MutableLiveData<List<Child>> songList;
-
-    public ArrayList<String> filters = new ArrayList<>();
-    public ArrayList<String> filterNames = new ArrayList<>();
-
-    public int year = 0;
-    public int maxNumberByYear = 500;
-    public int maxNumberByGenre = 100;
-
-    public SongListPageViewModel(@NonNull Application application) {
-        super(application);
-
-        songRepository = new SongRepository();
-        artistRepository = new ArtistRepository();
+    init {
+        songRepository = SongRepository()
+        artistRepository = ArtistRepository()
     }
 
-    public LiveData<List<Child>> getSongList() {
-        songList = new MutableLiveData<>(new ArrayList<>());
+    fun getSongList(): LiveData<MutableList<Child?>?> {
+        songList = MutableLiveData<MutableList<Child?>?>(ArrayList<Child?>())
 
-        switch (title) {
-            case Constants.MEDIA_BY_GENRE:
-                songList = songRepository.getSongsByGenre(genre.getGenre(), 0);
-                break;
-            case Constants.MEDIA_BY_ARTIST:
-                songList = artistRepository.getTopSongs(artist.getName(), 50);
-                break;
-            case Constants.MEDIA_BY_GENRES:
-                songList = songRepository.getSongsByGenres(filters);
-                break;
-            case Constants.MEDIA_BY_YEAR:
-                songList = songRepository.getRandomSample(maxNumberByYear, year, year + 10);
-                break;
-            case Constants.MEDIA_STARRED:
-                songList = songRepository.getStarredSongs(false, -1);
-                break;
+        when (title) {
+            Constants.MEDIA_BY_GENRE -> songList = songRepository.getSongsByGenre(genre!!.genre, 0)
+            Constants.MEDIA_BY_ARTIST -> songList = artistRepository.getTopSongs(artist!!.name, 50)
+            Constants.MEDIA_BY_GENRES -> songList = songRepository.getSongsByGenres(filters)
+            Constants.MEDIA_BY_YEAR -> songList =
+                songRepository.getRandomSample(maxNumberByYear, year, year + 10)
+
+            Constants.MEDIA_STARRED -> songList = songRepository.getStarredSongs(false, -1)
         }
 
-        return songList;
+        return songList!!
     }
 
-    public void getSongsByPage(LifecycleOwner owner) {
-        switch (title) {
-            case Constants.MEDIA_BY_GENRE:
-                int songCount = songList.getValue() != null ? songList.getValue().size() : 0;
+    fun getSongsByPage(owner: LifecycleOwner) {
+        when (title) {
+            Constants.MEDIA_BY_GENRE -> {
+                val songCount =
+                    if (songList!!.getValue() != null) songList!!.getValue()!!.size else 0
 
-                if (songCount > 0 && songCount % maxNumberByGenre != 0) return;
+                if (songCount > 0 && songCount % maxNumberByGenre != 0) return
 
-                int page = songCount / maxNumberByGenre;
-                songRepository.getSongsByGenre(genre.getGenre(), page).observe(owner, children -> {
-                    if (children != null && !children.isEmpty()) {
-                        List<Child> currentMedia = songList.getValue();
-                        currentMedia.addAll(children);
-                        songList.setValue(currentMedia);
-                    }
-                });
-                break;
-            case Constants.MEDIA_BY_ARTIST:
-            case Constants.MEDIA_BY_GENRES:
-            case Constants.MEDIA_BY_YEAR:
-            case Constants.MEDIA_STARRED:
-                break;
+                val page = songCount / maxNumberByGenre
+                songRepository.getSongsByGenre(genre!!.genre, page)
+                    .observe(owner, Observer { children: MutableList<Child?>? ->
+                        if (children != null && !children.isEmpty()) {
+                            val currentMedia = songList!!.getValue()
+                            currentMedia!!.addAll(children)
+                            songList!!.value = currentMedia
+                        }
+                    })
+            }
+
+            Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_BY_YEAR, Constants.MEDIA_STARRED -> {}
         }
     }
 
-    public String getFiltersTitle() {
-        return TextUtils.join(", ", filterNames);
-    }
+    val filtersTitle: String?
+        get() = TextUtils.join(", ", filterNames)
 }

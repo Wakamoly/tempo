@@ -1,99 +1,96 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.ItemHorizontalShareBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.UIUtil
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class ShareHorizontalAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<ShareHorizontalAdapter.ViewHolder?>() {
+    private var shares: MutableList<Share>
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.ItemHorizontalShareBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Share;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.UIUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class ShareHorizontalAdapter extends RecyclerView.Adapter<ShareHorizontalAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Share> shares;
-
-    public ShareHorizontalAdapter(ClickCallback click) {
-        this.click = click;
-        this.shares = Collections.emptyList();
+    init {
+        this.shares = mutableListOf<Share?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalShareBinding view = ItemHorizontalShareBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalShareBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ShareHorizontalAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Share share = shares.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val share = shares.get(position)
 
-        holder.item.shareTitleTextView.setText(share.getDescription());
-        holder.item.shareSubtitleTextView.setText(holder.itemView.getContext().getString(R.string.share_subtitle_item, UIUtil.getReadableDate(share.getExpires())));
+        holder.item.shareTitleTextView.text = share.description
+        holder.item.shareSubtitleTextView.text = holder.itemView.context
+            .getString(R.string.share_subtitle_item, UIUtil.getReadableDate(share.expires))
 
-        if (share.getEntries() != null && !share.getEntries().isEmpty()) CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), share.getEntries().get(0).getCoverArtId(), CustomGlideRequest.ResourceType.Album)
-                .build()
-                .into(holder.item.shareCoverImageView);
+        if (share.entries != null && !share.entries!!.isEmpty()) CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            share.entries!!.get(0).coverArtId,
+            CustomGlideRequest.ResourceType.Album
+        )
+            .build()
+            .into(holder.item.shareCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return shares.size();
+    override fun getItemCount(): Int {
+        return shares.size
     }
 
-    public void setItems(List<Share> shares) {
-        this.shares = shares;
-        notifyDataSetChanged();
+    fun setItems(shares: MutableList<Share>) {
+        this.shares = shares
+        notifyDataSetChanged()
     }
 
-    public Share getItem(int id) {
-        return shares.get(id);
+    fun getItem(id: Int): Share? {
+        return shares.get(id)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalShareBinding item;
+    inner class ViewHolder internal constructor(var item: ItemHorizontalShareBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.shareTitleTextView.setSelected(true)
+            item.shareSubtitleTextView.setSelected(true)
 
-        ViewHolder(ItemHorizontalShareBinding item) {
-            super(item.getRoot());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
 
-            this.item = item;
-
-            item.shareTitleTextView.setSelected(true);
-            item.shareSubtitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-
-            item.shareButton.setOnClickListener(v -> onLongClick());
+            item.shareButton.setOnClickListener(View.OnClickListener { v: View? -> onLongClick() })
         }
 
-        private void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.SHARE_OBJECT, shares.get(getBindingAdapterPosition()));
+        private fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.SHARE_OBJECT, shares.get(getBindingAdapterPosition()))
 
-            click.onShareClick(bundle);
+            click.onShareClick(bundle)
         }
 
-        private boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.SHARE_OBJECT, shares.get(getBindingAdapterPosition()));
+        private fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.SHARE_OBJECT, shares.get(getBindingAdapterPosition()))
 
-            click.onShareLongClick(bundle);
+            click.onShareLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

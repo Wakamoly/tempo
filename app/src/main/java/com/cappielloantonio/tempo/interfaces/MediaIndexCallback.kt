@@ -1,8 +1,8 @@
-package com.cappielloantonio.tempo.interfaces;
+package com.cappielloantonio.tempo.interfaces
 
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
 
 @Keep
-public interface MediaIndexCallback {
-    default void onRecovery(int index) {}
+interface MediaIndexCallback {
+    fun onRecovery(index: Int) {}
 }

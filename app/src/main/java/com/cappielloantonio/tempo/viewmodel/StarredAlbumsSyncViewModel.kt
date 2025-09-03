@@ -1,90 +1,95 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
-import android.app.Activity;
+import android.app.Activity
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.Child
+import java.util.concurrent.CountDownLatch
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.MutableLiveData;
+class StarredAlbumsSyncViewModel(application: Application) : AndroidViewModel(application) {
+    private val albumRepository: AlbumRepository
 
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
+    private val starredAlbums = MutableLiveData<MutableList<AlbumID3?>?>(null)
+    private val starredAlbumSongs = MutableLiveData<MutableList<Child?>?>(null)
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-
-public class StarredAlbumsSyncViewModel extends AndroidViewModel {
-    private final AlbumRepository albumRepository;
-
-    private final MutableLiveData<List<AlbumID3>> starredAlbums = new MutableLiveData<>(null);
-    private final MutableLiveData<List<Child>> starredAlbumSongs = new MutableLiveData<>(null);
-
-    public StarredAlbumsSyncViewModel(@NonNull Application application) {
-        super(application);
-        albumRepository = new AlbumRepository();
+    init {
+        albumRepository = AlbumRepository()
     }
 
-    public LiveData<List<AlbumID3>> getStarredAlbums(LifecycleOwner owner) {
-        albumRepository.getStarredAlbums(false, -1).observe(owner, starredAlbums::postValue);
-        return starredAlbums;
+    fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+        albumRepository.getStarredAlbums(false, -1).observe(
+            owner,
+            Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) })
+        return starredAlbums
     }
 
-    public LiveData<List<Child>> getAllStarredAlbumSongs() {
-        albumRepository.getStarredAlbums(false, -1).observeForever(new Observer<List<AlbumID3>>() {
-            @Override
-            public void onChanged(List<AlbumID3> albums) {
+    val allStarredAlbumSongs: LiveData<MutableList<Child?>?>
+        get() {
+            albumRepository.getStarredAlbums(false, -1).observeForever(object :
+                Observer<MutableList<AlbumID3?>?> {
+                override fun onChanged(albums: MutableList<AlbumID3>?) {
+                    if (albums != null && !albums.isEmpty()) {
+                        collectAllAlbumSongs(
+                            albums,
+                            AlbumSongsCallback { value: MutableList<Child?>? ->
+                                starredAlbumSongs.postValue(value)
+                            })
+                    } else {
+                        starredAlbumSongs.postValue(ArrayList<Child?>())
+                    }
+                    albumRepository.getStarredAlbums(false, -1).removeObserver(this)
+                }
+            })
+
+            return starredAlbumSongs
+        }
+
+    fun getStarredAlbumSongs(activity: Activity?): LiveData<MutableList<Child?>?> {
+        albumRepository.getStarredAlbums(false, -1)
+            .observe((activity as LifecycleOwner?)!!, Observer { albums: MutableList<AlbumID3>? ->
                 if (albums != null && !albums.isEmpty()) {
-                    collectAllAlbumSongs(albums, starredAlbumSongs::postValue);
+                    collectAllAlbumSongs(
+                        albums,
+                        AlbumSongsCallback { value: MutableList<Child?>? ->
+                            starredAlbumSongs.postValue(value)
+                        })
                 } else {
-                    starredAlbumSongs.postValue(new ArrayList<>());
+                    starredAlbumSongs.postValue(ArrayList<Child?>())
                 }
-                albumRepository.getStarredAlbums(false, -1).removeObserver(this);
-            }
-        });
-        
-        return starredAlbumSongs;
+            })
+        return starredAlbumSongs
     }
 
-    public LiveData<List<Child>> getStarredAlbumSongs(Activity activity) {
-        albumRepository.getStarredAlbums(false, -1).observe((LifecycleOwner) activity, albums -> {
-            if (albums != null && !albums.isEmpty()) {
-                collectAllAlbumSongs(albums, starredAlbumSongs::postValue);
-            } else {
-                starredAlbumSongs.postValue(new ArrayList<>());
-            }
-        });
-        return starredAlbumSongs;
-    }
+    private fun collectAllAlbumSongs(albums: MutableList<AlbumID3>, callback: AlbumSongsCallback) {
+        val allSongs: MutableList<Child?> = ArrayList<Child?>()
+        val latch = CountDownLatch(albums.size)
 
-    private void collectAllAlbumSongs(List<AlbumID3> albums, AlbumSongsCallback callback) {
-        List<Child> allSongs = new ArrayList<>();
-        CountDownLatch latch = new CountDownLatch(albums.size());
-        
-        for (AlbumID3 album : albums) {
-            LiveData<List<Child>> albumTracks = albumRepository.getAlbumTracks(album.getId());
-            albumTracks.observeForever(new Observer<List<Child>>() {
-                @Override
-                public void onChanged(List<Child> songs) {
+        for (album in albums) {
+            val albumTracks: LiveData<MutableList<Child?>?> =
+                albumRepository.getAlbumTracks(album.id)
+            albumTracks.observeForever(object : Observer<MutableList<Child?>?> {
+                override fun onChanged(songs: MutableList<Child?>?) {
                     if (songs != null) {
-                        allSongs.addAll(songs);
+                        allSongs.addAll(songs)
                     }
-                    latch.countDown();
-                    
-                    if (latch.getCount() == 0) {
-                        callback.onSongsCollected(allSongs);
-                        albumTracks.removeObserver(this);
+                    latch.countDown()
+
+                    if (latch.count == 0L) {
+                        callback.onSongsCollected(allSongs)
+                        albumTracks.removeObserver(this)
                     }
                 }
-            });
+            })
         }
     }
 
     private interface AlbumSongsCallback {
-        void onSongsCollected(List<Child> songs);
+        fun onSongsCollected(songs: MutableList<Child?>?)
     }
 }

@@ -1,35 +1,32 @@
-package com.cappielloantonio.tempo.database.dao;
+package com.cappielloantonio.tempo.database.dao
 
-import androidx.lifecycle.LiveData;
-import androidx.room.Dao;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-
-import com.cappielloantonio.tempo.model.Download;
-
-import java.util.List;
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.cappielloantonio.tempo.model.Download
 
 @Dao
-public interface DownloadDao {
-    @Query("SELECT * FROM download WHERE download_state = 1 ORDER BY artist, album, disc_number, track ASC")
-    LiveData<List<Download>> getAll();
+interface DownloadDao {
+    @get:Query("SELECT * FROM download WHERE download_state = 1 ORDER BY artist, album, disc_number, track ASC")
+    val all: LiveData<MutableList<Download?>?>?
 
     @Query("SELECT * FROM download WHERE id = :id")
-    Download getOne(String id);
+    fun getOne(id: String?): Download?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Download download);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insert(download: Download?)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insertAll(List<Download> downloads);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insertAll(downloads: MutableList<Download?>?)
 
     @Query("UPDATE download SET download_state = 1 WHERE id = :id")
-    void update(String id);
+    fun update(id: String?)
 
     @Query("DELETE FROM download WHERE id = :id")
-    void delete(String id);
+    fun delete(id: String?)
 
     @Query("DELETE FROM download")
-    void deleteAll();
+    fun deleteAll()
 }

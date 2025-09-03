@@ -1,195 +1,235 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.Context;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Toast;
+import android.app.Dialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.DialogInterface
+import android.os.Bundle
+import android.os.Parcelable
+import android.text.Editable
+import android.text.TextUtils
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogPlaylistEditorBinding
+import com.cappielloantonio.tempo.interfaces.PlaylistCallback
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.cappielloantonio.tempo.ui.adapter.PlaylistDialogSongHorizontalAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.Preferences.isSharingEnabled
+import com.cappielloantonio.tempo.viewmodel.PlaylistEditorViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Collections
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : DialogFragment() {
+    private var bind: DialogPlaylistEditorBinding? = null
+    private var playlistEditorViewModel: PlaylistEditorViewModel? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogPlaylistEditorBinding;
-import com.cappielloantonio.tempo.interfaces.PlaylistCallback;
-import com.cappielloantonio.tempo.ui.adapter.PlaylistDialogSongHorizontalAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.PlaylistEditorViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    private var playlistName: String? = null
+    private var playlistDialogSongHorizontalAdapter: PlaylistDialogSongHorizontalAdapter? = null
 
-import java.util.Collections;
-import java.util.Objects;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        bind = DialogPlaylistEditorBinding.inflate(getLayoutInflater())
 
-public class PlaylistEditorDialog extends DialogFragment {
-    private DialogPlaylistEditorBinding bind;
-    private PlaylistEditorViewModel playlistEditorViewModel;
+        playlistEditorViewModel = ViewModelProvider(requireActivity()).get<PlaylistEditorViewModel>(
+            PlaylistEditorViewModel::class.java
+        )
 
-    private final PlaylistCallback playlistCallback;
-
-    private String playlistName;
-    private PlaylistDialogSongHorizontalAdapter playlistDialogSongHorizontalAdapter;
-
-    public PlaylistEditorDialog(PlaylistCallback playlistCallback) {
-        this.playlistCallback = playlistCallback;
+        return MaterialAlertDialogBuilder(activity!!)
+            .setView(bind!!.getRoot())
+            .setTitle(R.string.playlist_editor_dialog_title)
+            .setPositiveButton(
+                R.string.playlist_editor_dialog_positive_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNeutralButton(
+                R.string.playlist_editor_dialog_neutral_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+            .setNegativeButton(
+                R.string.playlist_editor_dialog_negative_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+            .create()
     }
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        bind = DialogPlaylistEditorBinding.inflate(getLayoutInflater());
+    override fun onStart() {
+        super.onStart()
 
-        playlistEditorViewModel = new ViewModelProvider(requireActivity()).get(PlaylistEditorViewModel.class);
-
-        return new MaterialAlertDialogBuilder(getActivity())
-                .setView(bind.getRoot())
-                .setTitle(R.string.playlist_editor_dialog_title)
-                .setPositiveButton(R.string.playlist_editor_dialog_positive_button, (dialog, id) -> { })
-                .setNeutralButton(R.string.playlist_editor_dialog_neutral_button, (dialog, id) -> dialog.cancel())
-                .setNegativeButton(R.string.playlist_editor_dialog_negative_button, (dialog, id) -> dialog.cancel())
-                .create();
+        setParameterInfo()
+        setButtonAction()
+        initSongsView()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        setParameterInfo();
-        setButtonAction();
-        initSongsView();
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
-    }
+    private fun setParameterInfo() {
+        if (requireArguments().getParcelableArrayList<Parcelable?>(Constants.TRACKS_OBJECT) != null) {
+            playlistEditorViewModel!!.setSongsToAdd(
+                requireArguments().getParcelableArrayList<Child?>(
+                    Constants.TRACKS_OBJECT
+                )
+            )
+            playlistEditorViewModel!!.setPlaylistToEdit(null)
+        } else if (requireArguments().getParcelable<Parcelable?>(Constants.PLAYLIST_OBJECT) != null) {
+            playlistEditorViewModel!!.setSongsToAdd(null)
+            playlistEditorViewModel!!.setPlaylistToEdit(
+                requireArguments().getParcelable<Playlist?>(
+                    Constants.PLAYLIST_OBJECT
+                )
+            )
 
-    private void setParameterInfo() {
-        if (requireArguments().getParcelableArrayList(Constants.TRACKS_OBJECT) != null) {
-            playlistEditorViewModel.setSongsToAdd(requireArguments().getParcelableArrayList(Constants.TRACKS_OBJECT));
-            playlistEditorViewModel.setPlaylistToEdit(null);
-        } else if (requireArguments().getParcelable(Constants.PLAYLIST_OBJECT) != null) {
-            playlistEditorViewModel.setSongsToAdd(null);
-            playlistEditorViewModel.setPlaylistToEdit(requireArguments().getParcelable(Constants.PLAYLIST_OBJECT));
-
-            if (playlistEditorViewModel.getPlaylistToEdit() != null) {
-                bind.playlistNameTextView.setText(playlistEditorViewModel.getPlaylistToEdit().getName());
+            if (playlistEditorViewModel!!.getPlaylistToEdit() != null) {
+                bind!!.playlistNameTextView.setText(playlistEditorViewModel!!.getPlaylistToEdit().name)
             }
         }
     }
 
-    private void setButtonAction() {
-        androidx.appcompat.app.AlertDialog alertDialog = (androidx.appcompat.app.AlertDialog) Objects.requireNonNull(getDialog());
+    private fun setButtonAction() {
+        val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            if (validateInput()) {
-                if (playlistEditorViewModel.getSongsToAdd() != null) {
-                    playlistEditorViewModel.createPlaylist(playlistName);
-                } else if (playlistEditorViewModel.getPlaylistToEdit() != null) {
-                    playlistEditorViewModel.updatePlaylist(playlistName);
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                if (validateInput()) {
+                    if (playlistEditorViewModel!!.getSongsToAdd() != null) {
+                        playlistEditorViewModel!!.createPlaylist(playlistName)
+                    } else if (playlistEditorViewModel!!.getPlaylistToEdit() != null) {
+                        playlistEditorViewModel!!.updatePlaylist(playlistName)
+                    }
+
+                    dialogDismiss()
                 }
+            })
 
-                dialogDismiss();
-            }
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                Toast.makeText(
+                    requireContext(),
+                    R.string.playlist_editor_dialog_action_delete_toast,
+                    Toast.LENGTH_SHORT
+                ).show()
+            })
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> Toast.makeText(requireContext(), R.string.playlist_editor_dialog_action_delete_toast, Toast.LENGTH_SHORT).show());
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnLongClickListener(OnLongClickListener { v: View? ->
+                playlistEditorViewModel!!.deletePlaylist()
+                dialogDismiss()
+                false
+            })
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnLongClickListener(v -> {
-            playlistEditorViewModel.deletePlaylist();
-            dialogDismiss();
-            return false;
-        });
+        bind!!.playlistShareButton.setOnClickListener(View.OnClickListener { view: View? ->
+            playlistEditorViewModel!!.sharePlaylist()
+                .observe(requireActivity(), Observer { sharedPlaylist: Share? ->
+                    val clipboardManager =
+                        requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                    val clipData =
+                        ClipData.newPlainText(getString(R.string.app_name), sharedPlaylist!!.url)
+                    clipboardManager.setPrimaryClip(clipData)
+                })
+        })
 
-        bind.playlistShareButton.setOnClickListener(view -> {
-            playlistEditorViewModel.sharePlaylist().observe(requireActivity(), sharedPlaylist -> {
-                ClipboardManager clipboardManager = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clipData = ClipData.newPlainText(getString(R.string.app_name), sharedPlaylist.getUrl());
-                clipboardManager.setPrimaryClip(clipData);
-            });
-        });
-
-        bind.playlistShareButton.setVisibility(Preferences.isSharingEnabled() ? View.VISIBLE : View.GONE);
+        bind!!.playlistShareButton.visibility = if (isSharingEnabled()) View.VISIBLE else View.GONE
     }
 
-    private void initSongsView() {
-        bind.playlistSongRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.playlistSongRecyclerView.setHasFixedSize(true);
+    private fun initSongsView() {
+        bind!!.playlistSongRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.playlistSongRecyclerView.setHasFixedSize(true)
 
-        playlistDialogSongHorizontalAdapter = new PlaylistDialogSongHorizontalAdapter();
-        bind.playlistSongRecyclerView.setAdapter(playlistDialogSongHorizontalAdapter);
+        playlistDialogSongHorizontalAdapter = PlaylistDialogSongHorizontalAdapter()
+        bind!!.playlistSongRecyclerView.setAdapter(playlistDialogSongHorizontalAdapter)
 
-        playlistEditorViewModel.getPlaylistSongLiveList().observe(requireActivity(), songs -> {
-            if (songs != null) playlistDialogSongHorizontalAdapter.setItems(songs);
-        });
+        playlistEditorViewModel!!.getPlaylistSongLiveList()
+            .observe(requireActivity(), Observer { songs: MutableList<Child?>? ->
+                if (songs != null) playlistDialogSongHorizontalAdapter!!.setItems(songs)
+            })
 
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, ItemTouchHelper.LEFT) {
-            int originalPosition = -1;
-            int fromPosition = -1;
-            int toPosition = -1;
+        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
+            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+            ItemTouchHelper.LEFT
+        ) {
+            var originalPosition: Int = -1
+            var fromPosition: Int = -1
+            var toPosition: Int = -1
 
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                if (originalPosition == -1)
-                    originalPosition = viewHolder.getBindingAdapterPosition();
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                if (originalPosition == -1) originalPosition =
+                    viewHolder.getBindingAdapterPosition()
 
-                fromPosition = viewHolder.getBindingAdapterPosition();
-                toPosition = target.getBindingAdapterPosition();
+                fromPosition = viewHolder.getBindingAdapterPosition()
+                toPosition = target.getBindingAdapterPosition()
 
-                Collections.swap(playlistDialogSongHorizontalAdapter.getItems(), fromPosition, toPosition);
-                Objects.requireNonNull(recyclerView.getAdapter()).notifyItemMoved(fromPosition, toPosition);
+                Collections.swap(
+                    playlistDialogSongHorizontalAdapter!!.getItems(),
+                    fromPosition,
+                    toPosition
+                )
+                Objects.requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
+                    .notifyItemMoved(fromPosition, toPosition)
 
-                return false;
+                return false
             }
 
-            @Override
-            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ) {
+                super.clearView(recyclerView, viewHolder)
 
                 /*
                  * Qui vado a riscivere tutta la table Queue, quando teoricamente potrei solo swappare l'ordine degli elementi interessati
                  * Nel caso la coda contenesse parecchi brani, potrebbero verificarsi rallentamenti pesanti
                  */
-                playlistEditorViewModel.orderPlaylistSongLiveListAfterSwap(playlistDialogSongHorizontalAdapter.getItems());
+                playlistEditorViewModel!!.orderPlaylistSongLiveListAfterSwap(
+                    playlistDialogSongHorizontalAdapter!!.getItems()
+                )
 
-                originalPosition = -1;
-                fromPosition = -1;
-                toPosition = -1;
+                originalPosition = -1
+                fromPosition = -1
+                toPosition = -1
             }
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-                playlistEditorViewModel.removeFromPlaylistSongLiveList(viewHolder.getBindingAdapterPosition());
-                Objects.requireNonNull(bind.playlistSongRecyclerView.getAdapter()).notifyItemRemoved(viewHolder.getBindingAdapterPosition());
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
+                playlistEditorViewModel!!.removeFromPlaylistSongLiveList(viewHolder.getBindingAdapterPosition())
+                Objects.requireNonNull<RecyclerView.Adapter<*>?>(bind!!.playlistSongRecyclerView.adapter)
+                    .notifyItemRemoved(viewHolder.getBindingAdapterPosition())
             }
         }
-        ).attachToRecyclerView(bind.playlistSongRecyclerView);
+        ).attachToRecyclerView(bind!!.playlistSongRecyclerView)
     }
 
-    private boolean validateInput() {
-        playlistName = Objects.requireNonNull(bind.playlistNameTextView.getText()).toString().trim();
+    private fun validateInput(): Boolean {
+        playlistName =
+            Objects.requireNonNull<Editable?>(bind!!.playlistNameTextView.getText()).toString()
+                .trim { it <= ' ' }
 
         if (TextUtils.isEmpty(playlistName)) {
-            bind.playlistNameTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.playlistNameTextView.error = getString(R.string.error_required)
+            return false
         }
 
-        return true;
+        return true
     }
 
-    private void dialogDismiss() {
-        Objects.requireNonNull(getDialog()).dismiss();
+    private fun dialogDismiss() {
+        Objects.requireNonNull<Dialog?>(dialog).dismiss()
         if (playlistCallback != null) {
-            playlistCallback.onDismiss();
+            playlistCallback.onDismiss()
         }
     }
 }

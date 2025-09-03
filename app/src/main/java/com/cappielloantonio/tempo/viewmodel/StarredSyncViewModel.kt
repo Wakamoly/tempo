@@ -1,31 +1,27 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class StarredSyncViewModel(application: Application) : AndroidViewModel(application) {
+    private val songRepository: SongRepository
 
-import com.cappielloantonio.tempo.repository.SongRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
+    private val starredTracks = MutableLiveData<MutableList<Child?>?>(null)
 
-import java.util.List;
-
-public class StarredSyncViewModel extends AndroidViewModel {
-    private final SongRepository songRepository;
-
-    private final MutableLiveData<List<Child>> starredTracks = new MutableLiveData<>(null);
-
-    public StarredSyncViewModel(@NonNull Application application) {
-        super(application);
-
-        songRepository = new SongRepository();
+    init {
+        songRepository = SongRepository()
     }
 
-    public LiveData<List<Child>> getStarredTracks(LifecycleOwner owner) {
-        songRepository.getStarredSongs(false, -1).observe(owner, starredTracks::postValue);
-        return starredTracks;
+    fun getStarredTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+        songRepository.getStarredSongs(false, -1).observe(
+            owner,
+            Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) })
+        return starredTracks
     }
 }

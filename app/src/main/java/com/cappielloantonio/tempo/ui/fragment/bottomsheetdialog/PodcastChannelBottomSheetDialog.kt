@@ -1,96 +1,107 @@
-package com.cappielloantonio.tempo.ui.fragment.bottomsheetdialog;
+package com.cappielloantonio.tempo.ui.fragment.bottomsheetdialog
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-
-import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.viewmodel.PodcastChannelBottomSheetViewModel;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.google.common.util.concurrent.ListenableFuture;
+import android.content.ComponentName
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.viewmodel.PodcastChannelBottomSheetViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.common.util.concurrent.ListenableFuture
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
 @UnstableApi
-public class PodcastChannelBottomSheetDialog extends BottomSheetDialogFragment implements View.OnClickListener {
-    private PodcastChannelBottomSheetViewModel podcastChannelBottomSheetViewModel;
-    private PodcastChannel podcastChannel;
+class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickListener {
+    private var podcastChannelBottomSheetViewModel: PodcastChannelBottomSheetViewModel? = null
+    private var podcastChannel: PodcastChannel? = null
 
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.bottom_sheet_podcast_channel_dialog, container, false);
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.bottom_sheet_podcast_channel_dialog, container, false)
 
-        podcastChannel = requireArguments().getParcelable(Constants.PODCAST_CHANNEL_OBJECT);
+        podcastChannel =
+            requireArguments().getParcelable<PodcastChannel?>(Constants.PODCAST_CHANNEL_OBJECT)
 
-        podcastChannelBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(PodcastChannelBottomSheetViewModel.class);
-        podcastChannelBottomSheetViewModel.setPodcastChannel(podcastChannel);
+        podcastChannelBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<PodcastChannelBottomSheetViewModel>(
+                PodcastChannelBottomSheetViewModel::class.java
+            )
+        podcastChannelBottomSheetViewModel!!.setPodcastChannel(podcastChannel)
 
-        init(view);
+        init(view)
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
+        initializeMediaBrowser()
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    private void init(View view) {
-        ImageView coverPodcast = view.findViewById(R.id.podcast_cover_image_view);
+    private fun init(view: View) {
+        val coverPodcast = view.findViewById<ImageView>(R.id.podcast_cover_image_view)
 
-        CustomGlideRequest.Builder
-                .from(requireContext(), podcastChannelBottomSheetViewModel.getPodcastChannel().getCoverArtId(), CustomGlideRequest.ResourceType.Podcast)
-                .build()
-                .into(coverPodcast);
+        CustomGlideRequest.Builder.Companion.from(
+            requireContext(),
+            podcastChannelBottomSheetViewModel!!.getPodcastChannel().coverArtId,
+            CustomGlideRequest.ResourceType.Podcast
+        )
+            .build()
+            .into(coverPodcast)
 
-        TextView titlePodcast = view.findViewById(R.id.podcast_title_text_view);
-        titlePodcast.setText(podcastChannelBottomSheetViewModel.getPodcastChannel().getTitle());
+        val titlePodcast = view.findViewById<TextView>(R.id.podcast_title_text_view)
+        titlePodcast.setText(podcastChannelBottomSheetViewModel!!.getPodcastChannel().title)
 
-        TextView delete = view.findViewById(R.id.delete_text_view);
-        delete.setOnClickListener(v -> {
-            podcastChannelBottomSheetViewModel.deletePodcastChannel();
-            dismissBottomSheet();
-        });
+        val delete = view.findViewById<TextView>(R.id.delete_text_view)
+        delete.setOnClickListener(View.OnClickListener { v: View? ->
+            podcastChannelBottomSheetViewModel!!.deletePodcastChannel()
+            dismissBottomSheet()
+        })
     }
 
-    @Override
-    public void onClick(View v) {
-        dismissBottomSheet();
+    override fun onClick(v: View?) {
+        dismissBottomSheet()
     }
 
-    private void dismissBottomSheet() {
-        dismiss();
+    private fun dismissBottomSheet() {
+        dismiss()
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseMediaBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseMediaBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 }

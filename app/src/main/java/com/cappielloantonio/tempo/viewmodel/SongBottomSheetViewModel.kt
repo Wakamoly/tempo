@@ -1,139 +1,129 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
-import androidx.media3.common.util.UnstableApi;
-
-import com.cappielloantonio.tempo.interfaces.StarCallback;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.FavoriteRepository;
-import com.cappielloantonio.tempo.repository.SharingRepository;
-import com.cappielloantonio.tempo.repository.SongRepository;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Share;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.NetworkUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import androidx.media3.common.util.UnstableApi
+import com.cappielloantonio.tempo.interfaces.StarCallback
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.FavoriteRepository
+import com.cappielloantonio.tempo.repository.SharingRepository
+import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.NetworkUtil
+import com.cappielloantonio.tempo.util.Preferences.isStarredSyncEnabled
+import java.util.Date
 
 @UnstableApi
-public class SongBottomSheetViewModel extends AndroidViewModel {
-    private final SongRepository songRepository;
-    private final AlbumRepository albumRepository;
-    private final ArtistRepository artistRepository;
-    private final FavoriteRepository favoriteRepository;
-    private final SharingRepository sharingRepository;
+class SongBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+    private val songRepository: SongRepository
+    private val albumRepository: AlbumRepository
+    private val artistRepository: ArtistRepository
+    private val favoriteRepository: FavoriteRepository
+    private val sharingRepository: SharingRepository
 
-    private Child song;
+    private var song: Child? = null
 
-    private final MutableLiveData<List<Child>> instantMix = new MutableLiveData<>(null);
+    private val instantMix = MutableLiveData<MutableList<Child?>?>(null)
 
-    public SongBottomSheetViewModel(@NonNull Application application) {
-        super(application);
-
-        songRepository = new SongRepository();
-        albumRepository = new AlbumRepository();
-        artistRepository = new ArtistRepository();
-        favoriteRepository = new FavoriteRepository();
-        sharingRepository = new SharingRepository();
+    init {
+        songRepository = SongRepository()
+        albumRepository = AlbumRepository()
+        artistRepository = ArtistRepository()
+        favoriteRepository = FavoriteRepository()
+        sharingRepository = SharingRepository()
     }
 
-    public Child getSong() {
-        return song;
+    fun getSong(): Child {
+        return song!!
     }
 
-    public void setSong(Child song) {
-        this.song = song;
+    fun setSong(song: Child) {
+        this.song = song
     }
 
-    public void setFavorite(Context context) {
-        if (song.getStarred() != null) {
+    fun setFavorite(context: Context?) {
+        if (song!!.starred != null) {
             if (NetworkUtil.isOffline()) {
-                removeFavoriteOffline(song);
+                removeFavoriteOffline(song!!)
             } else {
-                removeFavoriteOnline(song);
+                removeFavoriteOnline(song!!)
             }
         } else {
             if (NetworkUtil.isOffline()) {
-                setFavoriteOffline(song);
+                setFavoriteOffline(song!!)
             } else {
-                setFavoriteOnline(context, song);
+                setFavoriteOnline(context, song!!)
             }
         }
     }
 
-    private void removeFavoriteOffline(Child media) {
-        favoriteRepository.starLater(media.getId(), null, null, false);
-        media.setStarred(null);
+    private fun removeFavoriteOffline(media: Child) {
+        favoriteRepository.starLater(media.id, null, null, false)
+        media.starred = null
     }
 
-    private void removeFavoriteOnline(Child media) {
-        favoriteRepository.unstar(media.getId(), null, null, new StarCallback() {
-            @Override
-            public void onError() {
+    private fun removeFavoriteOnline(media: Child) {
+        favoriteRepository.unstar(media.id, null, null, object : StarCallback {
+            override fun onError() {
                 // media.setStarred(new Date());
-                favoriteRepository.starLater(media.getId(), null, null, false);
+                favoriteRepository.starLater(media.id, null, null, false)
             }
-        });
+        })
 
-        media.setStarred(null);
+        media.starred = null
     }
 
-    private void setFavoriteOffline(Child media) {
-        favoriteRepository.starLater(media.getId(), null, null, true);
-        media.setStarred(new Date());
+    private fun setFavoriteOffline(media: Child) {
+        favoriteRepository.starLater(media.id, null, null, true)
+        media.starred = Date()
     }
 
-    private void setFavoriteOnline(Context context, Child media) {
-        favoriteRepository.star(media.getId(), null, null, new StarCallback() {
-            @Override
-            public void onError() {
+    private fun setFavoriteOnline(context: Context?, media: Child) {
+        favoriteRepository.star(media.id, null, null, object : StarCallback {
+            override fun onError() {
                 // media.setStarred(null);
-                favoriteRepository.starLater(media.getId(), null, null, true);
+                favoriteRepository.starLater(media.id, null, null, true)
             }
-        });
+        })
 
-        media.setStarred(new Date());
+        media.starred = Date()
 
-        if (Preferences.isStarredSyncEnabled()) {
+        if (isStarredSyncEnabled()) {
             DownloadUtil.getDownloadTracker(context).download(
-                    MappingUtil.mapDownload(media),
-                    new Download(media)
-            );
+                MappingUtil.mapDownload(media),
+                Download(media)
+            )
         }
     }
 
-    public LiveData<AlbumID3> getAlbum() {
-        return albumRepository.getAlbum(song.getAlbumId());
+    val album: LiveData<AlbumID3?>?
+        get() = albumRepository.getAlbum(song!!.albumId)
+
+    val artist: LiveData<ArtistID3?>?
+        get() = artistRepository.getArtist(song!!.artistId)
+
+    fun getInstantMix(owner: LifecycleOwner, media: Child): LiveData<MutableList<Child?>?> {
+        instantMix.value = mutableListOf<Child?>()
+
+        songRepository.getInstantMix(media.id, 20)
+            .observe(owner, Observer { value: MutableList<Child?>? -> instantMix.postValue(value) })
+
+        return instantMix
     }
 
-    public LiveData<ArtistID3> getArtist() {
-        return artistRepository.getArtist(song.getArtistId());
-    }
-
-    public LiveData<List<Child>> getInstantMix(LifecycleOwner owner, Child media) {
-        instantMix.setValue(Collections.emptyList());
-
-        songRepository.getInstantMix(media.getId(), 20).observe(owner, instantMix::postValue);
-
-        return instantMix;
-    }
-
-    public MutableLiveData<Share> shareTrack() {
-        return sharingRepository.createShare(song.getId(), song.getTitle(), null);
+    fun shareTrack(): MutableLiveData<Share?>? {
+        return sharingRepository.createShare(song!!.id, song!!.title, null)
     }
 }

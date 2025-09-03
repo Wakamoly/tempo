@@ -1,333 +1,411 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.os.Handler;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.content.ComponentName
+import android.os.Bundle
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.annotation.OptIn
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.MediaController
+import androidx.media3.session.SessionToken
+import androidx.room.RoomDatabase.Builder.build
+import androidx.viewpager2.widget.ViewPager2
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentPlayerBottomSheetBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.PlayQueue
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.fragment.pager.PlayerControllerVerticalPager
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.Preferences.getRepeatMode
+import com.cappielloantonio.tempo.util.Preferences.getSyncCountdownTimer
+import com.cappielloantonio.tempo.util.Preferences.isShuffleModeEnabled
+import com.cappielloantonio.tempo.util.Preferences.isSyncronizationEnabled
+import com.cappielloantonio.tempo.util.Preferences.setRepeatMode
+import com.cappielloantonio.tempo.util.Preferences.setShuffleModeEnabled
+import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel
+import com.google.android.material.elevation.SurfaceColors
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.function.IntPredicate
+import java.util.stream.IntStream
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Observer;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.Player;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.MediaController;
-import androidx.media3.session.SessionToken;
-import androidx.viewpager2.widget.ViewPager2;
+@OptIn(markerClass = UnstableApi::class)
+class PlayerBottomSheetFragment : Fragment() {
+    private var bind: FragmentPlayerBottomSheetBinding? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentPlayerBottomSheetBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.PlayQueue;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.fragment.pager.PlayerControllerVerticalPager;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel;
-import com.google.android.material.elevation.SurfaceColors;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+    private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
 
-import java.util.Objects;
-import java.util.stream.IntStream;
+    private var progressBarHandler: Handler? = null
+    private var progressBarRunnable: Runnable? = null
 
-@OptIn(markerClass = UnstableApi.class)
-public class PlayerBottomSheetFragment extends Fragment {
-    private FragmentPlayerBottomSheetBinding bind;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        bind = FragmentPlayerBottomSheetBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
 
-    private PlayerBottomSheetViewModel playerBottomSheetViewModel;
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+        playerBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
+                PlayerBottomSheetViewModel::class.java
+            )
 
-    private Handler progressBarHandler;
-    private Runnable progressBarRunnable;
+        customizeBottomSheetBackground()
+        customizeBottomSheetAction()
+        initViewPager()
+        setHeaderBookmarksButton()
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        bind = FragmentPlayerBottomSheetBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-
-        playerBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(PlayerBottomSheetViewModel.class);
-
-        customizeBottomSheetBackground();
-        customizeBottomSheetAction();
-        initViewPager();
-        setHeaderBookmarksButton();
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
-        bindMediaController();
+        initializeMediaBrowser()
+        bindMediaController()
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void customizeBottomSheetBackground() {
-        bind.playerHeaderLayout.getRoot().setBackgroundColor(SurfaceColors.getColorForElevation(requireContext(), 8));
+    private fun customizeBottomSheetBackground() {
+        bind!!.playerHeaderLayout.getRoot()
+            .setBackgroundColor(SurfaceColors.getColorForElevation(requireContext(), 8f))
     }
 
-    private void customizeBottomSheetAction() {
-        bind.playerHeaderLayout.getRoot().setOnClickListener(view -> ((MainActivity) requireActivity()).expandBottomSheet());
+    private fun customizeBottomSheetAction() {
+        bind!!.playerHeaderLayout.getRoot()
+            .setOnClickListener(View.OnClickListener { view: View? -> (requireActivity() as MainActivity).expandBottomSheet() })
     }
 
-    private void initViewPager() {
-        bind.playerBodyLayout.playerBodyBottomSheetViewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL);
-        bind.playerBodyLayout.playerBodyBottomSheetViewPager.setAdapter(new PlayerControllerVerticalPager(this));
+    private fun initViewPager() {
+        bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL)
+        bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setAdapter(
+            PlayerControllerVerticalPager(this)
+        )
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseMediaBrowser() {
-        MediaController.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseMediaBrowser() {
+        MediaController.releaseFuture(mediaBrowserListenableFuture!!)
     }
 
-    private void bindMediaController() {
-        mediaBrowserListenableFuture.addListener(() -> {
+    private fun bindMediaController() {
+        mediaBrowserListenableFuture!!.addListener(Runnable {
             try {
-                MediaBrowser mediaBrowser = mediaBrowserListenableFuture.get();
+                val mediaBrowser = mediaBrowserListenableFuture!!.get()
 
-                mediaBrowser.setShuffleModeEnabled(Preferences.isShuffleModeEnabled());
-                mediaBrowser.setRepeatMode(Preferences.getRepeatMode());
+                mediaBrowser.setShuffleModeEnabled(isShuffleModeEnabled())
+                mediaBrowser.setRepeatMode(getRepeatMode())
 
-                setMediaControllerListener(mediaBrowser);
-            } catch (Exception e) {
-                e.printStackTrace();
+                setMediaControllerListener(mediaBrowser)
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        }, MoreExecutors.directExecutor());
+        }, MoreExecutors.directExecutor())
     }
 
-    private void setMediaControllerListener(MediaBrowser mediaBrowser) {
-        defineProgressBarHandler(mediaBrowser);
-        setMediaControllerUI(mediaBrowser);
-        setMetadata(mediaBrowser.getMediaMetadata());
-        setContentDuration(mediaBrowser.getContentDuration());
-        setPlayingState(mediaBrowser.isPlaying());
-        setHeaderMediaController();
-        setHeaderNextButtonState(mediaBrowser.hasNextMediaItem());
+    private fun setMediaControllerListener(mediaBrowser: MediaBrowser) {
+        defineProgressBarHandler(mediaBrowser)
+        setMediaControllerUI(mediaBrowser)
+        setMetadata(mediaBrowser.getMediaMetadata())
+        setContentDuration(mediaBrowser.getContentDuration())
+        setPlayingState(mediaBrowser.isPlaying())
+        setHeaderMediaController()
+        setHeaderNextButtonState(mediaBrowser.hasNextMediaItem())
 
-        mediaBrowser.addListener(new Player.Listener() {
-            @Override
-            public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata) {
-                setMediaControllerUI(mediaBrowser);
-                setMetadata(mediaMetadata);
-                setContentDuration(mediaBrowser.getContentDuration());
+        mediaBrowser.addListener(object : Player.Listener {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                setMediaControllerUI(mediaBrowser)
+                setMetadata(mediaMetadata)
+                setContentDuration(mediaBrowser.getContentDuration())
             }
 
-            @Override
-            public void onIsPlayingChanged(boolean isPlaying) {
-                setPlayingState(isPlaying);
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                setPlayingState(isPlaying)
             }
 
-            @Override
-            public void onSkipSilenceEnabledChanged(boolean skipSilenceEnabled) {
-                Player.Listener.super.onSkipSilenceEnabledChanged(skipSilenceEnabled);
+            override fun onEvents(player: Player, events: Player.Events) {
+                setHeaderNextButtonState(mediaBrowser.hasNextMediaItem())
             }
 
-            @Override
-            public void onEvents(Player player, Player.Events events) {
-                setHeaderNextButtonState(mediaBrowser.hasNextMediaItem());
+            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                setShuffleModeEnabled(shuffleModeEnabled)
             }
 
-            @Override
-            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-                Preferences.setShuffleModeEnabled(shuffleModeEnabled);
+            override fun onRepeatModeChanged(repeatMode: Int) {
+                setRepeatMode(repeatMode)
             }
-
-            @Override
-            public void onRepeatModeChanged(int repeatMode) {
-                Preferences.setRepeatMode(repeatMode);
-            }
-        });
+        })
     }
 
-    private void setMetadata(MediaMetadata mediaMetadata) {
+    private fun setMetadata(mediaMetadata: MediaMetadata) {
         if (mediaMetadata.extras != null) {
-            playerBottomSheetViewModel.setLiveMedia(getViewLifecycleOwner(), mediaMetadata.extras.getString("type"), mediaMetadata.extras.getString("id"));
-            playerBottomSheetViewModel.setLiveAlbum(getViewLifecycleOwner(), mediaMetadata.extras.getString("type"), mediaMetadata.extras.getString("albumId"));
-            playerBottomSheetViewModel.setLiveArtist(getViewLifecycleOwner(), mediaMetadata.extras.getString("type"), mediaMetadata.extras.getString("artistId"));
-            playerBottomSheetViewModel.setLiveDescription(mediaMetadata.extras.getString("description", null));
+            playerBottomSheetViewModel!!.setLiveMedia(
+                getViewLifecycleOwner(),
+                mediaMetadata.extras!!.getString("type"),
+                mediaMetadata.extras!!.getString("id")
+            )
+            playerBottomSheetViewModel!!.setLiveAlbum(
+                getViewLifecycleOwner(),
+                mediaMetadata.extras!!.getString("type"),
+                mediaMetadata.extras!!.getString("albumId")
+            )
+            playerBottomSheetViewModel!!.setLiveArtist(
+                getViewLifecycleOwner(),
+                mediaMetadata.extras!!.getString("type"),
+                mediaMetadata.extras!!.getString("artistId")
+            )
+            playerBottomSheetViewModel!!.setLiveDescription(
+                mediaMetadata.extras!!.getString(
+                    "description",
+                    null
+                )
+            )
 
-            bind.playerHeaderLayout.playerHeaderMediaTitleLabel.setText(mediaMetadata.extras.getString("title"));
-            bind.playerHeaderLayout.playerHeaderMediaArtistLabel.setText(
-                    mediaMetadata.artist != null
-                            ? mediaMetadata.artist
-                            : Objects.equals(mediaMetadata.extras.getString("type"), Constants.MEDIA_TYPE_RADIO)
-                            ? mediaMetadata.extras.getString("uri", getString(R.string.label_placeholder))
-                            : "");
+            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.text = mediaMetadata.extras!!.getString(
+                "title"
+            )
+            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.text = if (mediaMetadata.artist != null)
+                mediaMetadata.artist
+            else
+                if (mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO)
+                    mediaMetadata.extras!!.getString(
+                        "uri",
+                        getString(R.string.label_placeholder)
+                    )
+                else
+                    ""
 
-            CustomGlideRequest.Builder
-                    .from(requireContext(), mediaMetadata.extras.getString("coverArtId"), CustomGlideRequest.ResourceType.Song)
-                    .build()
-                    .into(bind.playerHeaderLayout.playerHeaderMediaCoverImage);
+            CustomGlideRequest.Builder.Companion.from(
+                requireContext(),
+                mediaMetadata.extras!!.getString("coverArtId"),
+                CustomGlideRequest.ResourceType.Song
+            )
+                .build()
+                .into(bind!!.playerHeaderLayout.playerHeaderMediaCoverImage)
 
-            bind.playerHeaderLayout.playerHeaderMediaTitleLabel.setVisibility(mediaMetadata.extras.getString("title") != null && !Objects.equals(mediaMetadata.extras.getString("title"), "") ? View.VISIBLE : View.GONE);
-            bind.playerHeaderLayout.playerHeaderMediaArtistLabel.setVisibility(
-                    (mediaMetadata.extras.getString("artist") != null && !Objects.equals(mediaMetadata.extras.getString("artist"), ""))
-                            || (Objects.equals(mediaMetadata.extras.getString("type"), Constants.MEDIA_TYPE_RADIO) && mediaMetadata.extras.getString("uri") != null)
-                            ? View.VISIBLE
-                            : View.GONE);
+            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.visibility = if (mediaMetadata.extras!!.getString(
+                    "title"
+                ) != null && mediaMetadata.extras!!.getString("title") != ""
+            ) View.VISIBLE else View.GONE
+            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.visibility = if ((mediaMetadata.extras!!.getString("artist") != null && mediaMetadata.extras!!.getString(
+                    "artist"
+                ) != "")
+                || (mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO && mediaMetadata.extras!!.getString(
+                    "uri"
+                ) != null)
+            )
+                View.VISIBLE
+            else
+                View.GONE
         }
     }
 
-    private void setMediaControllerUI(MediaBrowser mediaBrowser) {
+    private fun setMediaControllerUI(mediaBrowser: MediaBrowser) {
         if (mediaBrowser.getMediaMetadata().extras != null) {
-            switch (mediaBrowser.getMediaMetadata().extras.getString("type", Constants.MEDIA_TYPE_MUSIC)) {
-                case Constants.MEDIA_TYPE_PODCAST:
-                    bind.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.VISIBLE);
-                    bind.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.VISIBLE);
-                    bind.playerHeaderLayout.playerHeaderNextMediaButton.setVisibility(View.GONE);
-                    break;
-                case Constants.MEDIA_TYPE_MUSIC:
-                default:
-                    bind.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.GONE);
-                    bind.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.GONE);
-                    bind.playerHeaderLayout.playerHeaderNextMediaButton.setVisibility(View.VISIBLE);
-                    break;
-            }
-        }
-    }
-
-    private void setContentDuration(long duration) {
-        bind.playerHeaderLayout.playerHeaderSeekBar.setMax((int) (duration / 1000));
-    }
-
-    private void setProgress(MediaBrowser mediaBrowser) {
-        if (bind != null)
-            bind.playerHeaderLayout.playerHeaderSeekBar.setProgress((int) (mediaBrowser.getCurrentPosition() / 1000), true);
-    }
-
-    private void setPlayingState(boolean isPlaying) {
-        bind.playerHeaderLayout.playerHeaderButton.setChecked(isPlaying);
-        runProgressBarHandler(isPlaying);
-    }
-
-    private void setHeaderMediaController() {
-        bind.playerHeaderLayout.playerHeaderButton.setOnClickListener(view -> bind.getRoot().findViewById(R.id.exo_play_pause).performClick());
-        bind.playerHeaderLayout.playerHeaderNextMediaButton.setOnClickListener(view -> bind.getRoot().findViewById(R.id.exo_next).performClick());
-        bind.playerHeaderLayout.playerHeaderRewindMediaButton.setOnClickListener(view -> bind.getRoot().findViewById(R.id.exo_rew).performClick());
-        bind.playerHeaderLayout.playerHeaderFastForwardMediaButton.setOnClickListener(view -> bind.getRoot().findViewById(R.id.exo_ffwd).performClick());
-    }
-
-    private void setHeaderNextButtonState(boolean isEnabled) {
-        bind.playerHeaderLayout.playerHeaderNextMediaButton.setEnabled(isEnabled);
-        bind.playerHeaderLayout.playerHeaderNextMediaButton.setAlpha(isEnabled ? (float) 1.0 : (float) 0.3);
-    }
-
-    public View getPlayerHeader() {
-        return requireView().findViewById(R.id.player_header_layout);
-    }
-
-    public void goBackToFirstPage() {
-        bind.playerBodyLayout.playerBodyBottomSheetViewPager.setCurrentItem(0, false);
-        goToControllerPage();
-    }
-
-    public void goToControllerPage() {
-        PlayerControllerVerticalPager playerControllerVerticalPager = (PlayerControllerVerticalPager) bind.playerBodyLayout.playerBodyBottomSheetViewPager.getAdapter();
-        if (playerControllerVerticalPager != null) {
-            PlayerControllerFragment playerControllerFragment = (PlayerControllerFragment) playerControllerVerticalPager.getRegisteredFragment(0);
-            if (playerControllerFragment != null) {
-                playerControllerFragment.goToControllerPage();
-            }
-        }
-    }
-
-    public void goToLyricsPage() {
-        PlayerControllerVerticalPager playerControllerVerticalPager = (PlayerControllerVerticalPager) bind.playerBodyLayout.playerBodyBottomSheetViewPager.getAdapter();
-        if (playerControllerVerticalPager != null) {
-            PlayerControllerFragment playerControllerFragment = (PlayerControllerFragment) playerControllerVerticalPager.getRegisteredFragment(0);
-            if (playerControllerFragment != null) {
-                playerControllerFragment.goToLyricsPage();
-            }
-        }
-    }
-
-    public void goToQueuePage() {
-        bind.playerBodyLayout.playerBodyBottomSheetViewPager.setCurrentItem(1, true);
-    }
-
-    public void setPlayerControllerVerticalPagerDraggableState(Boolean isDraggable) {
-        ViewPager2 playerControllerVerticalPager = bind.playerBodyLayout.playerBodyBottomSheetViewPager;
-        playerControllerVerticalPager.setUserInputEnabled(isDraggable);
-    }
-
-    private void defineProgressBarHandler(MediaBrowser mediaBrowser) {
-        progressBarHandler = new Handler();
-        progressBarRunnable = () -> {
-            setProgress(mediaBrowser);
-            progressBarHandler.postDelayed(progressBarRunnable, 1000);
-        };
-    }
-
-    private void runProgressBarHandler(boolean isPlaying) {
-        if (isPlaying) {
-            progressBarHandler.postDelayed(progressBarRunnable, 1000);
-        } else {
-            progressBarHandler.removeCallbacks(progressBarRunnable);
-        }
-    }
-
-    private void setHeaderBookmarksButton() {
-        if (Preferences.isSyncronizationEnabled()) {
-            playerBottomSheetViewModel.getPlayQueue().observeForever(new Observer<PlayQueue>() {
-                @Override
-                public void onChanged(PlayQueue playQueue) {
-                    playerBottomSheetViewModel.getPlayQueue().removeObserver(this);
-
-                    if (bind == null) return;
-
-                    if (playQueue != null && !playQueue.getEntries().isEmpty()) {
-                        int index = IntStream.range(0, playQueue.getEntries().size()).filter(ix -> playQueue.getEntries().get(ix).getId().equals(playQueue.getCurrent())).findFirst().orElse(-1);
-
-                        if (index != -1) {
-                            bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.VISIBLE);
-                            bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(v -> {
-                                MediaManager.startQueue(mediaBrowserListenableFuture, playQueue.getEntries(), index);
-                                bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE);
-                            });
-                        }
-                    } else {
-                        bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE);
-                        bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(null);
-                    }
+            when (mediaBrowser.getMediaMetadata().extras!!.getString(
+                "type",
+                Constants.MEDIA_TYPE_MUSIC
+            )) {
+                Constants.MEDIA_TYPE_PODCAST -> {
+                    bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.VISIBLE)
+                    bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.VISIBLE)
+                    bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setVisibility(View.GONE)
                 }
-            });
 
-            bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnLongClickListener(v -> {
-                bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE);
-                return true;
-            });
+                Constants.MEDIA_TYPE_MUSIC -> {
+                    bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.GONE)
+                    bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.GONE)
+                    bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setVisibility(View.VISIBLE)
+                }
 
-            new Handler().postDelayed(() -> {
-                if (bind != null)
-                    bind.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE);
-            }, Preferences.getSyncCountdownTimer() * 1000L);
+                else -> {
+                    bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.GONE)
+                    bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.GONE)
+                    bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setVisibility(View.VISIBLE)
+                }
+            }
+        }
+    }
+
+    private fun setContentDuration(duration: Long) {
+        bind!!.playerHeaderLayout.playerHeaderSeekBar.setMax((duration / 1000).toInt())
+    }
+
+    private fun setProgress(mediaBrowser: MediaBrowser) {
+        if (bind != null) bind!!.playerHeaderLayout.playerHeaderSeekBar.setProgress(
+            (mediaBrowser.getCurrentPosition() / 1000).toInt(),
+            true
+        )
+    }
+
+    private fun setPlayingState(isPlaying: Boolean) {
+        bind!!.playerHeaderLayout.playerHeaderButton.setChecked(isPlaying)
+        runProgressBarHandler(isPlaying)
+    }
+
+    private fun setHeaderMediaController() {
+        bind!!.playerHeaderLayout.playerHeaderButton.setOnClickListener(View.OnClickListener { view: View? ->
+            bind!!.getRoot().findViewById<View?>(R.id.exo_play_pause).performClick()
+        })
+        bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
+            bind!!.getRoot().findViewById<View?>(R.id.exo_next).performClick()
+        })
+        bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
+            bind!!.getRoot().findViewById<View?>(R.id.exo_rew).performClick()
+        })
+        bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
+            bind!!.getRoot().findViewById<View?>(R.id.exo_ffwd).performClick()
+        })
+    }
+
+    private fun setHeaderNextButtonState(isEnabled: Boolean) {
+        bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setEnabled(isEnabled)
+        bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setAlpha(if (isEnabled) 1.0.toFloat() else 0.3.toFloat())
+    }
+
+    val playerHeader: View?
+        get() = requireView().findViewById<View?>(R.id.player_header_layout)
+
+    fun goBackToFirstPage() {
+        bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setCurrentItem(0, false)
+        goToControllerPage()
+    }
+
+    fun goToControllerPage() {
+        val playerControllerVerticalPager =
+            bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.adapter as PlayerControllerVerticalPager?
+        if (playerControllerVerticalPager != null) {
+            val playerControllerFragment =
+                playerControllerVerticalPager.getRegisteredFragment(0) as PlayerControllerFragment?
+            if (playerControllerFragment != null) {
+                playerControllerFragment.goToControllerPage()
+            }
+        }
+    }
+
+    fun goToLyricsPage() {
+        val playerControllerVerticalPager =
+            bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.adapter as PlayerControllerVerticalPager?
+        if (playerControllerVerticalPager != null) {
+            val playerControllerFragment =
+                playerControllerVerticalPager.getRegisteredFragment(0) as PlayerControllerFragment?
+            if (playerControllerFragment != null) {
+                playerControllerFragment.goToLyricsPage()
+            }
+        }
+    }
+
+    fun goToQueuePage() {
+        bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setCurrentItem(1, true)
+    }
+
+    fun setPlayerControllerVerticalPagerDraggableState(isDraggable: Boolean) {
+        val playerControllerVerticalPager = bind!!.playerBodyLayout.playerBodyBottomSheetViewPager
+        playerControllerVerticalPager.setUserInputEnabled(isDraggable)
+    }
+
+    private fun defineProgressBarHandler(mediaBrowser: MediaBrowser) {
+        progressBarHandler = Handler()
+        progressBarRunnable = Runnable {
+            setProgress(mediaBrowser)
+            progressBarHandler!!.postDelayed(progressBarRunnable!!, 1000)
+        }
+    }
+
+    private fun runProgressBarHandler(isPlaying: Boolean) {
+        if (isPlaying) {
+            progressBarHandler!!.postDelayed(progressBarRunnable!!, 1000)
+        } else {
+            progressBarHandler!!.removeCallbacks(progressBarRunnable!!)
+        }
+    }
+
+    private fun setHeaderBookmarksButton() {
+        if (isSyncronizationEnabled()) {
+            playerBottomSheetViewModel!!.getPlayQueue()
+                .observeForever(object : Observer<PlayQueue?> {
+                    override fun onChanged(playQueue: PlayQueue?) {
+                        playerBottomSheetViewModel!!.getPlayQueue().removeObserver(this)
+
+                        if (bind == null) return
+
+                        if (playQueue != null && !playQueue.entries!!.isEmpty()) {
+                            val index = IntStream.range(0, playQueue.entries!!.size)
+                                .filter(IntPredicate { ix: Int -> playQueue.entries!!.get(ix).id == playQueue.current })
+                                .findFirst().orElse(-1)
+
+                            if (index != -1) {
+                                bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                                    View.VISIBLE
+                                )
+                                bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(
+                                    View.OnClickListener { v: View? ->
+                                        MediaManager.startQueue(
+                                            mediaBrowserListenableFuture,
+                                            playQueue.entries,
+                                            index
+                                        )
+                                        bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                                            View.GONE
+                                        )
+                                    })
+                            }
+                        } else {
+                            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                                View.GONE
+                            )
+                            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(
+                                null
+                            )
+                        }
+                    }
+                })
+
+            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnLongClickListener(
+                OnLongClickListener { v: View? ->
+                    bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE)
+                    true
+                })
+
+            Handler().postDelayed(Runnable {
+                if (bind != null) bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                    View.GONE
+                )
+            }, getSyncCountdownTimer() * 1000L)
         }
     }
 }

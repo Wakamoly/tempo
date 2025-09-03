@@ -1,56 +1,55 @@
-package com.cappielloantonio.tempo.subsonic.api.podcast;
+package com.cappielloantonio.tempo.subsonic.api.podcast
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class PodcastClient(private val subsonic: Subsonic) {
+    private val podcastService: PodcastService
 
-import retrofit2.Call;
-
-public class PodcastClient {
-    private static final String TAG = "PodcastClient";
-
-    private final Subsonic subsonic;
-    private final PodcastService podcastService;
-
-    public PodcastClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.podcastService = new RetrofitClient(subsonic).getRetrofit().create(PodcastService.class);
+    init {
+        this.podcastService =
+            RetrofitClient(subsonic).retrofit.create<PodcastService>(PodcastService::class.java)
     }
 
-    public Call<ApiResponse> getPodcasts(boolean includeEpisodes, String channelId) {
-        Log.d(TAG, "getPodcasts()");
-        return podcastService.getPodcasts(subsonic.getParams(), includeEpisodes, channelId);
+    fun getPodcasts(includeEpisodes: Boolean, channelId: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "getPodcasts()")
+        return podcastService.getPodcasts(subsonic.getParams(), includeEpisodes, channelId)
     }
 
-    public Call<ApiResponse> getNewestPodcasts(int count) {
-        Log.d(TAG, "getNewestPodcasts()");
-        return podcastService.getNewestPodcasts(subsonic.getParams(), count);
+    fun getNewestPodcasts(count: Int): Call<ApiResponse?>? {
+        Log.d(TAG, "getNewestPodcasts()")
+        return podcastService.getNewestPodcasts(subsonic.getParams(), count)
     }
 
-    public Call<ApiResponse> refreshPodcasts() {
-        Log.d(TAG, "refreshPodcasts()");
-        return podcastService.refreshPodcasts(subsonic.getParams());
+    fun refreshPodcasts(): Call<ApiResponse?>? {
+        Log.d(TAG, "refreshPodcasts()")
+        return podcastService.refreshPodcasts(subsonic.getParams())
     }
 
-    public Call<ApiResponse> createPodcastChannel(String url) {
-        Log.d(TAG, "createPodcastChannel()");
-        return podcastService.createPodcastChannel(subsonic.getParams(), url);
+    fun createPodcastChannel(url: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "createPodcastChannel()")
+        return podcastService.createPodcastChannel(subsonic.getParams(), url)
     }
 
-    public Call<ApiResponse> deletePodcastChannel(String channelId) {
-        Log.d(TAG, "deletePodcastChannel()");
-        return podcastService.deletePodcastChannel(subsonic.getParams(), channelId);
+    fun deletePodcastChannel(channelId: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "deletePodcastChannel()")
+        return podcastService.deletePodcastChannel(subsonic.getParams(), channelId)
     }
 
-    public Call<ApiResponse> deletePodcastEpisode(String episodeId) {
-        Log.d(TAG, "deletePodcastEpisode()");
-        return podcastService.deletePodcastEpisode(subsonic.getParams(), episodeId);
+    fun deletePodcastEpisode(episodeId: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "deletePodcastEpisode()")
+        return podcastService.deletePodcastEpisode(subsonic.getParams(), episodeId)
     }
 
-    public Call<ApiResponse> downloadPodcastEpisode(String episodeId) {
-        Log.d(TAG, "downloadPodcastEpisode()");
-        return podcastService.downloadPodcastEpisode(subsonic.getParams(), episodeId);
+    fun downloadPodcastEpisode(episodeId: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "downloadPodcastEpisode()")
+        return podcastService.downloadPodcastEpisode(subsonic.getParams(), episodeId)
+    }
+
+    companion object {
+        private const val TAG = "PodcastClient"
     }
 }

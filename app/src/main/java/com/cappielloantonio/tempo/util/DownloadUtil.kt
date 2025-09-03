@@ -1,263 +1,308 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import android.app.Notification;
-import android.content.Context;
-
-import androidx.core.app.NotificationCompat;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.database.DatabaseProvider;
-import androidx.media3.database.StandaloneDatabaseProvider;
-import androidx.media3.datasource.DataSource;
-import androidx.media3.datasource.DataSpec;
-import androidx.media3.datasource.DefaultDataSource;
-import androidx.media3.datasource.DefaultHttpDataSource;
-import androidx.media3.datasource.ResolvingDataSource;
-import androidx.media3.datasource.cache.Cache;
-import androidx.media3.datasource.cache.CacheDataSource;
-import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor;
-import androidx.media3.datasource.cache.NoOpCacheEvictor;
-import androidx.media3.datasource.cache.SimpleCache;
-import androidx.media3.exoplayer.DefaultRenderersFactory;
-import androidx.media3.exoplayer.RenderersFactory;
-import androidx.media3.exoplayer.offline.DownloadManager;
-import androidx.media3.exoplayer.offline.DownloadNotificationHelper;
-
-import com.cappielloantonio.tempo.service.DownloaderManager;
-
-import java.io.File;
-import java.net.CookieHandler;
-import java.net.CookieManager;
-import java.net.CookiePolicy;
-import java.util.ArrayList;
-import java.util.concurrent.Executors;
+import android.app.Notification
+import android.content.Context
+import androidx.core.app.NotificationCompat
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.database.DatabaseProvider
+import androidx.media3.database.StandaloneDatabaseProvider
+import androidx.media3.datasource.DataSource
+import androidx.media3.datasource.DataSpec
+import androidx.media3.datasource.DefaultDataSource
+import androidx.media3.datasource.DefaultHttpDataSource
+import androidx.media3.datasource.ResolvingDataSource
+import androidx.media3.datasource.cache.Cache
+import androidx.media3.datasource.cache.CacheDataSource
+import androidx.media3.datasource.cache.LeastRecentlyUsedCacheEvictor
+import androidx.media3.datasource.cache.NoOpCacheEvictor
+import androidx.media3.datasource.cache.SimpleCache
+import androidx.media3.exoplayer.DefaultRenderersFactory
+import androidx.media3.exoplayer.DefaultRenderersFactory.ExtensionRendererMode
+import androidx.media3.exoplayer.RenderersFactory
+import androidx.media3.exoplayer.offline.DownloadManager
+import androidx.media3.exoplayer.offline.DownloadNotificationHelper
+import com.cappielloantonio.tempo.service.DownloaderManager
+import com.cappielloantonio.tempo.util.Preferences.getDownloadStoragePreference
+import com.cappielloantonio.tempo.util.Preferences.getStreamingCacheSize
+import com.cappielloantonio.tempo.util.Preferences.getStreamingCacheStoragePreference
+import com.cappielloantonio.tempo.util.Preferences.setDownloadStoragePreference
+import com.cappielloantonio.tempo.util.Preferences.setStreamingCacheStoragePreference
+import java.io.File
+import java.net.CookieHandler
+import java.net.CookieManager
+import java.net.CookiePolicy
+import java.util.Locale
+import java.util.concurrent.Executors
 
 @UnstableApi
-public final class DownloadUtil {
+object DownloadUtil {
+    const val DOWNLOAD_NOTIFICATION_CHANNEL_ID: String = "download_channel"
+    const val DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP: String =
+        "com.cappielloantonio.tempo.SuccessfulDownload"
+    const val DOWNLOAD_NOTIFICATION_FAILED_GROUP: String =
+        "com.cappielloantonio.tempo.FailedDownload"
 
-    public static final String DOWNLOAD_NOTIFICATION_CHANNEL_ID = "download_channel";
-    public static final String DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP = "com.cappielloantonio.tempo.SuccessfulDownload";
-    public static final String DOWNLOAD_NOTIFICATION_FAILED_GROUP = "com.cappielloantonio.tempo.FailedDownload";
+    private const val STREAMING_CACHE_CONTENT_DIRECTORY = "streaming_cache"
+    private const val DOWNLOAD_CONTENT_DIRECTORY = "downloads"
 
-    private static final String STREAMING_CACHE_CONTENT_DIRECTORY = "streaming_cache";
-    private static final String DOWNLOAD_CONTENT_DIRECTORY = "downloads";
+    private var dataSourceFactory: DataSource.Factory? = null
 
-    private static DataSource.Factory dataSourceFactory;
-    private static DataSource.Factory httpDataSourceFactory;
-    private static DatabaseProvider databaseProvider;
-    private static File streamingCacheDirectory;
-    private static File downloadDirectory;
-    private static Cache downloadCache;
-    private static SimpleCache streamingCache;
-    private static DownloadManager downloadManager;
-    private static DownloaderManager downloaderManager;
-    private static DownloadNotificationHelper downloadNotificationHelper;
+    @get:Synchronized
+    var httpDataSourceFactory: DataSource.Factory? = null
+        get() {
+            if (field == null) {
+                val cookieManager = CookieManager()
+                cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER)
+                CookieHandler.setDefault(cookieManager)
+                field = DefaultHttpDataSource.Factory()
+                    .setAllowCrossProtocolRedirects(true)
+            }
 
-    public static boolean useExtensionRenderers() {
-        return true;
-    }
-
-    public static RenderersFactory buildRenderersFactory(Context context, boolean preferExtensionRenderer) {
-        @DefaultRenderersFactory.ExtensionRendererMode int extensionRendererMode =
-                useExtensionRenderers()
-                        ? (preferExtensionRenderer ? DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-                        : DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF;
-
-        return new DefaultRenderersFactory(context.getApplicationContext()).setExtensionRendererMode(extensionRendererMode);
-    }
-
-    public static synchronized DataSource.Factory getHttpDataSourceFactory() {
-        if (httpDataSourceFactory == null) {
-            CookieManager cookieManager = new CookieManager();
-            cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER);
-            CookieHandler.setDefault(cookieManager);
-            httpDataSourceFactory = new DefaultHttpDataSource
-                    .Factory()
-                    .setAllowCrossProtocolRedirects(true);
+            return field
         }
+        private set
+    private var databaseProvider: DatabaseProvider? = null
+    private var streamingCacheDirectory: File? = null
+    private var downloadDirectory: File? = null
+    private var downloadCache: Cache? = null
+    private var streamingCache: SimpleCache? = null
+    private var downloadManager: DownloadManager? = null
+    private var downloaderManager: DownloaderManager? = null
+    private var downloadNotificationHelper: DownloadNotificationHelper? = null
 
-        return httpDataSourceFactory;
+    fun useExtensionRenderers(): Boolean {
+        return true
     }
 
-    public static synchronized DataSource.Factory getDataSourceFactory(Context context) {
+    fun buildRenderersFactory(
+        context: Context,
+        preferExtensionRenderer: Boolean
+    ): RenderersFactory {
+        val extensionRendererMode: @ExtensionRendererMode Int =
+            if (useExtensionRenderers())
+                (if (preferExtensionRenderer) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+            else
+                DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF
+
+        return DefaultRenderersFactory(context.applicationContext).setExtensionRendererMode(
+            extensionRendererMode
+        )
+    }
+
+    @Synchronized
+    fun getDataSourceFactory(context: Context): DataSource.Factory {
+        var context = context
         if (dataSourceFactory == null) {
-            context = context.getApplicationContext();
+            context = context.applicationContext
 
-            DefaultDataSource.Factory upstreamFactory = new DefaultDataSource.Factory(context, getHttpDataSourceFactory());
+            val upstreamFactory = DefaultDataSource.Factory(
+                context,
+                httpDataSourceFactory!!
+            )
 
-            if (Preferences.getStreamingCacheSize() > 0) {
-                CacheDataSource.Factory streamCacheFactory = new CacheDataSource.Factory()
-                        .setCache(getStreamingCache(context))
-                        .setUpstreamDataSourceFactory(upstreamFactory);
+            if (getStreamingCacheSize() > 0) {
+                val streamCacheFactory = CacheDataSource.Factory()
+                    .setCache(getStreamingCache(context))
+                    .setUpstreamDataSourceFactory(upstreamFactory)
 
-                ResolvingDataSource.Factory resolvingFactory = new ResolvingDataSource.Factory(
-                        new StreamingCacheDataSource.Factory(streamCacheFactory),
-                        dataSpec -> {
-                            DataSpec.Builder builder = dataSpec.buildUpon();
-                            builder.setFlags(dataSpec.flags & ~DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN);
-                            return builder.build();
-                        }
-                );
+                val resolvingFactory = ResolvingDataSource.Factory(
+                    StreamingCacheDataSource.Factory(streamCacheFactory)
+                ) { dataSpec: DataSpec? ->
+                    val builder = dataSpec!!.buildUpon()
+                    builder.setFlags(dataSpec.flags and DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN.inv())
+                    builder.build()
+                }
 
-                dataSourceFactory = buildReadOnlyCacheDataSource(resolvingFactory, getDownloadCache(context));
+                dataSourceFactory =
+                    buildReadOnlyCacheDataSource(resolvingFactory, getDownloadCache(context))
             } else {
-                dataSourceFactory = buildReadOnlyCacheDataSource(upstreamFactory, getDownloadCache(context));
+                dataSourceFactory =
+                    buildReadOnlyCacheDataSource(upstreamFactory, getDownloadCache(context))
             }
         }
 
-        return dataSourceFactory;
+        return dataSourceFactory!!
     }
 
-    public static synchronized DownloadNotificationHelper getDownloadNotificationHelper(Context context) {
+    @Synchronized
+    fun getDownloadNotificationHelper(context: Context): DownloadNotificationHelper {
         if (downloadNotificationHelper == null) {
-            downloadNotificationHelper = new DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID);
+            downloadNotificationHelper =
+                DownloadNotificationHelper(context, DOWNLOAD_NOTIFICATION_CHANNEL_ID)
         }
 
-        return downloadNotificationHelper;
+        return downloadNotificationHelper!!
     }
 
-    public static synchronized DownloadManager getDownloadManager(Context context) {
-        ensureDownloadManagerInitialized(context);
-        return downloadManager;
+    @Synchronized
+    fun getDownloadManager(context: Context): DownloadManager? {
+        ensureDownloadManagerInitialized(context)
+        return downloadManager
     }
 
-    public static synchronized DownloaderManager getDownloadTracker(Context context) {
-        ensureDownloadManagerInitialized(context);
-        return downloaderManager;
+    @Synchronized
+    fun getDownloadTracker(context: Context): DownloaderManager? {
+        ensureDownloadManagerInitialized(context)
+        return downloaderManager
     }
 
-    private static synchronized Cache getDownloadCache(Context context) {
+    @Synchronized
+    private fun getDownloadCache(context: Context): Cache {
         if (downloadCache == null) {
-            File downloadContentDirectory = new File(getDownloadDirectory(context), DOWNLOAD_CONTENT_DIRECTORY);
-            downloadCache = new SimpleCache(downloadContentDirectory, new NoOpCacheEvictor(), getDatabaseProvider(context));
+            val downloadContentDirectory =
+                File(getDownloadDirectory(context), DOWNLOAD_CONTENT_DIRECTORY)
+            downloadCache = SimpleCache(
+                downloadContentDirectory,
+                NoOpCacheEvictor(),
+                getDatabaseProvider(context)
+            )
         }
 
-        return downloadCache;
+        return downloadCache!!
     }
 
-    private static synchronized SimpleCache getStreamingCache(Context context) {
+    @Synchronized
+    private fun getStreamingCache(context: Context): SimpleCache {
         if (streamingCache == null) {
-            File streamingCacheDirectory = new File(getStreamingCacheDirectory(context), STREAMING_CACHE_CONTENT_DIRECTORY);
+            val streamingCacheDirectory =
+                File(getStreamingCacheDirectory(context), STREAMING_CACHE_CONTENT_DIRECTORY)
 
-            streamingCache = new SimpleCache(
-                    streamingCacheDirectory,
-                    new LeastRecentlyUsedCacheEvictor(Preferences.getStreamingCacheSize() * 1024 * 1024),
-                    getDatabaseProvider(context)
-            );
+            streamingCache = SimpleCache(
+                streamingCacheDirectory,
+                LeastRecentlyUsedCacheEvictor(getStreamingCacheSize() * 1024 * 1024),
+                getDatabaseProvider(context)
+            )
         }
 
-        return streamingCache;
+        return streamingCache!!
     }
 
-    private static synchronized void ensureDownloadManagerInitialized(Context context) {
+    @Synchronized
+    private fun ensureDownloadManagerInitialized(context: Context) {
         if (downloadManager == null) {
-            downloadManager = new DownloadManager(
-                    context,
-                    getDatabaseProvider(context),
-                    getDownloadCache(context),
-                    getHttpDataSourceFactory(),
-                    Executors.newFixedThreadPool(6)
-            );
+            downloadManager = DownloadManager(
+                context,
+                getDatabaseProvider(context),
+                getDownloadCache(context),
+                httpDataSourceFactory!!,
+                Executors.newFixedThreadPool(6)
+            )
 
-            downloaderManager = new DownloaderManager(context, getHttpDataSourceFactory(), downloadManager);
+            downloaderManager = DownloaderManager(context, httpDataSourceFactory, downloadManager)
         }
     }
 
-    private static synchronized DatabaseProvider getDatabaseProvider(Context context) {
+    @Synchronized
+    private fun getDatabaseProvider(context: Context): DatabaseProvider {
         if (databaseProvider == null) {
-            databaseProvider = new StandaloneDatabaseProvider(context);
+            databaseProvider = StandaloneDatabaseProvider(context)
         }
 
-        return databaseProvider;
+        return databaseProvider!!
     }
 
-    private static synchronized File getStreamingCacheDirectory(Context context) {
+    @Synchronized
+    private fun getStreamingCacheDirectory(context: Context): File? {
         if (streamingCacheDirectory == null) {
-            if (Preferences.getStreamingCacheStoragePreference() == 0) {
-                streamingCacheDirectory = context.getExternalFilesDirs(null)[0];
+            if (getStreamingCacheStoragePreference() == 0) {
+                streamingCacheDirectory = context.getExternalFilesDirs(null)[0]
                 if (streamingCacheDirectory == null) {
-                    streamingCacheDirectory = context.getFilesDir();
+                    streamingCacheDirectory = context.filesDir
                 }
             } else {
                 try {
-                    streamingCacheDirectory = context.getExternalFilesDirs(null)[1];
-                } catch (Exception exception) {
-                    streamingCacheDirectory = context.getExternalFilesDirs(null)[0];
-                    Preferences.setStreamingCacheStoragePreference(0);
+                    streamingCacheDirectory = context.getExternalFilesDirs(null)[1]
+                } catch (exception: Exception) {
+                    streamingCacheDirectory = context.getExternalFilesDirs(null)[0]
+                    setStreamingCacheStoragePreference(0)
                 }
-
             }
         }
 
-        return streamingCacheDirectory;
+        return streamingCacheDirectory
     }
 
-    private static synchronized File getDownloadDirectory(Context context) {
+    @Synchronized
+    private fun getDownloadDirectory(context: Context): File {
         if (downloadDirectory == null) {
-            if (Preferences.getDownloadStoragePreference() == 0) {
-                downloadDirectory = context.getExternalFilesDirs(null)[0];
+            if (getDownloadStoragePreference() == 0) {
+                downloadDirectory = context.getExternalFilesDirs(null)[0]
                 if (downloadDirectory == null) {
-                    downloadDirectory = context.getFilesDir();
+                    downloadDirectory = context.filesDir
                 }
             } else {
                 try {
-                    downloadDirectory = context.getExternalFilesDirs(null)[1];
-                } catch (Exception exception) {
-                    downloadDirectory = context.getExternalFilesDirs(null)[0];
-                    Preferences.setDownloadStoragePreference(0);
+                    downloadDirectory = context.getExternalFilesDirs(null)[1]
+                } catch (exception: Exception) {
+                    downloadDirectory = context.getExternalFilesDirs(null)[0]
+                    setDownloadStoragePreference(0)
                 }
-
             }
         }
 
-        return downloadDirectory;
+        return downloadDirectory!!
     }
 
-    private static CacheDataSource.Factory buildReadOnlyCacheDataSource(DataSource.Factory upstreamFactory, Cache cache) {
-        return new CacheDataSource.Factory()
-                .setCache(cache)
-                .setUpstreamDataSourceFactory(upstreamFactory)
-                .setCacheWriteDataSinkFactory(null)
-                .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR);
+    private fun buildReadOnlyCacheDataSource(
+        upstreamFactory: DataSource.Factory?,
+        cache: Cache
+    ): CacheDataSource.Factory {
+        return CacheDataSource.Factory()
+            .setCache(cache)
+            .setUpstreamDataSourceFactory(upstreamFactory)
+            .setCacheWriteDataSinkFactory(null)
+            .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
     }
 
-    public static synchronized void eraseDownloadFolder(Context context) {
-        File directory = getDownloadDirectory(context);
+    @Synchronized
+    fun eraseDownloadFolder(context: Context) {
+        val directory = getDownloadDirectory(context)
 
-        ArrayList<File> files = listFiles(directory, new ArrayList<>());
+        val files = listFiles(directory, ArrayList<File>())
 
-        for (File file : files) {
-            file.delete();
+        for (file in files) {
+            file.delete()
         }
     }
 
-    private static synchronized ArrayList<File> listFiles(File directory, ArrayList<File> files) {
+    @Synchronized
+    private fun listFiles(directory: File, files: ArrayList<File>): ArrayList<File> {
         if (directory.isDirectory()) {
-            File[] list = directory.listFiles();
+            val list = directory.listFiles()
 
             if (list != null) {
-                for (File file : list) {
-                    if (file.isFile() && file.getName().toLowerCase().endsWith(".exo")) {
-                        files.add(file);
+                for (file in list) {
+                    if (file.isFile() && file.getName().lowercase(Locale.getDefault())
+                            .endsWith(".exo")
+                    ) {
+                        files.add(file)
                     } else if (file.isDirectory()) {
-                        listFiles(file, files);
+                        listFiles(file, files)
                     }
                 }
             }
         }
 
-        return files;
+        return files
     }
 
-    public static synchronized long getStreamingCacheSize(Context context) {
-        return getStreamingCache(context).getCacheSpace();
+    @Synchronized
+    fun getStreamingCacheSize(context: Context): Long {
+        return getStreamingCache(context).getCacheSpace()
     }
 
-    public static Notification buildGroupSummaryNotification(Context context, String channelId, String groupId, int icon, String title) {
-        return new NotificationCompat.Builder(context, channelId)
-                .setContentTitle(title)
-                .setSmallIcon(icon)
-                .setGroup(groupId)
-                .setGroupSummary(true)
-                .build();
+    fun buildGroupSummaryNotification(
+        context: Context,
+        channelId: String,
+        groupId: String?,
+        icon: Int,
+        title: String?
+    ): Notification {
+        return NotificationCompat.Builder(context, channelId)
+            .setContentTitle(title)
+            .setSmallIcon(icon)
+            .setGroup(groupId)
+            .setGroupSummary(true)
+            .build()
     }
 }

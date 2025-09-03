@@ -1,96 +1,90 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.view.animation.AccelerateDecelerateInterpolator;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHomeDiscoverSongBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class DiscoverSongAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<DiscoverSongAdapter.ViewHolder?>() {
+    private var songs: MutableList<Child>
 
-import com.cappielloantonio.tempo.databinding.ItemHomeDiscoverSongBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class DiscoverSongAdapter extends RecyclerView.Adapter<DiscoverSongAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Child> songs;
-
-    public DiscoverSongAdapter(ClickCallback click) {
-        this.click = click;
-        this.songs = Collections.emptyList();
+    init {
+        this.songs = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeDiscoverSongBinding view = ItemHomeDiscoverSongBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomeDiscoverSongBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return DiscoverSongAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Child song = songs.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val song = songs.get(position)
 
-        holder.item.titleDiscoverSongLabel.setText(song.getTitle());
-        holder.item.albumDiscoverSongLabel.setText(song.getAlbum());
+        holder.item.titleDiscoverSongLabel.text = song.title
+        holder.item.albumDiscoverSongLabel.text = song.album
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.discoverSongCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.discoverSongCoverImageView)
     }
 
-    @Override
-    public void onViewAttachedToWindow(@NonNull ViewHolder holder) {
-        super.onViewAttachedToWindow(holder);
-        startAnimation(holder);
+    override fun onViewAttachedToWindow(holder: ViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        startAnimation(holder)
     }
 
-    @Override
-    public int getItemCount() {
-        return songs.size();
+    override fun getItemCount(): Int {
+        return songs.size
     }
 
-    public void setItems(List<Child> songs) {
-        this.songs = songs;
-        notifyDataSetChanged();
+    fun setItems(songs: MutableList<Child>) {
+        this.songs = songs
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeDiscoverSongBinding item;
-
-        ViewHolder(ItemHomeDiscoverSongBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
+    inner class ViewHolder internal constructor(var item: ItemHomeDiscoverSongBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()));
-            bundle.putBoolean(Constants.MEDIA_MIX, true);
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.TRACK_OBJECT, songs.get(getBindingAdapterPosition()))
+            bundle.putBoolean(Constants.MEDIA_MIX, true)
 
-            click.onMediaClick(bundle);
+            click.onMediaClick(bundle)
         }
     }
 
-    private void startAnimation(ViewHolder holder) {
+    private fun startAnimation(holder: ViewHolder) {
         holder.item.discoverSongCoverImageView.animate()
-                .setDuration(20000)
-                .setStartDelay(10)
-                .setInterpolator(new AccelerateDecelerateInterpolator())
-                .scaleX(1.4f)
-                .scaleY(1.4f)
-                .start();
+            .setDuration(20000)
+            .setStartDelay(10)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .scaleX(1.4f)
+            .scaleY(1.4f)
+            .start()
     }
 }

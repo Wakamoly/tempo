@@ -1,153 +1,147 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import android.util.Log;
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
+import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.MutableLiveData;
+class PodcastRepository {
+    fun getPodcastChannels(
+        includeEpisodes: Boolean,
+        channelId: String?
+    ): MutableLiveData<MutableList<PodcastChannel?>?> {
+        val livePodcastChannel =
+            MutableLiveData<MutableList<PodcastChannel?>?>(ArrayList<PodcastChannel?>())
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
-import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class PodcastRepository {
-    private static final String TAG = "PodcastRepository";
-
-    public MutableLiveData<List<PodcastChannel>> getPodcastChannels(boolean includeEpisodes, String channelId) {
-        MutableLiveData<List<PodcastChannel>> livePodcastChannel = new MutableLiveData<>(new ArrayList<>());
-
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .getPodcasts(includeEpisodes, channelId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getPodcasts() != null) {
-                            livePodcastChannel.setValue(response.body().getSubsonicResponse().getPodcasts().getChannels());
-                        }
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .getPodcasts(includeEpisodes, channelId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.podcasts != null) {
+                        livePodcastChannel.setValue(response.body()!!.subsonicResponse.podcasts!!.channels)
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return livePodcastChannel;
+        return livePodcastChannel
     }
 
-    public MutableLiveData<List<PodcastEpisode>> getNewestPodcastEpisodes(int count) {
-        MutableLiveData<List<PodcastEpisode>> liveNewestPodcastEpisodes = new MutableLiveData<>(new ArrayList<>());
+    fun getNewestPodcastEpisodes(count: Int): MutableLiveData<MutableList<PodcastEpisode?>?> {
+        val liveNewestPodcastEpisodes =
+            MutableLiveData<MutableList<PodcastEpisode?>?>(ArrayList<PodcastEpisode?>())
 
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .getNewestPodcasts(count)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getNewestPodcasts() != null) {
-                            liveNewestPodcastEpisodes.setValue(response.body().getSubsonicResponse().getNewestPodcasts().getEpisodes());
-                        }
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .getNewestPodcasts(count)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null) {
+                        liveNewestPodcastEpisodes.setValue(response.body()!!.subsonicResponse.newestPodcasts!!.episodes)
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return liveNewestPodcastEpisodes;
+        return liveNewestPodcastEpisodes
     }
 
-    public void refreshPodcasts() {
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .refreshPodcasts()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun refreshPodcasts() {
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .refreshPodcasts()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void createPodcastChannel(String url) {
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .createPodcastChannel(url)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun createPodcastChannel(url: String?) {
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .createPodcastChannel(url)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void deletePodcastChannel(String channelId) {
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .deletePodcastChannel(channelId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun deletePodcastChannel(channelId: String?) {
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .deletePodcastChannel(channelId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void deletePodcastEpisode(String episodeId) {
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .deletePodcastEpisode(episodeId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun deletePodcastEpisode(episodeId: String?) {
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .deletePodcastEpisode(episodeId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
-
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
     }
 
-    public void downloadPodcastEpisode(String episodeId) {
-        App.getSubsonicClientInstance(false)
-                .getPodcastClient()
-                .downloadPodcastEpisode(episodeId)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
+    fun downloadPodcastEpisode(episodeId: String?) {
+        getSubsonicClientInstance(false)
+            .getPodcastClient()
+            .downloadPodcastEpisode(episodeId)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                }
 
-                    }
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
+    }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-
-                    }
-                });
+    companion object {
+        private const val TAG = "PodcastRepository"
     }
 }

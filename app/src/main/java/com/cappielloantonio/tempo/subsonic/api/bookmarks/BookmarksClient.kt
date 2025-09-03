@@ -1,33 +1,35 @@
-package com.cappielloantonio.tempo.subsonic.api.bookmarks;
+package com.cappielloantonio.tempo.subsonic.api.bookmarks
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class BookmarksClient(private val subsonic: Subsonic) {
+    private val bookmarksService: BookmarksService
 
-import java.util.List;
-
-import retrofit2.Call;
-
-public class BookmarksClient {
-    private static final String TAG = "BookmarksClient";
-
-    private final Subsonic subsonic;
-    private final BookmarksService bookmarksService;
-
-    public BookmarksClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.bookmarksService = new RetrofitClient(subsonic).getRetrofit().create(BookmarksService.class);
+    init {
+        this.bookmarksService =
+            RetrofitClient(subsonic).retrofit.create<BookmarksService>(BookmarksService::class.java)
     }
 
-    public Call<ApiResponse> getPlayQueue() {
-        Log.d(TAG, "getPlayQueue()");
-        return bookmarksService.getPlayQueue(subsonic.getParams());
+    val playQueue: Call<ApiResponse?>?
+        get() {
+            Log.d(TAG, "getPlayQueue()")
+            return bookmarksService.getPlayQueue(subsonic.getParams())
+        }
+
+    fun savePlayQueue(
+        ids: MutableList<String?>?,
+        current: String?,
+        position: Long
+    ): Call<ApiResponse?>? {
+        Log.d(TAG, "savePlayQueue()")
+        return bookmarksService.savePlayQueue(subsonic.getParams(), ids, current, position)
     }
 
-    public Call<ApiResponse> savePlayQueue(List<String> ids, String current, long position) {
-        Log.d(TAG, "savePlayQueue()");
-        return bookmarksService.savePlayQueue(subsonic.getParams(), ids, current, position);
+    companion object {
+        private const val TAG = "BookmarksClient"
     }
 }

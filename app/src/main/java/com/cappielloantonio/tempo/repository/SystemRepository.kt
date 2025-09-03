@@ -1,123 +1,126 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import android.util.Log;
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.App.Companion.githubClientInstance
+import com.cappielloantonio.tempo.github.models.LatestRelease
+import com.cappielloantonio.tempo.interfaces.SystemCallback
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension
+import com.cappielloantonio.tempo.subsonic.models.ResponseStatus
+import com.cappielloantonio.tempo.subsonic.models.SubsonicResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.MutableLiveData;
-
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.github.models.LatestRelease;
-import com.cappielloantonio.tempo.interfaces.SystemCallback;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension;
-import com.cappielloantonio.tempo.subsonic.models.ResponseStatus;
-import com.cappielloantonio.tempo.subsonic.models.SubsonicResponse;
-
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class SystemRepository {
-    public void checkUserCredential(SystemCallback callback) {
-        App.getSubsonicClientInstance(false)
-                .getSystemClient()
-                .ping()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull retrofit2.Response<ApiResponse> response) {
-                        if (response.body() != null) {
-                            if (response.body().getSubsonicResponse().getStatus().equals(ResponseStatus.FAILED)) {
-                                callback.onError(new Exception(response.body().getSubsonicResponse().getError().getCode() + " - " + response.body().getSubsonicResponse().getError().getMessage()));
-                            } else if (response.body().getSubsonicResponse().getStatus().equals(ResponseStatus.OK)) {
-                                String password = response.raw().request().url().queryParameter("p");
-                                String token = response.raw().request().url().queryParameter("t");
-                                String salt = response.raw().request().url().queryParameter("s");
-                                callback.onSuccess(password, token, salt);
-                            } else {
-                                callback.onError(new Exception("Empty response"));
-                            }
+class SystemRepository {
+    fun checkUserCredential(callback: SystemCallback) {
+        getSubsonicClientInstance(false)
+            .getSystemClient()
+            .ping()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.body() != null) {
+                        if (response.body()!!.subsonicResponse.status == ResponseStatus.FAILED) {
+                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.code.toString() + " - " + response.body()!!.subsonicResponse.error!!.message))
+                        } else if (response.body()!!.subsonicResponse.status == ResponseStatus.OK) {
+                            val password = response.raw().request().url.queryParameter("p")
+                            val token = response.raw().request().url.queryParameter("t")
+                            val salt = response.raw().request().url.queryParameter("s")
+                            callback.onSuccess(password, token, salt)
                         } else {
-                            callback.onError(new Exception(String.valueOf(response.code())));
+                            callback.onError(Exception("Empty response"))
                         }
+                    } else {
+                        callback.onError(Exception(response.code().toString()))
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        callback.onError(new Exception(t.getMessage()));
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    callback.onError(Exception(t.message))
+                }
+            })
     }
 
-    public MutableLiveData<SubsonicResponse> ping() {
-        MutableLiveData<SubsonicResponse> pingResult = new MutableLiveData<>();
+    fun ping(): MutableLiveData<SubsonicResponse?> {
+        val pingResult = MutableLiveData<SubsonicResponse?>()
 
-        App.getSubsonicClientInstance(false)
-                .getSystemClient()
-                .ping()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            pingResult.postValue(response.body().getSubsonicResponse());
-                        } else {
-                            pingResult.postValue(null);
-                        }
+        getSubsonicClientInstance(false)
+            .getSystemClient()
+            .ping()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        pingResult.postValue(response.body()!!.subsonicResponse)
+                    } else {
+                        pingResult.postValue(null)
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        pingResult.postValue(null);
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    pingResult.postValue(null)
+                }
+            })
 
-        return pingResult;
+        return pingResult
     }
 
-    public MutableLiveData<List<OpenSubsonicExtension>> getOpenSubsonicExtensions() {
-        MutableLiveData<List<OpenSubsonicExtension>> extensionsResult = new MutableLiveData<>();
+    val openSubsonicExtensions: MutableLiveData<MutableList<OpenSubsonicExtension?>?>
+        get() {
+            val extensionsResult =
+                MutableLiveData<MutableList<OpenSubsonicExtension?>?>()
 
-        App.getSubsonicClientInstance(false)
+            getSubsonicClientInstance(false)
                 .getSystemClient()
                 .getOpenSubsonicExtensions()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            extensionsResult.postValue(response.body().getSubsonicResponse().getOpenSubsonicExtensions());
+                .enqueue(object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            extensionsResult.postValue(response.body()!!.subsonicResponse.openSubsonicExtensions)
                         }
                     }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        extensionsResult.postValue(null);
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable
+                    ) {
+                        extensionsResult.postValue(null)
                     }
-                });
+                })
 
-        return extensionsResult;
-    }
+            return extensionsResult
+        }
 
-    public MutableLiveData<LatestRelease> checkTempoUpdate() {
-        MutableLiveData<LatestRelease> latestRelease = new MutableLiveData<>();
+    fun checkTempoUpdate(): MutableLiveData<LatestRelease?> {
+        val latestRelease = MutableLiveData<LatestRelease?>()
 
-        App.getGithubClientInstance()
-                .getReleaseClient()
-                .getLatestRelease()
-                .enqueue(new Callback<LatestRelease>() {
-                    @Override
-                    public void onResponse(@NonNull Call<LatestRelease> call, @NonNull Response<LatestRelease> response) {
-                        if (response.isSuccessful() && response.body() != null) {
-                            latestRelease.postValue(response.body());
-                        }
+        githubClientInstance
+            .getReleaseClient()
+            .getLatestRelease()
+            .enqueue(object : Callback<LatestRelease?> {
+                override fun onResponse(
+                    call: Call<LatestRelease?>,
+                    response: Response<LatestRelease?>
+                ) {
+                    if (response.isSuccessful && response.body() != null) {
+                        latestRelease.postValue(response.body())
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<LatestRelease> call, @NonNull Throwable t) {
-                        latestRelease.postValue(null);
-                    }
-                });
+                override fun onFailure(call: Call<LatestRelease?>, t: Throwable) {
+                    latestRelease.postValue(null)
+                }
+            })
 
-        return latestRelease;
+        return latestRelease
     }
 }

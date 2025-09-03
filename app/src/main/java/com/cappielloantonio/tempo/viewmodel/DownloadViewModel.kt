@@ -1,63 +1,65 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
-import android.util.Log;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.model.DownloadStack
+import com.cappielloantonio.tempo.repository.DownloadRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Preferences.getDefaultDownloadViewType
+import java.util.stream.Collectors
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class DownloadViewModel(application: Application) : AndroidViewModel(application) {
+    private val downloadRepository: DownloadRepository
 
-import com.cappielloantonio.tempo.model.DownloadStack;
-import com.cappielloantonio.tempo.repository.DownloadRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Preferences;
+    private val downloadedTrackSample = MutableLiveData<MutableList<Child?>?>(null)
+    private val viewStack = MutableLiveData<ArrayList<DownloadStack?>?>(null)
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
+    init {
+        downloadRepository = DownloadRepository()
 
-public class DownloadViewModel extends AndroidViewModel {
-    private static final String TAG = "DownloadViewModel";
-
-    private final DownloadRepository downloadRepository;
-
-    private final MutableLiveData<List<Child>> downloadedTrackSample = new MutableLiveData<>(null);
-    private final MutableLiveData<ArrayList<DownloadStack>> viewStack = new MutableLiveData<>(null);
-
-    public DownloadViewModel(@NonNull Application application) {
-        super(application);
-
-        downloadRepository = new DownloadRepository();
-
-        initViewStack(new DownloadStack(Preferences.getDefaultDownloadViewType(), null));
+        initViewStack(DownloadStack(getDefaultDownloadViewType(), null))
     }
 
-    public LiveData<List<Child>> getDownloadedTracks(LifecycleOwner owner) {
-        downloadRepository.getLiveDownload().observe(owner, downloads -> downloadedTrackSample.postValue(downloads.stream().map(download -> (Child) download).collect(Collectors.toList())));
-        return downloadedTrackSample;
+    fun getDownloadedTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+        downloadRepository.getLiveDownload()
+            .observe(owner, Observer { downloads: MutableList<Download?>? ->
+                downloadedTrackSample.postValue(
+                    downloads!!.stream().map<Child?> { download: Download? -> download as Child? }
+                        .collect(
+                            Collectors.toList()
+                        ))
+            })
+        return downloadedTrackSample
     }
 
-    public LiveData<ArrayList<DownloadStack>> getViewStack() {
-        return viewStack;
+    fun getViewStack(): LiveData<ArrayList<DownloadStack?>?> {
+        return viewStack
     }
 
-    public void initViewStack(DownloadStack level) {
-        ArrayList<DownloadStack> stack = new ArrayList<>();
-        stack.add(level);
-        viewStack.setValue(stack);
+    fun initViewStack(level: DownloadStack?) {
+        val stack = ArrayList<DownloadStack?>()
+        stack.add(level)
+        viewStack.value = stack
     }
 
-    public void pushViewStack(DownloadStack level) {
-        ArrayList<DownloadStack> stack = viewStack.getValue();
-        stack.add(level);
-        viewStack.setValue(stack);
+    fun pushViewStack(level: DownloadStack?) {
+        val stack = viewStack.getValue()
+        stack!!.add(level)
+        viewStack.value = stack
     }
 
-    public void popViewStack() {
-        ArrayList<DownloadStack> stack = viewStack.getValue();
-        stack.remove(stack.size() - 1);
-        viewStack.setValue(stack);
+    fun popViewStack() {
+        val stack = viewStack.getValue()
+        stack!!.removeAt(stack.size - 1)
+        viewStack.value = stack
+    }
+
+    companion object {
+        private const val TAG = "DownloadViewModel"
     }
 }

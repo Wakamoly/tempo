@@ -1,110 +1,112 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.databinding.ItemLibraryMusicDirectoryBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemLibraryMusicDirectoryBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
 @UnstableApi
-public class MusicDirectoryAdapter extends RecyclerView.Adapter<MusicDirectoryAdapter.ViewHolder> {
-    private final ClickCallback click;
+class MusicDirectoryAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<MusicDirectoryAdapter.ViewHolder?>() {
+    private var children: MutableList<Child>
 
-    private List<Child> children;
-
-    public MusicDirectoryAdapter(ClickCallback click) {
-        this.click = click;
-        this.children = Collections.emptyList();
+    init {
+        this.children = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryMusicDirectoryBinding view = ItemLibraryMusicDirectoryBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryMusicDirectoryBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return MusicDirectoryAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Child child = children.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val child = children.get(position)
 
-        holder.item.musicDirectoryTitleTextView.setText(child.getTitle());
+        holder.item.musicDirectoryTitleTextView.text = child.title
 
-        CustomGlideRequest.ResourceType type = child.isDir()
-                ? CustomGlideRequest.ResourceType.Directory
-                : CustomGlideRequest.ResourceType.Song;
+        val type = if (child.isDir)
+            CustomGlideRequest.ResourceType.Directory
+        else
+            CustomGlideRequest.ResourceType.Song
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), child.getCoverArtId(), type)
-                .build()
-                .into(holder.item.musicDirectoryCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            child.coverArtId,
+            type
+        )
+            .build()
+            .into(holder.item.musicDirectoryCoverImageView)
 
-        holder.item.musicDirectoryMoreButton.setVisibility(child.isDir() ? View.VISIBLE : View.INVISIBLE);
-        holder.item.musicDirectoryPlayButton.setVisibility(child.isDir() ? View.INVISIBLE : View.VISIBLE);
+        holder.item.musicDirectoryMoreButton.setVisibility(if (child.isDir) View.VISIBLE else View.INVISIBLE)
+        holder.item.musicDirectoryPlayButton.setVisibility(if (child.isDir) View.INVISIBLE else View.VISIBLE)
     }
 
-    @Override
-    public int getItemCount() {
-        return children.size();
+    override fun getItemCount(): Int {
+        return children.size
     }
 
-    public void setItems(List<Child> children) {
-        this.children = children != null ? children : Collections.emptyList();
-        notifyDataSetChanged();
+    fun setItems(children: MutableList<Child>?) {
+        this.children = if (children != null) children else mutableListOf<Child?>()
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryMusicDirectoryBinding item;
+    inner class ViewHolder internal constructor(var item: ItemLibraryMusicDirectoryBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.musicDirectoryTitleTextView.setSelected(true)
 
-        ViewHolder(ItemLibraryMusicDirectoryBinding item) {
-            super(item.getRoot());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
 
-            this.item = item;
-
-            item.musicDirectoryTitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-
-            item.musicDirectoryMoreButton.setOnClickListener(v -> onClick());
+            item.musicDirectoryMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
+        fun onClick() {
+            val bundle = Bundle()
 
-            if (children.get(getBindingAdapterPosition()).isDir()) {
-                bundle.putString(Constants.MUSIC_DIRECTORY_ID, children.get(getBindingAdapterPosition()).getId());
-                click.onMusicDirectoryClick(bundle);
+            if (children.get(getBindingAdapterPosition()).isDir) {
+                bundle.putString(
+                    Constants.MUSIC_DIRECTORY_ID,
+                    children.get(getBindingAdapterPosition()).id
+                )
+                click.onMusicDirectoryClick(bundle)
             } else {
-                bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, new ArrayList<>(children));
-                bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition());
-                click.onMediaClick(bundle);
+                bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, ArrayList<Child?>(children))
+                bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition())
+                click.onMediaClick(bundle)
             }
         }
 
-        private boolean onLongClick() {
-            if (!children.get(getBindingAdapterPosition()).isDir()) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(Constants.TRACK_OBJECT, children.get(getBindingAdapterPosition()));
+        private fun onLongClick(): Boolean {
+            if (!children.get(getBindingAdapterPosition()).isDir) {
+                val bundle = Bundle()
+                bundle.putParcelable(
+                    Constants.TRACK_OBJECT,
+                    children.get(getBindingAdapterPosition())
+                )
 
-                click.onMediaLongClick(bundle);
+                click.onMediaLongClick(bundle)
 
-                return true;
+                return true
             } else {
-                return false;
+                return false
             }
         }
     }

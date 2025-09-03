@@ -1,104 +1,93 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.interfaces.MediaCallback
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class AlbumCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+    private val albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
+    private val loading = MutableLiveData<Boolean?>(true)
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.interfaces.MediaCallback;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
+    private var page = 0
+    private var status = Status.STOPPED
 
-import java.util.ArrayList;
-import java.util.List;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-
-public class AlbumCatalogueViewModel extends AndroidViewModel {
-    private final MutableLiveData<List<AlbumID3>> albumList = new MutableLiveData<>(new ArrayList<>());
-    private final MutableLiveData<Boolean> loading = new MutableLiveData<>(true);
-
-    private int page = 0;
-    private Status status = Status.STOPPED;
-
-    public AlbumCatalogueViewModel(@NonNull Application application) {
-        super(application);
+    fun getAlbumList(): LiveData<MutableList<AlbumID3?>?> {
+        return albumList
     }
 
-    public LiveData<List<AlbumID3>> getAlbumList() {
-        return albumList;
+    val loadingStatus: LiveData<Boolean?>
+        get() = loading
+
+    fun loadAlbums() {
+        page = 0
+        status = Status.RUNNING
+        albumList.value = ArrayList<AlbumID3?>()
+        loadAlbums(500)
     }
 
-    public LiveData<Boolean> getLoadingStatus() {
-        return loading;
+    fun stopLoading() {
+        status = Status.STOPPED
     }
 
-    public void loadAlbums() {
-        page = 0;
-        status = Status.RUNNING;
-        albumList.setValue(new ArrayList<>());
-        loadAlbums(500);
-    }
-
-    public void stopLoading() {
-        status = Status.STOPPED;
-    }
-
-    private void loadAlbums(int size) {
-        retrieveAlbums(new MediaCallback() {
-            @Override
-            public void onError(Exception exception) {
+    private fun loadAlbums(size: Int) {
+        retrieveAlbums(object : MediaCallback {
+            override fun onError(exception: Exception?) {
             }
 
-            @Override
-            public void onLoadMedia(List<?> media) {
+            override fun onLoadMedia(media: MutableList<*>?) {
                 if (status == Status.STOPPED) {
-                    loading.setValue(false);
-                    return;
+                    loading.value = false
+                    return
                 }
 
-                List<AlbumID3> liveAlbum = albumList.getValue();
+                val liveAlbum = albumList.getValue()
 
-                liveAlbum.addAll((List<AlbumID3>) media);
-                albumList.setValue(liveAlbum);
+                liveAlbum!!.addAll((media as MutableList<AlbumID3?>?)!!)
+                albumList.value = liveAlbum
 
-                if (media.size() == size) {
-                    loadAlbums(size);
-                    loading.setValue(true);
+                if (media.size == size) {
+                    loadAlbums(size)
+                    loading.value = true
                 } else {
-                    status = Status.STOPPED;
-                    loading.setValue(false);
+                    status = Status.STOPPED
+                    loading.value = false
                 }
             }
-        }, size, size * page++);
+        }, size, size * page++)
     }
 
 
-    private void retrieveAlbums(MediaCallback callback, int size, int offset) {
-        App.getSubsonicClientInstance(false)
-                .getAlbumSongListClient()
-                .getAlbumList2("alphabeticalByName", size, offset, null, null)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull retrofit2.Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getAlbumList2() != null && response.body().getSubsonicResponse().getAlbumList2().getAlbums() != null) {
-                            List<AlbumID3> albumList = new ArrayList<>(response.body().getSubsonicResponse().getAlbumList2().getAlbums());
-                            callback.onLoadMedia(albumList);
-                        }
+    private fun retrieveAlbums(callback: MediaCallback, size: Int, offset: Int) {
+        getSubsonicClientInstance(false)
+            .getAlbumSongListClient()
+            .getAlbumList2("alphabeticalByName", size, offset, null, null)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null && response.body()!!.subsonicResponse.albumList2!!.albums != null) {
+                        val albumList: MutableList<AlbumID3?> =
+                            ArrayList<AlbumID3?>(response.body()!!.subsonicResponse.albumList2!!.albums)
+                        callback.onLoadMedia(albumList)
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        callback.onError(new Exception(t.getMessage()));
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    callback.onError(Exception(t.message))
+                }
+            })
     }
 
-    private enum Status {
+    private enum class Status {
         RUNNING,
         STOPPED
     }

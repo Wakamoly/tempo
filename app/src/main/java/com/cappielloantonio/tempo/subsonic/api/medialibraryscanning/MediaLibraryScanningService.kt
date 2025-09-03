@@ -1,17 +1,14 @@
-package com.cappielloantonio.tempo.subsonic.api.medialibraryscanning;
+package com.cappielloantonio.tempo.subsonic.api.medialibraryscanning
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.QueryMap;
-
-public interface MediaLibraryScanningService {
+interface MediaLibraryScanningService {
     @GET("startScan")
-    Call<ApiResponse> startScan(@QueryMap Map<String, String> params);
+    fun startScan(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getScanStatus")
-    Call<ApiResponse> getScanStatus(@QueryMap Map<String, String> params);
+    fun getScanStatus(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 }

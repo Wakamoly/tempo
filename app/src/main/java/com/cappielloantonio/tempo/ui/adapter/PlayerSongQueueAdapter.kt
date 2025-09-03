@@ -1,161 +1,177 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.graphics.drawable.Drawable
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.media3.session.MediaBrowser
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.bumptech.glide.RequestBuilder
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.ItemPlayerQueueSongBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.interfaces.MediaIndexCallback
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.util.Preferences.showItemRating
+import com.google.common.util.concurrent.ListenableFuture
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.content.res.AppCompatResources;
-import androidx.media3.session.MediaBrowser;
-import androidx.recyclerview.widget.RecyclerView;
+class PlayerSongQueueAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<PlayerSongQueueAdapter.ViewHolder?>() {
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
+    private var songs: MutableList<Child>?
 
-import com.bumptech.glide.RequestBuilder;
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.ItemPlayerQueueSongBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.interfaces.MediaIndexCallback;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class PlayerSongQueueAdapter extends RecyclerView.Adapter<PlayerSongQueueAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
-    private List<Child> songs;
-
-    public PlayerSongQueueAdapter(ClickCallback click) {
-        this.click = click;
-        this.songs = Collections.emptyList();
+    init {
+        this.songs = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemPlayerQueueSongBinding view = ItemPlayerQueueSongBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemPlayerQueueSongBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return PlayerSongQueueAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Child song = songs.get(holder.getLayoutPosition());
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val song = songs!!.get(holder.layoutPosition)
 
-        holder.item.queueSongTitleTextView.setText(song.getTitle());
-        holder.item.queueSongSubtitleTextView.setText(
-                holder.itemView.getContext().getString(
-                        R.string.song_subtitle_formatter,
-                        song.getArtist(),
-                        MusicUtil.getReadableDurationString(song.getDuration(), false),
-                        MusicUtil.getReadableAudioQualityString(song)
-                )
-        );
+        holder.item.queueSongTitleTextView.text = song.title
+        holder.item.queueSongSubtitleTextView.text = holder.itemView.context.getString(
+            R.string.song_subtitle_formatter,
+            song.artist,
+            MusicUtil.getReadableDurationString(song.duration, false),
+            MusicUtil.getReadableAudioQualityString(song)
+        )
 
-        RequestBuilder<Drawable> thumbnail = CustomGlideRequest.Builder
-                        .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                        .build()
-                        .sizeMultiplier(0.1f);
+        val thumbnail: RequestBuilder<Drawable?> = CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .sizeMultiplier(0.1f)
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .thumbnail(thumbnail)
-                .into(holder.item.queueSongCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .thumbnail(thumbnail)
+            .into(holder.item.queueSongCoverImageView)
 
-        MediaManager.getCurrentIndex(mediaBrowserListenableFuture, new MediaIndexCallback() {
-            @Override
-            public void onRecovery(int index) {
-                if (holder.getLayoutPosition() < index) {
-                    holder.item.queueSongTitleTextView.setAlpha(0.2f);
-                    holder.item.queueSongSubtitleTextView.setAlpha(0.2f);
-                    holder.item.ratingIndicatorImageView.setAlpha(0.2f);
+        MediaManager.getCurrentIndex(mediaBrowserListenableFuture, object : MediaIndexCallback {
+            override fun onRecovery(index: Int) {
+                if (holder.layoutPosition < index) {
+                    holder.item.queueSongTitleTextView.setAlpha(0.2f)
+                    holder.item.queueSongSubtitleTextView.setAlpha(0.2f)
+                    holder.item.ratingIndicatorImageView.setAlpha(0.2f)
                 } else {
-                    holder.item.queueSongTitleTextView.setAlpha(1.0f);
-                    holder.item.queueSongSubtitleTextView.setAlpha(1.0f);
-                    holder.item.ratingIndicatorImageView.setAlpha(1.0f);
+                    holder.item.queueSongTitleTextView.setAlpha(1.0f)
+                    holder.item.queueSongSubtitleTextView.setAlpha(1.0f)
+                    holder.item.ratingIndicatorImageView.setAlpha(1.0f)
                 }
             }
-        });
+        })
 
-        if (Preferences.showItemRating()) {
-            if (song.getStarred() == null && song.getUserRating() == null) {
-                holder.item.ratingIndicatorImageView.setVisibility(View.GONE);
+        if (showItemRating()) {
+            if (song.starred == null && song.userRating == null) {
+                holder.item.ratingIndicatorImageView.visibility = View.GONE
             }
 
-            holder.item.preferredIcon.setVisibility(song.getStarred() != null ? View.VISIBLE : View.GONE);
-            holder.item.ratingBarLayout.setVisibility(song.getUserRating() != null ? View.VISIBLE : View.GONE);
+            holder.item.preferredIcon.setVisibility(if (song.starred != null) View.VISIBLE else View.GONE)
+            holder.item.ratingBarLayout.visibility = if (song.userRating != null) View.VISIBLE else View.GONE
 
-            if (song.getUserRating() != null) {
-                holder.item.oneStarIcon.setImageDrawable(AppCompatResources.getDrawable(holder.itemView.getContext(), song.getUserRating() >= 1 ? R.drawable.ic_star : R.drawable.ic_star_outlined));
-                holder.item.twoStarIcon.setImageDrawable(AppCompatResources.getDrawable(holder.itemView.getContext(), song.getUserRating() >= 2 ? R.drawable.ic_star : R.drawable.ic_star_outlined));
-                holder.item.threeStarIcon.setImageDrawable(AppCompatResources.getDrawable(holder.itemView.getContext(), song.getUserRating() >= 3 ? R.drawable.ic_star : R.drawable.ic_star_outlined));
-                holder.item.fourStarIcon.setImageDrawable(AppCompatResources.getDrawable(holder.itemView.getContext(), song.getUserRating() >= 4 ? R.drawable.ic_star : R.drawable.ic_star_outlined));
-                holder.item.fiveStarIcon.setImageDrawable(AppCompatResources.getDrawable(holder.itemView.getContext(), song.getUserRating() >= 5 ? R.drawable.ic_star : R.drawable.ic_star_outlined));
+            if (song.userRating != null) {
+                holder.item.oneStarIcon.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                        holder.itemView.context,
+                        if (song.userRating!! >= 1) R.drawable.ic_star else R.drawable.ic_star_outlined
+                    )
+                )
+                holder.item.twoStarIcon.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                        holder.itemView.context,
+                        if (song.userRating!! >= 2) R.drawable.ic_star else R.drawable.ic_star_outlined
+                    )
+                )
+                holder.item.threeStarIcon.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                        holder.itemView.context,
+                        if (song.userRating!! >= 3) R.drawable.ic_star else R.drawable.ic_star_outlined
+                    )
+                )
+                holder.item.fourStarIcon.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                        holder.itemView.context,
+                        if (song.userRating!! >= 4) R.drawable.ic_star else R.drawable.ic_star_outlined
+                    )
+                )
+                holder.item.fiveStarIcon.setImageDrawable(
+                    AppCompatResources.getDrawable(
+                        holder.itemView.context,
+                        if (song.userRating!! >= 5) R.drawable.ic_star else R.drawable.ic_star_outlined
+                    )
+                )
             }
         } else {
-            holder.item.ratingIndicatorImageView.setVisibility(View.GONE);
+            holder.item.ratingIndicatorImageView.visibility = View.GONE
         }
     }
 
-    public List<Child> getItems() {
-        return this.songs;
-    }
+    var items: MutableList<Child>?
+        get() = this.songs
+        set(songs) {
+            this.songs = songs
+            notifyDataSetChanged()
+        }
 
-    public void setItems(List<Child> songs) {
-        this.songs = songs;
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public int getItemCount() {
+    override fun getItemCount(): Int {
         if (songs == null) {
-            return 0;
+            return 0
         }
-        return songs.size();
+        return songs!!.size
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    public void setMediaBrowserListenableFuture(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture) {
-        this.mediaBrowserListenableFuture = mediaBrowserListenableFuture;
+    fun setMediaBrowserListenableFuture(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
+        this.mediaBrowserListenableFuture = mediaBrowserListenableFuture
     }
 
-    public Child getItem(int id) {
-        return songs.get(id);
+    fun getItem(id: Int): Child? {
+        return songs!!.get(id)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemPlayerQueueSongBinding item;
+    inner class ViewHolder internal constructor(var item: ItemPlayerQueueSongBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.queueSongTitleTextView.setSelected(true)
+            item.queueSongSubtitleTextView.setSelected(true)
 
-        ViewHolder(ItemPlayerQueueSongBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.queueSongTitleTextView.setSelected(true);
-            item.queueSongSubtitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, new ArrayList<>(songs));
-            bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition());
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, ArrayList<Child?>(songs))
+            bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition())
 
-            click.onMediaClick(bundle);
+            click.onMediaClick(bundle)
         }
     }
 }

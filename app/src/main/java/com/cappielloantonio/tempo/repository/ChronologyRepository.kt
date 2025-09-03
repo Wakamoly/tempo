@@ -1,39 +1,33 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.lifecycle.LiveData;
+import androidx.lifecycle.LiveData
+import com.cappielloantonio.tempo.database.AppDatabase
+import com.cappielloantonio.tempo.database.dao.ChronologyDao
+import com.cappielloantonio.tempo.model.Chronology
 
-import com.cappielloantonio.tempo.database.AppDatabase;
-import com.cappielloantonio.tempo.database.dao.ChronologyDao;
-import com.cappielloantonio.tempo.model.Chronology;
+class ChronologyRepository {
+    private val chronologyDao: ChronologyDao = AppDatabase.Companion.getInstance().chronologyDao()
 
-import java.util.Calendar;
-import java.util.List;
-
-public class ChronologyRepository {
-    private final ChronologyDao chronologyDao = AppDatabase.getInstance().chronologyDao();
-
-    public LiveData<List<Chronology>> getChronology(String server, long start, long end) {
-        return chronologyDao.getAllFrom(start, end, server);
+    fun getChronology(
+        server: String?,
+        start: Long,
+        end: Long
+    ): LiveData<MutableList<Chronology?>?>? {
+        return chronologyDao.getAllFrom(start, end, server)
     }
 
-    public void insert(Chronology item) {
-        InsertThreadSafe insert = new InsertThreadSafe(chronologyDao, item);
-        Thread thread = new Thread(insert);
-        thread.start();
+    fun insert(item: Chronology?) {
+        val insert = InsertThreadSafe(chronologyDao, item)
+        val thread = Thread(insert)
+        thread.start()
     }
 
-    private static class InsertThreadSafe implements Runnable {
-        private final ChronologyDao chronologyDao;
-        private final Chronology item;
-
-        public InsertThreadSafe(ChronologyDao chronologyDao, Chronology item) {
-            this.chronologyDao = chronologyDao;
-            this.item = item;
-        }
-
-        @Override
-        public void run() {
-            chronologyDao.insert(item);
+    private class InsertThreadSafe(
+        private val chronologyDao: ChronologyDao,
+        private val item: Chronology?
+    ) : Runnable {
+        override fun run() {
+            chronologyDao.insert(item)
         }
     }
 }

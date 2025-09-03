@@ -1,74 +1,73 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHorizontalPlaylistDialogTrackBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.util.MusicUtil
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class PlaylistDialogSongHorizontalAdapter :
+    RecyclerView.Adapter<PlaylistDialogSongHorizontalAdapter.ViewHolder?>() {
+    private var songs: MutableList<Child>
 
-import com.cappielloantonio.tempo.databinding.ItemHorizontalPlaylistDialogTrackBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class PlaylistDialogSongHorizontalAdapter extends RecyclerView.Adapter<PlaylistDialogSongHorizontalAdapter.ViewHolder> {
-    private List<Child> songs;
-
-    public PlaylistDialogSongHorizontalAdapter() {
-        this.songs = Collections.emptyList();
+    init {
+        this.songs = mutableListOf<Child?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalPlaylistDialogTrackBinding view = ItemHorizontalPlaylistDialogTrackBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalPlaylistDialogTrackBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Child song = songs.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val song = songs.get(position)
 
-        holder.item.playlistDialogSongTitleTextView.setText(song.getTitle());
-        holder.item.playlistDialogAlbumArtistTextView.setText(song.getArtist());
-        holder.item.playlistDialogSongDurationTextView.setText(MusicUtil.getReadableDurationString(song.getDuration(), false));
+        holder.item.playlistDialogSongTitleTextView.text = song.title
+        holder.item.playlistDialogAlbumArtistTextView.text = song.artist
+        holder.item.playlistDialogSongDurationTextView.text = MusicUtil.getReadableDurationString(
+            song.duration,
+            false
+        )
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), song.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.playlistDialogSongCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            song.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.playlistDialogSongCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return songs.size();
+    override fun getItemCount(): Int {
+        return songs.size
     }
 
-    public List<Child> getItems() {
-        return this.songs;
+    var items: MutableList<Child>
+        get() = this.songs
+        set(songs) {
+            this.songs = songs
+            notifyDataSetChanged()
+        }
+
+    fun getItem(id: Int): Child? {
+        return songs.get(id)
     }
 
-    public void setItems(List<Child> songs) {
-        this.songs = songs;
-        notifyDataSetChanged();
-    }
-
-    public Child getItem(int id) {
-        return songs.get(id);
-    }
-
-    public static class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalPlaylistDialogTrackBinding item;
-
-        ViewHolder(ItemHorizontalPlaylistDialogTrackBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.playlistDialogSongTitleTextView.setSelected(true);
+    class ViewHolder internal constructor(var item: ItemHorizontalPlaylistDialogTrackBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.playlistDialogSongTitleTextView.setSelected(true)
         }
     }
 }

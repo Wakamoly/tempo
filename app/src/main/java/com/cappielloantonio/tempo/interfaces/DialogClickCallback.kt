@@ -1,13 +1,13 @@
-package com.cappielloantonio.tempo.interfaces;
+package com.cappielloantonio.tempo.interfaces
 
+import androidx.annotation.Keep
 
-import androidx.annotation.Keep;
 
 @Keep
-public interface DialogClickCallback {
-    default void onPositiveClick() {}
+interface DialogClickCallback {
+    fun onPositiveClick() {}
 
-    default void onNegativeClick() {}
+    fun onNegativeClick() {}
 
-    default void onNeutralClick() {}
+    fun onNeutralClick() {}
 }

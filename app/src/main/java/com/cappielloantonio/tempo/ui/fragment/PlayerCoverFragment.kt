@@ -1,197 +1,230 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.os.Handler;
-import android.transition.Fade;
-import android.transition.Transition;
-import android.transition.TransitionManager;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import java.util.ArrayList;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.MediaMetadata;
-import androidx.media3.common.Player;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerCoverBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.ui.dialog.PlaylistChooserDialog;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+import android.content.ComponentName
+import android.os.Bundle
+import android.os.Handler
+import android.transition.Fade
+import android.transition.Transition
+import android.transition.TransitionManager
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.MediaMetadata
+import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerCoverBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.ui.dialog.PlaylistChooserDialog
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.Preferences.isSyncronizationEnabled
+import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel
+import com.google.android.material.snackbar.Snackbar
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
 @UnstableApi
-public class PlayerCoverFragment extends Fragment {
-    private PlayerBottomSheetViewModel playerBottomSheetViewModel;
-    private InnerFragmentPlayerCoverBinding bind;
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+class PlayerCoverFragment : Fragment() {
+    private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null
+    private var bind: InnerFragmentPlayerCoverBinding? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
 
-    private final Handler handler = new Handler();
+    private val handler = Handler()
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        bind = InnerFragmentPlayerCoverBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        bind = InnerFragmentPlayerCoverBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
 
-        playerBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(PlayerBottomSheetViewModel.class);
+        playerBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
+                PlayerBottomSheetViewModel::class.java
+            )
 
-        initOverlay();
-        initInnerButton();
+        initOverlay()
+        initInnerButton()
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        initializeBrowser();
-        bindMediaController();
-        toggleOverlayVisibility(false);
+    override fun onStart() {
+        super.onStart()
+        initializeBrowser()
+        bindMediaController()
+        toggleOverlayVisibility(false)
     }
 
-    @Override
-    public void onStop() {
-        releaseBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initTapButtonHideTransition() {
-        bind.nowPlayingTapButton.setVisibility(View.VISIBLE);
+    private fun initTapButtonHideTransition() {
+        bind!!.nowPlayingTapButton.visibility = View.VISIBLE
 
-        handler.removeCallbacksAndMessages(null);
+        handler.removeCallbacksAndMessages(null)
 
-        final Runnable runnable = () -> {
-            if (bind != null) bind.nowPlayingTapButton.setVisibility(View.GONE);
-        };
+        val runnable = Runnable {
+            if (bind != null) bind!!.nowPlayingTapButton.visibility = View.GONE
+        }
 
-        handler.postDelayed(runnable, 10000);
+        handler.postDelayed(runnable, 10000)
     }
 
-    private void initOverlay() {
-        bind.nowPlayingSongCoverImageView.setOnClickListener(view -> toggleOverlayVisibility(true));
-        bind.nowPlayingSongCoverButtonGroup.setOnClickListener(view -> toggleOverlayVisibility(false));
-        bind.nowPlayingTapButton.setOnClickListener(view -> toggleOverlayVisibility(true));
+    private fun initOverlay() {
+        bind!!.nowPlayingSongCoverImageView.setOnClickListener(View.OnClickListener { view: View? ->
+            toggleOverlayVisibility(
+                true
+            )
+        })
+        bind!!.nowPlayingSongCoverButtonGroup.setOnClickListener(View.OnClickListener { view: View? ->
+            toggleOverlayVisibility(
+                false
+            )
+        })
+        bind!!.nowPlayingTapButton.setOnClickListener(View.OnClickListener { view: View? ->
+            toggleOverlayVisibility(
+                true
+            )
+        })
     }
 
-    private void toggleOverlayVisibility(boolean isVisible) {
-        Transition transition = new Fade();
-        transition.setDuration(200);
-        transition.addTarget(bind.nowPlayingSongCoverButtonGroup);
+    private fun toggleOverlayVisibility(isVisible: Boolean) {
+        val transition: Transition = Fade()
+        transition.setDuration(200)
+        transition.addTarget(bind!!.nowPlayingSongCoverButtonGroup)
 
-        TransitionManager.beginDelayedTransition(bind.getRoot(), transition);
-        bind.nowPlayingSongCoverButtonGroup.setVisibility(isVisible ? View.VISIBLE : View.GONE);
-        bind.nowPlayingTapButton.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+        TransitionManager.beginDelayedTransition(bind!!.getRoot(), transition)
+        bind!!.nowPlayingSongCoverButtonGroup.visibility = if (isVisible) View.VISIBLE else View.GONE
+        bind!!.nowPlayingTapButton.visibility = if (isVisible) View.GONE else View.VISIBLE
 
-        bind.innerButtonBottomRight.setVisibility(Preferences.isSyncronizationEnabled() ? View.VISIBLE : View.GONE);
-        bind.innerButtonBottomRightAlternative.setVisibility(Preferences.isSyncronizationEnabled() ? View.GONE : View.VISIBLE);
+        bind!!.innerButtonBottomRight.visibility = if (isSyncronizationEnabled()) View.VISIBLE else View.GONE
+        bind!!.innerButtonBottomRightAlternative.visibility = if (isSyncronizationEnabled()) View.GONE else View.VISIBLE
 
-        if (!isVisible) initTapButtonHideTransition();
+        if (!isVisible) initTapButtonHideTransition()
     }
 
-    private void initInnerButton() {
-        playerBottomSheetViewModel.getLiveMedia().observe(getViewLifecycleOwner(), song -> {
-            if (song != null && bind != null) {
-                bind.innerButtonTopLeft.setOnClickListener(view -> {
-                    DownloadUtil.getDownloadTracker(requireContext()).download(
+    private fun initInnerButton() {
+        playerBottomSheetViewModel!!.getLiveMedia()
+            .observe(getViewLifecycleOwner(), Observer { song: Child? ->
+                if (song != null && bind != null) {
+                    bind!!.innerButtonTopLeft.setOnClickListener(View.OnClickListener { view: View? ->
+                        DownloadUtil.getDownloadTracker(requireContext()).download(
                             MappingUtil.mapDownload(song),
-                            new Download(song)
-                    );
-                });
+                            Download(song)
+                        )
+                    })
 
-                bind.innerButtonTopRight.setOnClickListener(view -> {
-                            ArrayList<Child> tracks = new ArrayList<>();
-                            tracks.add(song);
-                            Bundle bundle = new Bundle();
-                            bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, tracks);
+                    bind!!.innerButtonTopRight.setOnClickListener(View.OnClickListener { view: View? ->
+                        val tracks = ArrayList<Child?>()
+                        tracks.add(song)
+                        val bundle = Bundle()
+                        bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, tracks)
 
-                            PlaylistChooserDialog dialog = new PlaylistChooserDialog();
-                            dialog.setArguments(bundle);
-                            dialog.show(requireActivity().getSupportFragmentManager(), null);
-                        }
-                );
-
-                bind.innerButtonBottomLeft.setOnClickListener(view -> {
-                    playerBottomSheetViewModel.getMediaInstantMix(getViewLifecycleOwner(), song).observe(getViewLifecycleOwner(), media -> {
-                        MediaManager.enqueue(mediaBrowserListenableFuture, media, true);
-                    });
-                });
-
-                bind.innerButtonBottomRight.setOnClickListener(view -> {
-                    if (playerBottomSheetViewModel.savePlayQueue()) {
-                        Snackbar.make(requireView(), R.string.player_queue_save_queue_success, Snackbar.LENGTH_LONG).show();
+                        val dialog = PlaylistChooserDialog()
+                        dialog.setArguments(bundle)
+                        dialog.show(requireActivity().supportFragmentManager, null)
                     }
-                });
+                    )
 
-                bind.innerButtonBottomRightAlternative.setOnClickListener(view -> {
-                    if (getActivity() != null) {
-                        PlayerBottomSheetFragment playerBottomSheetFragment = (PlayerBottomSheetFragment) requireActivity().getSupportFragmentManager().findFragmentByTag("PlayerBottomSheet");
-                        if (playerBottomSheetFragment != null) {
-                            playerBottomSheetFragment.goToLyricsPage();
+                    bind!!.innerButtonBottomLeft.setOnClickListener(View.OnClickListener { view: View? ->
+                        playerBottomSheetViewModel!!.getMediaInstantMix(
+                            getViewLifecycleOwner(),
+                            song
+                        ).observe(getViewLifecycleOwner(), Observer { media: MutableList<Child?>? ->
+                            MediaManager.enqueue(mediaBrowserListenableFuture, media, true)
+                        })
+                    })
+
+                    bind!!.innerButtonBottomRight.setOnClickListener(View.OnClickListener { view: View? ->
+                        if (playerBottomSheetViewModel!!.savePlayQueue()) {
+                            Snackbar.make(
+                                requireView(),
+                                R.string.player_queue_save_queue_success,
+                                Snackbar.LENGTH_LONG
+                            ).show()
                         }
-                    }
-                });
-            }
-        });
+                    })
+
+                    bind!!.innerButtonBottomRightAlternative.setOnClickListener(View.OnClickListener { view: View? ->
+                        if (activity != null) {
+                            val playerBottomSheetFragment =
+                                requireActivity().supportFragmentManager
+                                    .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
+                            if (playerBottomSheetFragment != null) {
+                                playerBottomSheetFragment.goToLyricsPage()
+                            }
+                        }
+                    })
+                }
+            })
     }
 
-    private void initializeBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture!!)
     }
 
-    private void bindMediaController() {
-        mediaBrowserListenableFuture.addListener(() -> {
+    private fun bindMediaController() {
+        mediaBrowserListenableFuture!!.addListener(Runnable {
             try {
-                MediaBrowser mediaBrowser = mediaBrowserListenableFuture.get();
-                setMediaBrowserListener(mediaBrowser);
-            } catch (Exception exception) {
-                exception.printStackTrace();
+                val mediaBrowser = mediaBrowserListenableFuture!!.get()
+                setMediaBrowserListener(mediaBrowser)
+            } catch (exception: Exception) {
+                exception.printStackTrace()
             }
-        }, MoreExecutors.directExecutor());
+        }, MoreExecutors.directExecutor())
     }
 
-    private void setMediaBrowserListener(MediaBrowser mediaBrowser) {
-        setCover(mediaBrowser.getMediaMetadata());
+    private fun setMediaBrowserListener(mediaBrowser: MediaBrowser) {
+        setCover(mediaBrowser.getMediaMetadata())
 
-        mediaBrowser.addListener(new Player.Listener() {
-            @Override
-            public void onMediaMetadataChanged(@NonNull MediaMetadata mediaMetadata) {
-                setCover(mediaMetadata);
-                toggleOverlayVisibility(false);
+        mediaBrowser.addListener(object : Player.Listener {
+            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                setCover(mediaMetadata)
+                toggleOverlayVisibility(false)
             }
-        });
+        })
     }
 
-    private void setCover(MediaMetadata mediaMetadata) {
-        CustomGlideRequest.Builder
-                .from(requireContext(), mediaMetadata.extras != null ? mediaMetadata.extras.getString("coverArtId") : null, CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(bind.nowPlayingSongCoverImageView);
+    private fun setCover(mediaMetadata: MediaMetadata) {
+        CustomGlideRequest.Builder.Companion.from(
+            requireContext(),
+            if (mediaMetadata.extras != null) mediaMetadata.extras!!.getString("coverArtId") else null,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(bind!!.nowPlayingSongCoverImageView)
     }
 }

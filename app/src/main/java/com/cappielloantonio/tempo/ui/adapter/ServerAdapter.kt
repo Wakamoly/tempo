@@ -1,86 +1,74 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.ItemLoginServerBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.model.Server
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class ServerAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<ServerAdapter.ViewHolder?>() {
+    private var servers: MutableList<Server>
 
-import com.cappielloantonio.tempo.databinding.ItemLoginServerBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.model.Server;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class ServerAdapter extends RecyclerView.Adapter<ServerAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Server> servers;
-
-    public ServerAdapter(ClickCallback click) {
-        this.click = click;
-        this.servers = new ArrayList<>();
+    init {
+        this.servers = ArrayList<Server>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLoginServerBinding view = ItemLoginServerBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view =
+            ItemLoginServerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ServerAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Server server = servers.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val server = servers.get(position)
 
-        holder.item.serverNameTextView.setText(server.getServerName());
-        holder.item.serverAddressTextView.setText(server.getAddress());
+        holder.item.serverNameTextView.text = server.serverName
+        holder.item.serverAddressTextView.text = server.address
     }
 
-    @Override
-    public int getItemCount() {
-        return servers.size();
+    override fun getItemCount(): Int {
+        return servers.size
     }
 
-    public void setItems(List<Server> servers) {
-        this.servers = servers;
-        notifyDataSetChanged();
+    fun setItems(servers: MutableList<Server>) {
+        this.servers = servers
+        notifyDataSetChanged()
     }
 
-    public Server getItem(int id) {
-        return servers.get(id);
+    fun getItem(id: Int): Server? {
+        return servers.get(id)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLoginServerBinding item;
+    inner class ViewHolder internal constructor(var item: ItemLoginServerBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.serverNameTextView.setSelected(true)
 
-        ViewHolder(ItemLoginServerBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.serverNameTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("server_object", servers.get(getBindingAdapterPosition()));
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable("server_object", servers.get(getBindingAdapterPosition()))
 
-            click.onServerClick(bundle);
+            click.onServerClick(bundle)
         }
 
-        public boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable("server_object", servers.get(getBindingAdapterPosition()));
+        fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable("server_object", servers.get(getBindingAdapterPosition()))
 
-            click.onServerLongClick(bundle);
+            click.onServerLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

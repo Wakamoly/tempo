@@ -1,37 +1,34 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.MutableLiveData;
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import com.cappielloantonio.tempo.subsonic.models.LyricsList
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-import com.cappielloantonio.tempo.subsonic.models.LyricsList;
+class OpenRepository {
+    fun getLyricsBySongId(id: String?): MutableLiveData<LyricsList?> {
+        val lyricsList = MutableLiveData<LyricsList?>()
 
-import retrofit2.Call;
-import retrofit2.Callback;
-import retrofit2.Response;
-
-public class OpenRepository {
-    public MutableLiveData<LyricsList> getLyricsBySongId(String id) {
-        MutableLiveData<LyricsList> lyricsList = new MutableLiveData<>();
-
-        App.getSubsonicClientInstance(false)
-                .getOpenClient()
-                .getLyricsBySongId(id)
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse().getLyricsList() != null) {
-                            lyricsList.setValue(response.body().getSubsonicResponse().getLyricsList());
-                        }
+        getSubsonicClientInstance(false)
+            .getOpenClient()
+            .getLyricsBySongId(id)
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.lyricsList != null) {
+                        lyricsList.value = response.body()!!.subsonicResponse.lyricsList
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                }
+            })
 
-                    }
-                });
-
-        return lyricsList;
+        return lyricsList
     }
 }

@@ -1,258 +1,292 @@
-package com.cappielloantonio.tempo.ui.fragment.bottomsheetdialog;
+package com.cappielloantonio.tempo.ui.fragment.bottomsheetdialog
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
-import android.content.ComponentName;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.ImageView;
-import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
-
-import androidx.annotation.Nullable;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-import androidx.navigation.fragment.NavHostFragment;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.MediaCallback;
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.repository.AlbumRepository;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.dialog.PlaylistChooserDialog;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.AlbumBottomSheetViewModel;
-import com.cappielloantonio.tempo.viewmodel.HomeViewModel;
-import com.google.android.material.bottomsheet.BottomSheetDialogFragment;
-import com.google.android.material.snackbar.Snackbar;
-import com.google.common.util.concurrent.ListenableFuture;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.ComponentName
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import android.widget.ToggleButton
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.navigation.fragment.NavHostFragment
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.MediaCallback
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.repository.AlbumRepository
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.dialog.PlaylistChooserDialog
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.DownloadUtil
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.util.Preferences.isSharingEnabled
+import com.cappielloantonio.tempo.viewmodel.AlbumBottomSheetViewModel
+import com.cappielloantonio.tempo.viewmodel.HomeViewModel
+import com.google.android.material.bottomsheet.BottomSheetDialogFragment
+import com.google.common.util.concurrent.ListenableFuture
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Collections
+import java.util.stream.Collectors
 
 @UnstableApi
-public class AlbumBottomSheetDialog extends BottomSheetDialogFragment implements View.OnClickListener {
-    private HomeViewModel homeViewModel;
-    private AlbumBottomSheetViewModel albumBottomSheetViewModel;
-    private AlbumID3 album;
+class AlbumBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickListener {
+    private var homeViewModel: HomeViewModel? = null
+    private var albumBottomSheetViewModel: AlbumBottomSheetViewModel? = null
+    private var album: AlbumID3? = null
 
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
 
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.bottom_sheet_album_dialog, container, false);
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val view = inflater.inflate(R.layout.bottom_sheet_album_dialog, container, false)
 
-        album = this.requireArguments().getParcelable(Constants.ALBUM_OBJECT);
+        album = this.requireArguments().getParcelable<AlbumID3?>(Constants.ALBUM_OBJECT)
 
-        homeViewModel = new ViewModelProvider(requireActivity()).get(HomeViewModel.class);
-        albumBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(AlbumBottomSheetViewModel.class);
-        albumBottomSheetViewModel.setAlbum(album);
+        homeViewModel =
+            ViewModelProvider(requireActivity()).get<HomeViewModel>(HomeViewModel::class.java)
+        albumBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<AlbumBottomSheetViewModel>(
+                AlbumBottomSheetViewModel::class.java
+            )
+        albumBottomSheetViewModel!!.setAlbum(album)
 
-        init(view);
+        init(view)
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
+        initializeMediaBrowser()
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    private void init(View view) {
-        ImageView coverAlbum = view.findViewById(R.id.album_cover_image_view);
-        CustomGlideRequest.Builder
-                .from(requireContext(), albumBottomSheetViewModel.getAlbum().getCoverArtId(), CustomGlideRequest.ResourceType.Album)
-                .build()
-                .into(coverAlbum);
+    private fun init(view: View) {
+        val coverAlbum = view.findViewById<ImageView>(R.id.album_cover_image_view)
+        CustomGlideRequest.Builder.Companion.from(
+            requireContext(),
+            albumBottomSheetViewModel!!.getAlbum().coverArtId,
+            CustomGlideRequest.ResourceType.Album
+        )
+            .build()
+            .into(coverAlbum)
 
-        TextView titleAlbum = view.findViewById(R.id.album_title_text_view);
-        titleAlbum.setText(albumBottomSheetViewModel.getAlbum().getName());
-        titleAlbum.setSelected(true);
+        val titleAlbum = view.findViewById<TextView>(R.id.album_title_text_view)
+        titleAlbum.text = albumBottomSheetViewModel!!.getAlbum().name
+        titleAlbum.setSelected(true)
 
-        TextView artistAlbum = view.findViewById(R.id.album_artist_text_view);
-        artistAlbum.setText(albumBottomSheetViewModel.getAlbum().getArtist());
+        val artistAlbum = view.findViewById<TextView>(R.id.album_artist_text_view)
+        artistAlbum.text = albumBottomSheetViewModel!!.getAlbum().artist
 
-        ToggleButton favoriteToggle = view.findViewById(R.id.button_favorite);
-        favoriteToggle.setChecked(albumBottomSheetViewModel.getAlbum().getStarred() != null);
-        favoriteToggle.setOnClickListener(v -> {
-            albumBottomSheetViewModel.setFavorite(requireContext());
-        });
+        val favoriteToggle = view.findViewById<ToggleButton>(R.id.button_favorite)
+        favoriteToggle.setChecked(albumBottomSheetViewModel!!.getAlbum().starred != null)
+        favoriteToggle.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.setFavorite(requireContext())
+        })
 
-        TextView playRadio = view.findViewById(R.id.play_radio_text_view);
-        playRadio.setOnClickListener(v -> {
-            AlbumRepository albumRepository = new AlbumRepository();
-            albumRepository.getInstantMix(album, 20, new MediaCallback() {
-                @Override
-                public void onError(Exception exception) {
-                    exception.printStackTrace();
+        val playRadio = view.findViewById<TextView>(R.id.play_radio_text_view)
+        playRadio.setOnClickListener(View.OnClickListener { v: View? ->
+            val albumRepository = AlbumRepository()
+            albumRepository.getInstantMix(album, 20, object : MediaCallback {
+                override fun onError(exception: Exception) {
+                    exception.printStackTrace()
                 }
 
-                @Override
-                public void onLoadMedia(List<?> media) {
-                    MusicUtil.ratingFilter((ArrayList<Child>) media);
+                override fun onLoadMedia(media: MutableList<*>) {
+                    MusicUtil.ratingFilter(media as ArrayList<Child?>?)
 
                     if (!media.isEmpty()) {
-                        MediaManager.startQueue(mediaBrowserListenableFuture, (ArrayList<Child>) media, 0);
-                        ((MainActivity) requireActivity()).setBottomSheetInPeek(true);
+                        MediaManager.startQueue(mediaBrowserListenableFuture, media, 0)
+                        (requireActivity() as MainActivity).setBottomSheetInPeek(true)
                     }
 
-                    dismissBottomSheet();
+                    dismissBottomSheet()
                 }
-            });
-        });
+            })
+        })
 
-        TextView playRandom = view.findViewById(R.id.play_random_text_view);
-        playRandom.setOnClickListener(v -> {
-            AlbumRepository albumRepository = new AlbumRepository();
-            albumRepository.getAlbumTracks(album.getId()).observe(getViewLifecycleOwner(), songs -> {
-                Collections.shuffle(songs);
+        val playRandom = view.findViewById<TextView>(R.id.play_random_text_view)
+        playRandom.setOnClickListener(View.OnClickListener { v: View? ->
+            val albumRepository = AlbumRepository()
+            albumRepository.getAlbumTracks(album!!.id)
+                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                    Collections.shuffle(songs)
+                    MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                    (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                    dismissBottomSheet()
+                })
+        })
 
-                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0);
-                ((MainActivity) requireActivity()).setBottomSheetInPeek(true);
+        val playNext = view.findViewById<TextView>(R.id.play_next_text_view)
+        playNext.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.getAlbumTracks()
+                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                    MediaManager.enqueue(mediaBrowserListenableFuture, songs, true)
+                    (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                    dismissBottomSheet()
+                })
+        })
 
-                dismissBottomSheet();
-            });
-        });
+        val addToQueue = view.findViewById<TextView>(R.id.add_to_queue_text_view)
+        addToQueue.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.getAlbumTracks()
+                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                    MediaManager.enqueue(mediaBrowserListenableFuture, songs, false)
+                    (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                    dismissBottomSheet()
+                })
+        })
 
-        TextView playNext = view.findViewById(R.id.play_next_text_view);
-        playNext.setOnClickListener(v -> albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-            MediaManager.enqueue(mediaBrowserListenableFuture, songs, true);
-            ((MainActivity) requireActivity()).setBottomSheetInPeek(true);
+        val downloadAll = view.findViewById<TextView>(R.id.download_all_text_view)
+        albumBottomSheetViewModel!!.getAlbumTracks()
+            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                val mediaItems = MappingUtil.mapDownloads(songs)
+                val downloads =
+                    songs!!.stream().map<Download?> { child: Child? -> Download(child) }.collect(
+                        Collectors.toList()
+                    )
+                downloadAll.setOnClickListener(View.OnClickListener { v: View? ->
+                    DownloadUtil.getDownloadTracker(requireContext())
+                        .download(mediaItems, downloads)
+                    dismissBottomSheet()
+                })
+            })
 
-            dismissBottomSheet();
-        }));
+        val addToPlaylist = view.findViewById<TextView>(R.id.add_to_playlist_text_view)
+        addToPlaylist.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.getAlbumTracks()
+                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                    val bundle = Bundle()
+                    bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, ArrayList<Child?>(songs))
 
-        TextView addToQueue = view.findViewById(R.id.add_to_queue_text_view);
-        addToQueue.setOnClickListener(v -> albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-            MediaManager.enqueue(mediaBrowserListenableFuture, songs, false);
-            ((MainActivity) requireActivity()).setBottomSheetInPeek(true);
+                    val dialog = PlaylistChooserDialog()
+                    dialog.setArguments(bundle)
+                    dialog.show(requireActivity().supportFragmentManager, null)
+                    dismissBottomSheet()
+                })
+        })
 
-            dismissBottomSheet();
-        }));
+        val removeAll = view.findViewById<TextView>(R.id.remove_all_text_view)
+        albumBottomSheetViewModel!!.getAlbumTracks()
+            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                val mediaItems = MappingUtil.mapDownloads(songs)
+                val downloads =
+                    songs!!.stream().map<Download?> { child: Child? -> Download(child) }.collect(
+                        Collectors.toList()
+                    )
+                removeAll.setOnClickListener(View.OnClickListener { v: View? ->
+                    DownloadUtil.getDownloadTracker(requireContext()).remove(mediaItems, downloads)
+                    dismissBottomSheet()
+                })
+            })
 
-        TextView downloadAll = view.findViewById(R.id.download_all_text_view);
-        albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-            List<MediaItem> mediaItems = MappingUtil.mapDownloads(songs);
-            List<Download> downloads = songs.stream().map(Download::new).collect(Collectors.toList());
+        initDownloadUI(removeAll)
 
-            downloadAll.setOnClickListener(v -> {
-                DownloadUtil.getDownloadTracker(requireContext()).download(mediaItems, downloads);
-                dismissBottomSheet();
-            });
-        });
+        val goToArtist = view.findViewById<TextView>(R.id.go_to_artist_text_view)
+        goToArtist.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.getArtist()
+                .observe(getViewLifecycleOwner(), Observer { artist: ArtistID3? ->
+                    if (artist != null) {
+                        val bundle = Bundle()
+                        bundle.putParcelable(Constants.ARTIST_OBJECT, artist)
+                        NavHostFragment.findNavController(this)
+                            .navigate(R.id.artistPageFragment, bundle)
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.album_error_retrieving_artist),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }
+                    dismissBottomSheet()
+                })
+        })
 
-        TextView addToPlaylist = view.findViewById(R.id.add_to_playlist_text_view);
-        addToPlaylist.setOnClickListener(v -> {
-            albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-                Bundle bundle = new Bundle();
-                bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, new ArrayList<>(songs));
+        val share = view.findViewById<TextView>(R.id.share_text_view)
+        share.setOnClickListener(View.OnClickListener { v: View? ->
+            albumBottomSheetViewModel!!.shareAlbum()
+                .observe(getViewLifecycleOwner(), Observer { sharedAlbum: Share? ->
+                    if (sharedAlbum != null) {
+                        val clipboardManager =
+                            requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clipData =
+                            ClipData.newPlainText(getString(R.string.app_name), sharedAlbum.url)
+                        clipboardManager.setPrimaryClip(clipData)
+                        refreshShares()
+                        dismissBottomSheet()
+                    } else {
+                        Toast.makeText(
+                            requireContext(),
+                            getString(R.string.share_unsupported_error),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        dismissBottomSheet()
+                    }
+                })
+        })
 
-                PlaylistChooserDialog dialog = new PlaylistChooserDialog();
-                dialog.setArguments(bundle);
-                dialog.show(requireActivity().getSupportFragmentManager(), null);
-
-                dismissBottomSheet();
-            });
-        });
-
-        TextView removeAll = view.findViewById(R.id.remove_all_text_view);
-        albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-            List<MediaItem> mediaItems = MappingUtil.mapDownloads(songs);
-            List<Download> downloads = songs.stream().map(Download::new).collect(Collectors.toList());
-
-            removeAll.setOnClickListener(v -> {
-                DownloadUtil.getDownloadTracker(requireContext()).remove(mediaItems, downloads);
-                dismissBottomSheet();
-            });
-        });
-
-        initDownloadUI(removeAll);
-
-        TextView goToArtist = view.findViewById(R.id.go_to_artist_text_view);
-        goToArtist.setOnClickListener(v -> albumBottomSheetViewModel.getArtist().observe(getViewLifecycleOwner(), artist -> {
-            if (artist != null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(Constants.ARTIST_OBJECT, artist);
-                NavHostFragment.findNavController(this).navigate(R.id.artistPageFragment, bundle);
-            } else {
-                Toast.makeText(requireContext(), getString(R.string.album_error_retrieving_artist), Toast.LENGTH_SHORT).show();
-            }
-
-            dismissBottomSheet();
-        }));
-
-        TextView share = view.findViewById(R.id.share_text_view);
-        share.setOnClickListener(v -> albumBottomSheetViewModel.shareAlbum().observe(getViewLifecycleOwner(), sharedAlbum -> {
-            if (sharedAlbum != null) {
-                ClipboardManager clipboardManager = (ClipboardManager) requireActivity().getSystemService(Context.CLIPBOARD_SERVICE);
-                ClipData clipData = ClipData.newPlainText(getString(R.string.app_name), sharedAlbum.getUrl());
-                clipboardManager.setPrimaryClip(clipData);
-                refreshShares();
-                dismissBottomSheet();
-            } else {
-                Toast.makeText(requireContext(), getString(R.string.share_unsupported_error), Toast.LENGTH_SHORT).show();
-                dismissBottomSheet();
-            }
-        }));
-
-        share.setVisibility(Preferences.isSharingEnabled() ? View.VISIBLE : View.GONE);
+        share.visibility = if (isSharingEnabled()) View.VISIBLE else View.GONE
     }
 
-    @Override
-    public void onClick(View v) {
-        dismissBottomSheet();
+    override fun onClick(v: View?) {
+        dismissBottomSheet()
     }
 
-    private void dismissBottomSheet() {
-        dismiss();
+    private fun dismissBottomSheet() {
+        dismiss()
     }
 
-    private void initDownloadUI(TextView removeAll) {
-        albumBottomSheetViewModel.getAlbumTracks().observe(getViewLifecycleOwner(), songs -> {
-            List<MediaItem> mediaItems = MappingUtil.mapDownloads(songs);
-
-            if (DownloadUtil.getDownloadTracker(requireContext()).areDownloaded(mediaItems)) {
-                removeAll.setVisibility(View.VISIBLE);
-            }
-        });
+    private fun initDownloadUI(removeAll: TextView) {
+        albumBottomSheetViewModel!!.getAlbumTracks()
+            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
+                val mediaItems = MappingUtil.mapDownloads(songs)
+                if (DownloadUtil.getDownloadTracker(requireContext()).areDownloaded(mediaItems)) {
+                    removeAll.visibility = View.VISIBLE
+                }
+            })
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseMediaBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseMediaBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    private void refreshShares() {
-        homeViewModel.refreshShares(requireActivity());
+    private fun refreshShares() {
+        homeViewModel!!.refreshShares(requireActivity())
     }
 }

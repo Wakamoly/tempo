@@ -1,35 +1,41 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.RadioRepository
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class RadioViewModel(application: Application) : AndroidViewModel(application) {
+    private val radioRepository: RadioRepository
 
-import com.cappielloantonio.tempo.repository.RadioRepository;
-import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation;
+    private val internetRadioStations = MutableLiveData<MutableList<InternetRadioStation?>?>(null)
 
-import java.util.List;
-
-public class RadioViewModel extends AndroidViewModel {
-    private final RadioRepository radioRepository;
-
-    private final MutableLiveData<List<InternetRadioStation>> internetRadioStations = new MutableLiveData<>(null);
-
-    public RadioViewModel(@NonNull Application application) {
-        super(application);
-
-        radioRepository = new RadioRepository();
+    init {
+        radioRepository = RadioRepository()
     }
 
-    public LiveData<List<InternetRadioStation>> getInternetRadioStations(LifecycleOwner owner) {
-        radioRepository.getInternetRadioStations().observe(owner, internetRadioStations::postValue);
-        return internetRadioStations;
+    fun getInternetRadioStations(owner: LifecycleOwner): LiveData<MutableList<InternetRadioStation?>?> {
+        radioRepository.getInternetRadioStations().observe(
+            owner,
+            Observer { value: MutableList<InternetRadioStation?>? ->
+                internetRadioStations.postValue(
+                    value
+                )
+            })
+        return internetRadioStations
     }
 
-    public void refreshInternetRadioStations(LifecycleOwner owner) {
-        radioRepository.getInternetRadioStations().observe(owner, internetRadioStations::postValue);
+    fun refreshInternetRadioStations(owner: LifecycleOwner) {
+        radioRepository.getInternetRadioStations().observe(
+            owner,
+            Observer { value: MutableList<InternetRadioStation?>? ->
+                internetRadioStations.postValue(
+                    value
+                )
+            })
     }
 }

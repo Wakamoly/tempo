@@ -1,85 +1,84 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.databinding.ItemLibraryMusicFolderBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.MusicFolder;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.Collections;
-import java.util.List;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemLibraryMusicFolderBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.MusicFolder
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
 @UnstableApi
-public class MusicFolderAdapter extends RecyclerView.Adapter<MusicFolderAdapter.ViewHolder> {
-    private final ClickCallback click;
+class MusicFolderAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<MusicFolderAdapter.ViewHolder?>() {
+    private var musicFolders: MutableList<MusicFolder>
 
-    private List<MusicFolder> musicFolders;
-
-    public MusicFolderAdapter(ClickCallback click) {
-        this.click = click;
-        this.musicFolders = Collections.emptyList();
+    init {
+        this.musicFolders = mutableListOf<MusicFolder?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryMusicFolderBinding view = ItemLibraryMusicFolderBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryMusicFolderBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return MusicFolderAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        MusicFolder musicFolder = musicFolders.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val musicFolder = musicFolders.get(position)
 
-        holder.item.musicFolderTitleTextView.setText(musicFolder.getName());
+        holder.item.musicFolderTitleTextView.text = musicFolder.name
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), musicFolder.getName(), CustomGlideRequest.ResourceType.Folder)
-                .build()
-                .into(holder.item.musicFolderCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            musicFolder.name,
+            CustomGlideRequest.ResourceType.Folder
+        )
+            .build()
+            .into(holder.item.musicFolderCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return musicFolders.size();
+    override fun getItemCount(): Int {
+        return musicFolders.size
     }
 
-    public void setItems(List<MusicFolder> musicFolders) {
-        this.musicFolders = musicFolders;
-        notifyDataSetChanged();
+    fun setItems(musicFolders: MutableList<MusicFolder>) {
+        this.musicFolders = musicFolders
+        notifyDataSetChanged()
     }
 
-    public MusicFolder getItem(int position) {
-        return musicFolders.get(position);
+    fun getItem(position: Int): MusicFolder? {
+        return musicFolders.get(position)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryMusicFolderBinding item;
+    inner class ViewHolder internal constructor(var item: ItemLibraryMusicFolderBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.musicFolderTitleTextView.setSelected(true)
 
-        ViewHolder(ItemLibraryMusicFolderBinding item) {
-            super(item.getRoot());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
 
-            this.item = item;
-
-            item.musicFolderTitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-
-            item.musicFolderMoreButton.setOnClickListener(v -> onClick());
+            item.musicFolderMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.MUSIC_FOLDER_OBJECT, musicFolders.get(getBindingAdapterPosition()));
-            click.onMusicFolderClick(bundle);
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.MUSIC_FOLDER_OBJECT,
+                musicFolders.get(getBindingAdapterPosition())
+            )
+            click.onMusicFolderClick(bundle)
         }
     }
 }

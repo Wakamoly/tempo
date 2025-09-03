@@ -1,236 +1,242 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.PopupMenu;
-import androidx.appcompat.widget.SearchView;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Bundle
+import android.os.Parcelable
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
+import android.view.View.OnTouchListener
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.PopupMenu
+import androidx.annotation.OptIn
+import androidx.appcompat.widget.SearchView
+import androidx.core.view.ViewCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.navigation.Navigation.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentAlbumListPageBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.AlbumID3
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.AlbumHorizontalAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.viewmodel.AlbumListPageViewModel
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.core.view.ViewCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.LinearLayoutManager;
+@OptIn(markerClass = UnstableApi::class)
+class AlbumListPageFragment : Fragment(), ClickCallback {
+    private var bind: FragmentAlbumListPageBinding? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentAlbumListPageBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.AlbumHorizontalAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.viewmodel.AlbumListPageViewModel;
+    private var activity: MainActivity? = null
+    private var albumListPageViewModel: AlbumListPageViewModel? = null
+    private var albumHorizontalAdapter: AlbumHorizontalAdapter? = null
 
-import java.util.List;
-
-@OptIn(markerClass = UnstableApi.class)
-public class AlbumListPageFragment extends Fragment implements ClickCallback {
-    private FragmentAlbumListPageBinding bind;
-
-    private MainActivity activity;
-    private AlbumListPageViewModel albumListPageViewModel;
-    private AlbumHorizontalAdapter albumHorizontalAdapter;
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
     }
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        activity = activity as MainActivity?
 
-        bind = FragmentAlbumListPageBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-        albumListPageViewModel = new ViewModelProvider(requireActivity()).get(AlbumListPageViewModel.class);
+        bind = FragmentAlbumListPageBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
+        albumListPageViewModel =
+            ViewModelProvider(requireActivity()).get<AlbumListPageViewModel>(AlbumListPageViewModel::class.java)
 
-        init();
-        initAppBar();
-        initAlbumListView();
+        init()
+        initAppBar()
+        initAlbumListView()
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void init() {
+    private fun init() {
         if (requireArguments().getString(Constants.ALBUM_RECENTLY_PLAYED) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_RECENTLY_PLAYED;
-            bind.pageTitleLabel.setText(R.string.album_list_page_recently_played);
+            albumListPageViewModel!!.title = Constants.ALBUM_RECENTLY_PLAYED
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_recently_played)
         } else if (requireArguments().getString(Constants.ALBUM_MOST_PLAYED) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_MOST_PLAYED;
-            bind.pageTitleLabel.setText(R.string.album_list_page_most_played);
+            albumListPageViewModel!!.title = Constants.ALBUM_MOST_PLAYED
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_most_played)
         } else if (requireArguments().getString(Constants.ALBUM_RECENTLY_ADDED) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_RECENTLY_ADDED;
-            bind.pageTitleLabel.setText(R.string.album_list_page_recently_added);
+            albumListPageViewModel!!.title = Constants.ALBUM_RECENTLY_ADDED
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_recently_added)
         } else if (requireArguments().getString(Constants.ALBUM_STARRED) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_STARRED;
-            bind.pageTitleLabel.setText(R.string.album_list_page_starred);
+            albumListPageViewModel!!.title = Constants.ALBUM_STARRED
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_starred)
         } else if (requireArguments().getString(Constants.ALBUM_NEW_RELEASES) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_NEW_RELEASES;
-            bind.pageTitleLabel.setText(R.string.album_list_page_new_releases);
+            albumListPageViewModel!!.title = Constants.ALBUM_NEW_RELEASES
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_new_releases)
         } else if (requireArguments().getString(Constants.ALBUM_DOWNLOADED) != null) {
-            albumListPageViewModel.title = Constants.ALBUM_DOWNLOADED;
-            bind.pageTitleLabel.setText(R.string.album_list_page_downloaded);
-        } else if (requireArguments().getParcelable(Constants.ARTIST_OBJECT) != null) {
-            albumListPageViewModel.artist = requireArguments().getParcelable(Constants.ARTIST_OBJECT);
-            albumListPageViewModel.title = Constants.ALBUM_FROM_ARTIST;
-            bind.pageTitleLabel.setText(albumListPageViewModel.artist.getName());
+            albumListPageViewModel!!.title = Constants.ALBUM_DOWNLOADED
+            bind!!.pageTitleLabel.setText(R.string.album_list_page_downloaded)
+        } else if (requireArguments().getParcelable<Parcelable?>(Constants.ARTIST_OBJECT) != null) {
+            albumListPageViewModel!!.artist =
+                requireArguments().getParcelable<ArtistID3?>(Constants.ARTIST_OBJECT)
+            albumListPageViewModel!!.title = Constants.ALBUM_FROM_ARTIST
+            bind!!.pageTitleLabel.text = albumListPageViewModel!!.artist.name
         }
     }
 
-    private void initAppBar() {
-        activity.setSupportActionBar(bind.toolbar);
+    private fun initAppBar() {
+        activity!!.setSupportActionBar(bind!!.toolbar)
 
-        if (activity.getSupportActionBar() != null) {
-            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
+        if (activity!!.supportActionBar != null) {
+            activity!!.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind.toolbar.setNavigationOnClickListener(v -> {
-            hideKeyboard(v);
-            activity.navController.navigateUp();
-        });
+        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
+            hideKeyboard(v!!)
+            activity!!.navController.navigateUp()
+        })
 
-        bind.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
-            if ((bind.albumInfoSector.getHeight() + verticalOffset) < (2 * ViewCompat.getMinimumHeight(bind.toolbar))) {
-                bind.toolbar.setTitle(R.string.album_list_page_title);
+        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+            if ((bind!!.albumInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
+                    bind!!.toolbar
+                ))
+            ) {
+                bind!!.toolbar.setTitle(R.string.album_list_page_title)
             } else {
-                bind.toolbar.setTitle(R.string.empty_string);
+                bind!!.toolbar.setTitle(R.string.empty_string)
             }
-        });
+        })
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initAlbumListView() {
-        bind.albumListRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.albumListRecyclerView.setHasFixedSize(true);
+    private fun initAlbumListView() {
+        bind!!.albumListRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.albumListRecyclerView.setHasFixedSize(true)
 
-        albumHorizontalAdapter = new AlbumHorizontalAdapter(
-                this,
-                (albumListPageViewModel.title.equals(Constants.ALBUM_DOWNLOADED) || albumListPageViewModel.title.equals(Constants.ALBUM_FROM_ARTIST))
-        );
+        albumHorizontalAdapter = AlbumHorizontalAdapter(
+            this,
+            (albumListPageViewModel!!.title == Constants.ALBUM_DOWNLOADED || albumListPageViewModel!!.title == Constants.ALBUM_FROM_ARTIST)
+        )
 
-        bind.albumListRecyclerView.setAdapter(albumHorizontalAdapter);
-        albumListPageViewModel.getAlbumList(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), albums -> {
-            albumHorizontalAdapter.setItems(albums);
-            setAlbumListPageSubtitle(albums);
-            setAlbumListPageSorter();
-        });
+        bind!!.albumListRecyclerView.setAdapter(albumHorizontalAdapter)
+        albumListPageViewModel!!.getAlbumList(getViewLifecycleOwner())
+            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<AlbumID3?>? ->
+                albumHorizontalAdapter!!.setItems(albums)
+                setAlbumListPageSubtitle(albums!!)
+                setAlbumListPageSorter()
+            })
 
-        bind.albumListRecyclerView.setOnTouchListener((v, event) -> {
-            hideKeyboard(v);
-            return false;
-        });
+        bind!!.albumListRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
+            hideKeyboard(v!!)
+            false
+        })
 
-        bind.albumListSortImageView.setOnClickListener(view -> showPopupMenu(view, R.menu.sort_horizontal_album_popup_menu));
+        bind!!.albumListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
+            showPopupMenu(
+                view,
+                R.menu.sort_horizontal_album_popup_menu
+            )
+        })
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.artist_list_menu, menu);
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.artist_list_menu, menu)
 
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        val searchItem = menu.findItem(R.id.action_search)
 
-        SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setImeOptions(EditorInfo.IME_ACTION_DONE);
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                searchView.clearFocus();
-                return false;
+        val searchView = searchItem.actionView as SearchView?
+        searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                searchView.clearFocus()
+                return false
             }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                albumHorizontalAdapter.getFilter().filter(newText);
-                return false;
+            override fun onQueryTextChange(newText: String?): Boolean {
+                albumHorizontalAdapter!!.filter.filter(newText)
+                return false
             }
-        });
+        })
 
-        searchView.setPadding(-32, 0, 0, 0);
+        searchView.setPadding(-32, 0, 0, 0)
     }
 
-    private void hideKeyboard(View view) {
-        InputMethodManager imm = (InputMethodManager) requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    private fun hideKeyboard(view: View) {
+        val imm =
+            requireActivity().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private void showPopupMenu(View view, int menuResource) {
-        PopupMenu popup = new PopupMenu(requireContext(), view);
-        popup.getMenuInflater().inflate(menuResource, popup.getMenu());
+    private fun showPopupMenu(view: View?, menuResource: Int) {
+        val popup = PopupMenu(requireContext(), view)
+        popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(menuItem -> {
-            if (menuItem.getItemId() == R.id.menu_horizontal_album_sort_name) {
-                albumHorizontalAdapter.sort(Constants.ALBUM_ORDER_BY_NAME);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_horizontal_album_sort_most_recently_starred) {
-                albumHorizontalAdapter.sort(Constants.ALBUM_ORDER_BY_MOST_RECENTLY_STARRED);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_horizontal_album_sort_least_recently_starred) {
-                albumHorizontalAdapter.sort(Constants.ALBUM_ORDER_BY_LEAST_RECENTLY_STARRED);
-                return true;
+        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+            if (menuItem!!.itemId == R.id.menu_horizontal_album_sort_name) {
+                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_NAME)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_most_recently_starred) {
+                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_MOST_RECENTLY_STARRED)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_least_recently_starred) {
+                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_LEAST_RECENTLY_STARRED)
+                return@setOnMenuItemClickListener true
             }
+            false
+        })
 
-            return false;
-        });
-
-        popup.show();
+        popup.show()
     }
 
-    private void setAlbumListPageSubtitle(List<AlbumID3> albums) {
-        switch (albumListPageViewModel.title) {
-            case Constants.ALBUM_RECENTLY_PLAYED:
-            case Constants.ALBUM_MOST_PLAYED:
-            case Constants.ALBUM_RECENTLY_ADDED:
-                bind.pageSubtitleLabel.setText(albums.size() < albumListPageViewModel.maxNumber ?
-                        getString(R.string.generic_list_page_count, albums.size()) :
-                        getString(R.string.generic_list_page_count_unknown, albumListPageViewModel.maxNumber)
-                );
-                break;
-            case Constants.ALBUM_STARRED:
-                bind.pageSubtitleLabel.setText(getString(R.string.generic_list_page_count, albums.size()));
-                break;
+    private fun setAlbumListPageSubtitle(albums: MutableList<AlbumID3?>) {
+        when (albumListPageViewModel!!.title) {
+            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED -> bind!!.pageSubtitleLabel.text =
+                if (albums.size < albumListPageViewModel!!.maxNumber) getString(
+                    R.string.generic_list_page_count,
+                    albums.size
+                ) else getString(
+                    R.string.generic_list_page_count_unknown,
+                    albumListPageViewModel!!.maxNumber
+                )
+
+            Constants.ALBUM_STARRED -> bind!!.pageSubtitleLabel.text = getString(
+                R.string.generic_list_page_count,
+                albums.size
+            )
         }
     }
 
-    private void setAlbumListPageSorter() {
-        switch (albumListPageViewModel.title) {
-            case Constants.ALBUM_RECENTLY_PLAYED:
-            case Constants.ALBUM_MOST_PLAYED:
-            case Constants.ALBUM_RECENTLY_ADDED:
-                bind.albumListSortImageView.setVisibility(View.GONE);
-                break;
-            case Constants.ALBUM_STARRED:
-                bind.albumListSortImageView.setVisibility(View.VISIBLE);
-                break;
+    private fun setAlbumListPageSorter() {
+        when (albumListPageViewModel!!.title) {
+            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED -> bind!!.albumListSortImageView.visibility =
+                View.GONE
+
+            Constants.ALBUM_STARRED -> bind!!.albumListSortImageView.visibility = View.VISIBLE
         }
     }
 
-    @Override
-    public void onAlbumClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.albumPageFragment, bundle);
+    override fun onAlbumClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.albumPageFragment, bundle)
     }
 
-    @Override
-    public void onAlbumLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.albumBottomSheetDialog, bundle);
+    override fun onAlbumLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.albumBottomSheetDialog, bundle)
     }
 }

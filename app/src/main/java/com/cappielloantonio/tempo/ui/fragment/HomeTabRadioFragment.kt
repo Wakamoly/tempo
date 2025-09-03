@@ -1,151 +1,158 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.os.Handler;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
-import androidx.recyclerview.widget.LinearLayoutManager;
-
-import com.cappielloantonio.tempo.databinding.FragmentHomeTabRadioBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.interfaces.RadioCallback;
-import com.cappielloantonio.tempo.service.MediaManager;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.InternetRadioStationAdapter;
-import com.cappielloantonio.tempo.ui.dialog.RadioEditorDialog;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.RadioViewModel;
-import com.google.common.util.concurrent.ListenableFuture;
+import android.content.ComponentName
+import android.os.Bundle
+import android.os.Handler
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.cappielloantonio.tempo.databinding.FragmentHomeTabRadioBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.interfaces.RadioCallback
+import com.cappielloantonio.tempo.service.MediaManager
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.InternetRadioStationAdapter
+import com.cappielloantonio.tempo.ui.dialog.RadioEditorDialog
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.Preferences.setRadioSectionHidden
+import com.cappielloantonio.tempo.viewmodel.RadioViewModel
+import com.google.common.util.concurrent.ListenableFuture
 
 @UnstableApi
-public class HomeTabRadioFragment extends Fragment implements ClickCallback, RadioCallback {
-    private static final String TAG = "HomeTabRadioFragment";
+class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
+    private var bind: FragmentHomeTabRadioBinding? = null
+    private var activity: MainActivity? = null
+    private var radioViewModel: RadioViewModel? = null
 
-    private FragmentHomeTabRadioBinding bind;
-    private MainActivity activity;
-    private RadioViewModel radioViewModel;
+    private var internetRadioStationAdapter: InternetRadioStationAdapter? = null
 
-    private InternetRadioStationAdapter internetRadioStationAdapter;
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
 
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        activity = activity as MainActivity?
 
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+        bind = FragmentHomeTabRadioBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
+        radioViewModel =
+            ViewModelProvider(requireActivity()).get<RadioViewModel?>(RadioViewModel::class.java)
 
-        bind = FragmentHomeTabRadioBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-        radioViewModel = new ViewModelProvider(requireActivity()).get(RadioViewModel.class);
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        init();
-        initRadioStationView();
+        init()
+        initRadioStationView()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        initializeMediaBrowser();
+        initializeMediaBrowser()
     }
 
-    @Override
-    public void onStop() {
-        releaseMediaBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseMediaBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void init() {
-        bind.internetRadioStationPreTextView.setOnClickListener(v -> {
-            RadioEditorDialog dialog = new RadioEditorDialog(this);
-            dialog.show(activity.getSupportFragmentManager(), null);
-        });
+    private fun init() {
+        bind!!.internetRadioStationPreTextView.setOnClickListener(View.OnClickListener { v: View? ->
+            val dialog = RadioEditorDialog(this)
+            dialog.show(activity!!.supportFragmentManager, null)
+        })
 
-        bind.internetRadioStationTitleTextView.setOnLongClickListener(v -> {
-            radioViewModel.getInternetRadioStations(getViewLifecycleOwner());
-            return true;
-        });
+        bind!!.internetRadioStationTitleTextView.setOnLongClickListener(OnLongClickListener { v: View? ->
+            radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
+            true
+        })
 
-        bind.hideSectionButton.setOnClickListener(v -> Preferences.setRadioSectionHidden());
+        bind!!.hideSectionButton.setOnClickListener(View.OnClickListener { v: View? -> setRadioSectionHidden() })
     }
 
-    private void initRadioStationView() {
-        bind.internetRadioStationRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.internetRadioStationRecyclerView.setHasFixedSize(true);
+    private fun initRadioStationView() {
+        bind!!.internetRadioStationRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.internetRadioStationRecyclerView.setHasFixedSize(true)
 
-        internetRadioStationAdapter = new InternetRadioStationAdapter(this);
-        bind.internetRadioStationRecyclerView.setAdapter(internetRadioStationAdapter);
-        radioViewModel.getInternetRadioStations(getViewLifecycleOwner()).observe(getViewLifecycleOwner(), internetRadioStations -> {
-            if (internetRadioStations == null) {
-                if (bind != null) bind.homeRadioStationSector.setVisibility(View.GONE);
-                if (bind != null) bind.emptyRadioStationLayout.setVisibility(View.GONE);
-            } else {
-                if (bind != null)
-                    bind.homeRadioStationSector.setVisibility(!internetRadioStations.isEmpty() ? View.VISIBLE : View.GONE);
-                if (bind != null)
-                    bind.emptyRadioStationLayout.setVisibility(internetRadioStations.isEmpty() ? View.VISIBLE : View.GONE);
+        internetRadioStationAdapter = InternetRadioStationAdapter(this)
+        bind!!.internetRadioStationRecyclerView.setAdapter(internetRadioStationAdapter)
+        radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner()).observe(
+            getViewLifecycleOwner(),
+            Observer { internetRadioStations: MutableList<InternetRadioStation?>? ->
+                if (internetRadioStations == null) {
+                    if (bind != null) bind!!.homeRadioStationSector.visibility = View.GONE
+                    if (bind != null) bind!!.emptyRadioStationLayout.visibility = View.GONE
+                } else {
+                    if (bind != null) bind!!.homeRadioStationSector.visibility = if (!internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
+                    if (bind != null) bind!!.emptyRadioStationLayout.visibility = if (internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
 
-                internetRadioStationAdapter.setItems(internetRadioStations);
+                    internetRadioStationAdapter!!.setItems(internetRadioStations)
+                }
+            })
+    }
+
+    private fun initializeMediaBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
+    }
+
+    private fun releaseMediaBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
+    }
+
+    override fun onInternetRadioStationClick(bundle: Bundle) {
+        MediaManager.startRadio(
+            mediaBrowserListenableFuture, bundle.getParcelable<InternetRadioStation?>(
+                Constants.INTERNET_RADIO_STATION_OBJECT
+            )
+        )
+        activity!!.setBottomSheetInPeek(true)
+    }
+
+    override fun onInternetRadioStationLongClick(bundle: Bundle?) {
+        val dialog = RadioEditorDialog(object : RadioCallback {
+            override fun onDismiss() {
+                radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
             }
-        });
+        })
+        dialog.setArguments(bundle)
+        dialog.show(activity!!.supportFragmentManager, null)
     }
 
-    private void initializeMediaBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    override fun onDismiss() {
+        Handler().postDelayed(Runnable {
+            if (radioViewModel != null) radioViewModel!!.refreshInternetRadioStations(
+                getViewLifecycleOwner()
+            )
+        }, 1000)
     }
 
-    private void releaseMediaBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
-    }
-
-    @Override
-    public void onInternetRadioStationClick(Bundle bundle) {
-        MediaManager.startRadio(mediaBrowserListenableFuture, bundle.getParcelable(Constants.INTERNET_RADIO_STATION_OBJECT));
-        activity.setBottomSheetInPeek(true);
-    }
-
-    @Override
-    public void onInternetRadioStationLongClick(Bundle bundle) {
-        RadioEditorDialog dialog = new RadioEditorDialog(new RadioCallback() {
-            @Override
-            public void onDismiss() {
-                radioViewModel.getInternetRadioStations(getViewLifecycleOwner());
-            }
-        });
-        dialog.setArguments(bundle);
-        dialog.show(activity.getSupportFragmentManager(), null);
-    }
-
-    @Override
-    public void onDismiss() {
-        new Handler().postDelayed(() -> {
-            if (radioViewModel != null)
-                radioViewModel.refreshInternetRadioStations(getViewLifecycleOwner());
-        }, 1000);
+    companion object {
+        private const val TAG = "HomeTabRadioFragment"
     }
 }

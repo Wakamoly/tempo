@@ -1,49 +1,42 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.cappielloantonio.tempo.interfaces.ScanCallback
+import com.cappielloantonio.tempo.repository.ScanRepository
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
+class SettingViewModel(application: Application) : AndroidViewModel(application) {
+    private val scanRepository: ScanRepository
 
-import com.cappielloantonio.tempo.interfaces.ScanCallback;
-import com.cappielloantonio.tempo.repository.ScanRepository;
-
-public class SettingViewModel extends AndroidViewModel {
-    private static final String TAG = "SettingViewModel";
-
-    private final ScanRepository scanRepository;
-
-    public SettingViewModel(@NonNull Application application) {
-        super(application);
-
-        scanRepository = new ScanRepository();
+    init {
+        scanRepository = ScanRepository()
     }
 
-    public void launchScan(ScanCallback callback) {
-        scanRepository.startScan(new ScanCallback() {
-            @Override
-            public void onError(Exception exception) {
-                callback.onError(exception);
+    fun launchScan(callback: ScanCallback) {
+        scanRepository.startScan(object : ScanCallback {
+            override fun onError(exception: Exception?) {
+                callback.onError(exception)
             }
 
-            @Override
-            public void onSuccess(boolean isScanning, long count) {
-                callback.onSuccess(isScanning, count);
+            override fun onSuccess(isScanning: Boolean, count: Long) {
+                callback.onSuccess(isScanning, count)
             }
-        });
+        })
     }
 
-    public void getScanStatus(ScanCallback callback) {
-        scanRepository.getScanStatus(new ScanCallback() {
-            @Override
-            public void onError(Exception exception) {
-                callback.onError(exception);
+    fun getScanStatus(callback: ScanCallback) {
+        scanRepository.getScanStatus(object : ScanCallback {
+            override fun onError(exception: Exception?) {
+                callback.onError(exception)
             }
 
-            @Override
-            public void onSuccess(boolean isScanning, long count) {
-                callback.onSuccess(isScanning, count);
+            override fun onSuccess(isScanning: Boolean, count: Long) {
+                callback.onSuccess(isScanning, count)
             }
-        });
+        })
+    }
+
+    companion object {
+        private const val TAG = "SettingViewModel"
     }
 }

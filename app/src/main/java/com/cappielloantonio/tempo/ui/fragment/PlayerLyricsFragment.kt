@@ -1,305 +1,335 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.annotation.SuppressLint;
-import android.content.ComponentName;
-import android.os.Bundle;
-import android.os.Handler;
-import android.text.Spannable;
-import android.text.SpannableString;
-import android.text.Layout;
-import android.text.style.ForegroundColorSpan;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.WindowManager;
+import android.annotation.SuppressLint
+import android.content.ComponentName
+import android.os.Bundle
+import android.os.Handler
+import android.text.Spannable
+import android.text.SpannableString
+import android.text.style.ForegroundColorSpan
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
+import androidx.annotation.OptIn
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerLyricsBinding
+import com.cappielloantonio.tempo.service.MediaService
+import com.cappielloantonio.tempo.subsonic.models.Line
+import com.cappielloantonio.tempo.subsonic.models.LyricsList
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.util.OpenSubsonicExtensionsUtil
+import com.cappielloantonio.tempo.util.Preferences.isDisplayAlwaysOn
+import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import kotlin.math.max
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.OptIn;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
+@OptIn(markerClass = UnstableApi::class)
+class PlayerLyricsFragment : Fragment() {
+    private var bind: InnerFragmentPlayerLyricsBinding? = null
+    private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
+    private var mediaBrowser: MediaBrowser? = null
+    private var syncLyricsHandler: Handler? = null
+    private var syncLyricsRunnable: Runnable? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.InnerFragmentPlayerLyricsBinding;
-import com.cappielloantonio.tempo.service.MediaService;
-import com.cappielloantonio.tempo.subsonic.models.Line;
-import com.cappielloantonio.tempo.subsonic.models.LyricsList;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.util.OpenSubsonicExtensionsUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        bind = InnerFragmentPlayerLyricsBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
 
-import java.util.List;
+        playerBottomSheetViewModel =
+            ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
+                PlayerBottomSheetViewModel::class.java
+            )
 
+        initOverlay()
 
-@OptIn(markerClass = UnstableApi.class)
-public class PlayerLyricsFragment extends Fragment {
-    private static final String TAG = "PlayerLyricsFragment";
-
-    private InnerFragmentPlayerLyricsBinding bind;
-    private PlayerBottomSheetViewModel playerBottomSheetViewModel;
-    private ListenableFuture<MediaBrowser> mediaBrowserListenableFuture;
-    private MediaBrowser mediaBrowser;
-    private Handler syncLyricsHandler;
-    private Runnable syncLyricsRunnable;
-
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        bind = InnerFragmentPlayerLyricsBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
-
-        playerBottomSheetViewModel = new ViewModelProvider(requireActivity()).get(PlayerBottomSheetViewModel.class);
-
-        initOverlay();
-
-        return view;
+        return view
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
 
-        initPanelContent();
+        initPanelContent()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        initializeBrowser();
-
+    override fun onStart() {
+        super.onStart()
+        initializeBrowser()
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        bindMediaController();
-        requireActivity().getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    override fun onResume() {
+        super.onResume()
+        bindMediaController()
+        requireActivity().window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        releaseHandler();
-        if (!Preferences.isDisplayAlwaysOn()) {
-            requireActivity().getWindow().clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    override fun onPause() {
+        super.onPause()
+        releaseHandler()
+        if (!isDisplayAlwaysOn()) {
+            requireActivity().window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         }
     }
 
-    @Override
-    public void onStop() {
-        releaseBrowser();
-        super.onStop();
+    override fun onStop() {
+        releaseBrowser()
+        super.onStop()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initOverlay() {
-        bind.syncLyricsTapButton.setOnClickListener(view -> {
-            playerBottomSheetViewModel.changeSyncLyricsState();
-        });
+    private fun initOverlay() {
+        bind!!.syncLyricsTapButton.setOnClickListener(View.OnClickListener { view: View? ->
+            playerBottomSheetViewModel!!.changeSyncLyricsState()
+        })
     }
 
-    private void initializeBrowser() {
-        mediaBrowserListenableFuture = new MediaBrowser.Builder(requireContext(), new SessionToken(requireContext(), new ComponentName(requireContext(), MediaService.class))).buildAsync();
+    private fun initializeBrowser() {
+        mediaBrowserListenableFuture = MediaBrowser.Builder(
+            requireContext(),
+            SessionToken(
+                requireContext(),
+                ComponentName(requireContext(), MediaService::class.java)
+            )
+        ).buildAsync()
     }
 
-    private void releaseHandler() {
+    private fun releaseHandler() {
         if (syncLyricsHandler != null) {
-            syncLyricsHandler.removeCallbacks(syncLyricsRunnable);
-            syncLyricsHandler = null;
+            syncLyricsHandler!!.removeCallbacks(syncLyricsRunnable!!)
+            syncLyricsHandler = null
         }
     }
 
-    private void releaseBrowser() {
-        MediaBrowser.releaseFuture(mediaBrowserListenableFuture);
+    private fun releaseBrowser() {
+        MediaBrowser.releaseFuture(mediaBrowserListenableFuture!!)
     }
 
-    private void bindMediaController() {
-        mediaBrowserListenableFuture.addListener(() -> {
+    private fun bindMediaController() {
+        mediaBrowserListenableFuture!!.addListener(Runnable {
             try {
-                mediaBrowser = mediaBrowserListenableFuture.get();
-                defineProgressHandler();
-            } catch (Exception e) {
-                e.printStackTrace();
+                mediaBrowser = mediaBrowserListenableFuture!!.get()
+                defineProgressHandler()
+            } catch (e: Exception) {
+                e.printStackTrace()
             }
-        }, MoreExecutors.directExecutor());
+        }, MoreExecutors.directExecutor())
     }
 
-    private void initPanelContent() {
+    private fun initPanelContent() {
         if (OpenSubsonicExtensionsUtil.isSongLyricsExtensionAvailable()) {
-            playerBottomSheetViewModel.getLiveLyricsList().observe(getViewLifecycleOwner(), lyricsList -> {
-                setPanelContent(null, lyricsList);
-            });
+            playerBottomSheetViewModel!!.getLiveLyricsList()
+                .observe(getViewLifecycleOwner(), Observer { lyricsList: LyricsList? ->
+                    setPanelContent(null, lyricsList)
+                })
         } else {
-            playerBottomSheetViewModel.getLiveLyrics().observe(getViewLifecycleOwner(), lyrics -> {
-                setPanelContent(lyrics, null);
-            });
+            playerBottomSheetViewModel!!.getLiveLyrics()
+                .observe(getViewLifecycleOwner(), Observer { lyrics: String? ->
+                    setPanelContent(lyrics, null)
+                })
         }
     }
 
-    private void setPanelContent(String lyrics, LyricsList lyricsList) {
-        playerBottomSheetViewModel.getLiveDescription().observe(getViewLifecycleOwner(), description -> {
-            if (bind != null) {
-                bind.nowPlayingSongLyricsSrollView.smoothScrollTo(0, 0);
+    private fun setPanelContent(lyrics: String?, lyricsList: LyricsList?) {
+        playerBottomSheetViewModel!!.getLiveDescription()
+            .observe(getViewLifecycleOwner(), Observer { description: String? ->
+                if (bind != null) {
+                    bind!!.nowPlayingSongLyricsSrollView.smoothScrollTo(0, 0)
 
-                if (lyrics != null && !lyrics.trim().equals("")) {
-                    bind.nowPlayingSongLyricsTextView.setText(MusicUtil.getReadableLyrics(lyrics));
-                    bind.nowPlayingSongLyricsTextView.setVisibility(View.VISIBLE);
-                    bind.emptyDescriptionImageView.setVisibility(View.GONE);
-                    bind.titleEmptyDescriptionLabel.setVisibility(View.GONE);
-                    bind.syncLyricsTapButton.setVisibility(View.GONE);
-                } else if (lyricsList != null && lyricsList.getStructuredLyrics() != null) {
-                    setSyncLirics(lyricsList);
-                    bind.nowPlayingSongLyricsTextView.setVisibility(View.VISIBLE);
-                    bind.emptyDescriptionImageView.setVisibility(View.GONE);
-                    bind.titleEmptyDescriptionLabel.setVisibility(View.GONE);
-                    bind.syncLyricsTapButton.setVisibility(View.VISIBLE);
-                } else if (description != null && !description.trim().equals("")) {
-                    bind.nowPlayingSongLyricsTextView.setText(MusicUtil.getReadableLyrics(description));
-                    bind.nowPlayingSongLyricsTextView.setVisibility(View.VISIBLE);
-                    bind.emptyDescriptionImageView.setVisibility(View.GONE);
-                    bind.titleEmptyDescriptionLabel.setVisibility(View.GONE);
-                    bind.syncLyricsTapButton.setVisibility(View.GONE);
-                } else {
-                    bind.nowPlayingSongLyricsTextView.setVisibility(View.GONE);
-                    bind.emptyDescriptionImageView.setVisibility(View.VISIBLE);
-                    bind.titleEmptyDescriptionLabel.setVisibility(View.VISIBLE);
-                    bind.syncLyricsTapButton.setVisibility(View.GONE);
+                    if (lyrics != null && lyrics.trim { it <= ' ' } != "") {
+                        bind!!.nowPlayingSongLyricsTextView.text = MusicUtil.getReadableLyrics(
+                            lyrics
+                        )
+                        bind!!.nowPlayingSongLyricsTextView.visibility = View.VISIBLE
+                        bind!!.emptyDescriptionImageView.setVisibility(View.GONE)
+                        bind!!.titleEmptyDescriptionLabel.visibility = View.GONE
+                        bind!!.syncLyricsTapButton.visibility = View.GONE
+                    } else if (lyricsList != null && lyricsList.structuredLyrics != null) {
+                        setSyncLirics(lyricsList)
+                        bind!!.nowPlayingSongLyricsTextView.visibility = View.VISIBLE
+                        bind!!.emptyDescriptionImageView.setVisibility(View.GONE)
+                        bind!!.titleEmptyDescriptionLabel.visibility = View.GONE
+                        bind!!.syncLyricsTapButton.visibility = View.VISIBLE
+                    } else if (description != null && description.trim { it <= ' ' } != "") {
+                        bind!!.nowPlayingSongLyricsTextView.text = MusicUtil.getReadableLyrics(
+                            description
+                        )
+                        bind!!.nowPlayingSongLyricsTextView.visibility = View.VISIBLE
+                        bind!!.emptyDescriptionImageView.setVisibility(View.GONE)
+                        bind!!.titleEmptyDescriptionLabel.visibility = View.GONE
+                        bind!!.syncLyricsTapButton.visibility = View.GONE
+                    } else {
+                        bind!!.nowPlayingSongLyricsTextView.visibility = View.GONE
+                        bind!!.emptyDescriptionImageView.setVisibility(View.VISIBLE)
+                        bind!!.titleEmptyDescriptionLabel.visibility = View.VISIBLE
+                        bind!!.syncLyricsTapButton.visibility = View.GONE
+                    }
                 }
-            }
-        });
+            })
     }
 
     @SuppressLint("DefaultLocale")
-    private void setSyncLirics(LyricsList lyricsList) {
-        if (lyricsList.getStructuredLyrics() != null && !lyricsList.getStructuredLyrics().isEmpty() && lyricsList.getStructuredLyrics().get(0).getLine() != null) {
-            StringBuilder lyricsBuilder = new StringBuilder();
-            List<Line> lines = lyricsList.getStructuredLyrics().get(0).getLine();
+    private fun setSyncLirics(lyricsList: LyricsList) {
+        if (lyricsList.structuredLyrics != null && !lyricsList.structuredLyrics!!.isEmpty() && lyricsList.structuredLyrics!!.get(
+                0
+            ).line != null
+        ) {
+            val lyricsBuilder = StringBuilder()
+            val lines: MutableList<Line>? = lyricsList.structuredLyrics!!.get(0).line
 
             if (lines != null) {
-                for (Line line : lines) {
-                    lyricsBuilder.append(line.getValue().trim()).append("\n");
+                for (line in lines) {
+                    lyricsBuilder.append(line.value.trim { it <= ' ' }).append("\n")
                 }
             }
 
-            bind.nowPlayingSongLyricsTextView.setText(lyricsBuilder.toString());
+            bind!!.nowPlayingSongLyricsTextView.text = lyricsBuilder.toString()
         }
     }
 
-    private void defineProgressHandler() {
-        playerBottomSheetViewModel.getLiveLyricsList().observe(getViewLifecycleOwner(), lyricsList -> {
-            if (lyricsList != null) {
-
-                if (lyricsList.getStructuredLyrics() != null && lyricsList.getStructuredLyrics().get(0) != null && !lyricsList.getStructuredLyrics().get(0).getSynced()) {
-                    releaseHandler();
-                    return;
-                }
-
-                syncLyricsHandler = new Handler();
-                syncLyricsRunnable = () -> {
-                    if (syncLyricsHandler != null) {
-                        if (bind != null) {
-                            displaySyncedLyrics();
-                        }
-
-                        syncLyricsHandler.postDelayed(syncLyricsRunnable, 250);
+    private fun defineProgressHandler() {
+        playerBottomSheetViewModel!!.getLiveLyricsList()
+            .observe(getViewLifecycleOwner(), Observer { lyricsList: LyricsList? ->
+                if (lyricsList != null) {
+                    if (lyricsList.structuredLyrics != null && lyricsList.structuredLyrics!!.get(0) != null && !lyricsList.structuredLyrics!!.get(
+                            0
+                        ).synced
+                    ) {
+                        releaseHandler()
+                        return@observe
                     }
-                };
 
-                syncLyricsHandler.postDelayed(syncLyricsRunnable, 250);
-            } else {
-                releaseHandler();
-            }
-        });
+                    syncLyricsHandler = Handler()
+                    syncLyricsRunnable = Runnable {
+                        if (syncLyricsHandler != null) {
+                            if (bind != null) {
+                                displaySyncedLyrics()
+                            }
+
+                            syncLyricsHandler!!.postDelayed(syncLyricsRunnable!!, 250)
+                        }
+                    }
+
+                    syncLyricsHandler!!.postDelayed(syncLyricsRunnable!!, 250)
+                } else {
+                    releaseHandler()
+                }
+            })
     }
 
-    private void displaySyncedLyrics() {
-        LyricsList lyricsList = playerBottomSheetViewModel.getLiveLyricsList().getValue();
-        int timestamp = (int) (mediaBrowser.getCurrentPosition());
+    private fun displaySyncedLyrics() {
+        val lyricsList = playerBottomSheetViewModel!!.getLiveLyricsList().getValue()
+        val timestamp = (mediaBrowser!!.getCurrentPosition()).toInt()
 
-        if (lyricsList != null && lyricsList.getStructuredLyrics() != null && !lyricsList.getStructuredLyrics().isEmpty() && lyricsList.getStructuredLyrics().get(0).getLine() != null) {
-            StringBuilder lyricsBuilder = new StringBuilder();
-            List<Line> lines = lyricsList.getStructuredLyrics().get(0).getLine();
+        if (lyricsList != null && lyricsList.structuredLyrics != null && !lyricsList.structuredLyrics!!.isEmpty() && lyricsList.structuredLyrics!!.get(
+                0
+            ).line != null
+        ) {
+            val lyricsBuilder = StringBuilder()
+            val lines: MutableList<Line>? = lyricsList.structuredLyrics!!.get(0).line
 
-            if (lines == null || lines.isEmpty()) return;
+            if (lines == null || lines.isEmpty()) return
 
-            for (Line line : lines) {
-                lyricsBuilder.append(line.getValue().trim()).append("\n");
+            for (line in lines) {
+                lyricsBuilder.append(line.value.trim { it <= ' ' }).append("\n")
             }
 
-            Line toHighlight = lines.stream().filter(line -> line != null && line.getStart() != null && line.getStart() < timestamp).reduce((first, second) -> second).orElse(null);
+            val toHighlight = lines.stream()
+                .filter { line: Line? -> line != null && line.start != null && line.start!! < timestamp }
+                .reduce { first: Line?, second: Line? -> second }.orElse(null)
 
             if (toHighlight != null) {
-                String lyrics = lyricsBuilder.toString();
-                Spannable spannableString = new SpannableString(lyrics);
+                val lyrics = lyricsBuilder.toString()
+                val spannableString: Spannable = SpannableString(lyrics)
 
-                int startingPosition = getStartPosition(lines, toHighlight);
-                int endingPosition = startingPosition + toHighlight.getValue().length();
+                val startingPosition = getStartPosition(lines, toHighlight)
+                val endingPosition = startingPosition + toHighlight.value.length
 
-                spannableString.setSpan(new ForegroundColorSpan(requireContext().getResources().getColor(R.color.shadowsLyricsTextColor, null)), 0, lyrics.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                spannableString.setSpan(new ForegroundColorSpan(requireContext().getResources().getColor(R.color.lyricsTextColor, null)), startingPosition, endingPosition, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                spannableString.setSpan(
+                    ForegroundColorSpan(
+                        requireContext().resources
+                            .getColor(R.color.shadowsLyricsTextColor, null)
+                    ), 0, lyrics.length, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
+                spannableString.setSpan(
+                    ForegroundColorSpan(
+                        requireContext().resources.getColor(R.color.lyricsTextColor, null)
+                    ), startingPosition, endingPosition, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                )
 
-                bind.nowPlayingSongLyricsTextView.setText(spannableString);
+                bind!!.nowPlayingSongLyricsTextView.text = spannableString
 
-                if (playerBottomSheetViewModel.getSyncLyricsState()) {
-                    bind.nowPlayingSongLyricsSrollView.smoothScrollTo(0, getScroll(lines, toHighlight));
+                if (playerBottomSheetViewModel!!.getSyncLyricsState()) {
+                    bind!!.nowPlayingSongLyricsSrollView.smoothScrollTo(
+                        0,
+                        getScroll(lines, toHighlight)
+                    )
                 }
             }
         }
     }
 
-    private int getStartPosition(List<Line> lines, Line toHighlight) {
-        int start = 0;
+    private fun getStartPosition(lines: MutableList<Line>, toHighlight: Line?): Int {
+        var start = 0
 
-        for (Line line : lines) {
+        for (line in lines) {
             if (line != toHighlight) {
-                start = start + line.getValue().length() + 1;
+                start = start + line.value.length + 1
             } else {
-                break;
+                break
             }
         }
 
-        return start;
+        return start
     }
 
-    private int getLineCount(List<Line> lines, Line toHighlight) {
-        int start = 0;
+    private fun getLineCount(lines: MutableList<Line>, toHighlight: Line?): Int {
+        var start = 0
 
-        for (Line line : lines) {
+        for (line in lines) {
             if (line != toHighlight) {
-                bind.tempLyricsLineTextView.setText(line.getValue());
-                start = start + bind.tempLyricsLineTextView.getLineCount();
+                bind!!.tempLyricsLineTextView.text = line.value
+                start = start + bind!!.tempLyricsLineTextView.lineCount
             } else {
-                break;
+                break
             }
         }
 
-        return start;
+        return start
     }
 
-    private int getScroll(List<Line> lines, Line toHighlight) {
-        int startIndex = getStartPosition(lines, toHighlight);
-        Layout layout = bind.nowPlayingSongLyricsTextView.getLayout();
-        if (layout == null) return 0;
+    private fun getScroll(lines: MutableList<Line>, toHighlight: Line?): Int {
+        val startIndex = getStartPosition(lines, toHighlight)
+        val layout = bind!!.nowPlayingSongLyricsTextView.layout
+        if (layout == null) return 0
 
-        int line = layout.getLineForOffset(startIndex);
-        int lineTop = layout.getLineTop(line);
-        int lineBottom = layout.getLineBottom(line);
-        int lineCenter = (lineTop + lineBottom) / 2;
+        val line = layout.getLineForOffset(startIndex)
+        val lineTop = layout.getLineTop(line)
+        val lineBottom = layout.getLineBottom(line)
+        val lineCenter = (lineTop + lineBottom) / 2
 
-        int scrollViewHeight = bind.nowPlayingSongLyricsSrollView.getHeight();
-        int scroll = lineCenter - scrollViewHeight / 2;
+        val scrollViewHeight = bind!!.nowPlayingSongLyricsSrollView.height
+        val scroll = lineCenter - scrollViewHeight / 2
 
-        return Math.max(scroll, 0);
+        return max(scroll, 0)
+    }
+
+    companion object {
+        private const val TAG = "PlayerLyricsFragment"
     }
 }

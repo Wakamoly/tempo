@@ -1,24 +1,34 @@
-package com.cappielloantonio.tempo.subsonic.api.sharing;
+package com.cappielloantonio.tempo.subsonic.api.sharing
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface SharingService {
+interface SharingService {
     @GET("getShares")
-    Call<ApiResponse> getShares(@QueryMap Map<String, String> params);
+    fun getShares(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("createShare")
-    Call<ApiResponse> createShare(@QueryMap Map<String, String> params, @Query("id") String id, @Query("description") String description, @Query("expires") Long expires);
+    fun createShare(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("description") description: String?,
+        @Query("expires") expires: Long?
+    ): Call<ApiResponse?>?
 
     @GET("updateShare")
-    Call<ApiResponse> updateShare(@QueryMap Map<String, String> params, @Query("id") String id, @Query("description") String description, @Query("expires") Long expires);
+    fun updateShare(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("description") description: String?,
+        @Query("expires") expires: Long?
+    ): Call<ApiResponse?>?
 
     @GET("deleteShare")
-    Call<ApiResponse> deleteShare(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun deleteShare(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 }

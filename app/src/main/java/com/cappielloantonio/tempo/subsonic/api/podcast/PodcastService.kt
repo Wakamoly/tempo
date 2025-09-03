@@ -1,33 +1,49 @@
-package com.cappielloantonio.tempo.subsonic.api.podcast;
+package com.cappielloantonio.tempo.subsonic.api.podcast
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface PodcastService {
+interface PodcastService {
     @GET("getPodcasts")
-    Call<ApiResponse> getPodcasts(@QueryMap Map<String, String> params, @Query("includeEpisodes") boolean includeEpisodes, @Query("id") String id);
+    fun getPodcasts(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("includeEpisodes") includeEpisodes: Boolean,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getNewestPodcasts")
-    Call<ApiResponse> getNewestPodcasts(@QueryMap Map<String, String> params, @Query("count") int count);
+    fun getNewestPodcasts(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("count") count: Int
+    ): Call<ApiResponse?>?
 
     @GET("refreshPodcasts")
-    Call<ApiResponse> refreshPodcasts(@QueryMap Map<String, String> params);
+    fun refreshPodcasts(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("createPodcastChannel")
-    Call<ApiResponse> createPodcastChannel(@QueryMap Map<String, String> params, @Query("url") String url);
+    fun createPodcastChannel(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("url") url: String?
+    ): Call<ApiResponse?>?
 
     @GET("deletePodcastChannel")
-    Call<ApiResponse> deletePodcastChannel(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun deletePodcastChannel(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("deletePodcastEpisode")
-    Call<ApiResponse> deletePodcastEpisode(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun deletePodcastEpisode(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("downloadPodcastEpisode")
-    Call<ApiResponse> downloadPodcastEpisode(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun downloadPodcastEpisode(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 }

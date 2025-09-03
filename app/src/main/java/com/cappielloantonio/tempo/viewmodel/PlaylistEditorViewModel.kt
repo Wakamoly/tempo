@@ -1,104 +1,99 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import com.cappielloantonio.tempo.repository.PlaylistRepository
+import com.cappielloantonio.tempo.repository.SharingRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.Playlist
+import com.cappielloantonio.tempo.subsonic.models.Share
+import com.google.common.collect.Lists
+import java.util.Objects
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class PlaylistEditorViewModel(application: Application) : AndroidViewModel(application) {
+    private val playlistRepository: PlaylistRepository
+    private val sharingRepository: SharingRepository
 
-import com.cappielloantonio.tempo.repository.PlaylistRepository;
-import com.cappielloantonio.tempo.repository.SharingRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.Playlist;
-import com.cappielloantonio.tempo.subsonic.models.Share;
-import com.google.common.collect.Lists;
+    private var toAdd: java.util.ArrayList<Child?>? = null
+    private var toEdit: Playlist? = null
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+    private var songLiveList = MutableLiveData<MutableList<Child>?>()
 
-public class PlaylistEditorViewModel extends AndroidViewModel {
-    private static final String TAG = "PlaylistEditorViewModel";
-
-    private final PlaylistRepository playlistRepository;
-    private final SharingRepository sharingRepository;
-
-    private ArrayList<Child> toAdd;
-    private Playlist toEdit;
-
-    private MutableLiveData<List<Child>> songLiveList = new MutableLiveData<>();
-
-    public PlaylistEditorViewModel(@NonNull Application application) {
-        super(application);
-
-        playlistRepository = new PlaylistRepository();
-        sharingRepository = new SharingRepository();
+    init {
+        playlistRepository = PlaylistRepository()
+        sharingRepository = SharingRepository()
     }
 
-    public void createPlaylist(String name) {
-        playlistRepository.createPlaylist(null, name, new ArrayList(Lists.transform(toAdd, Child::getId)));
+    fun createPlaylist(name: String?) {
+        playlistRepository.createPlaylist(
+            null,
+            name,
+            java.util.ArrayList<Any?>(Lists.transform<Child?, String?>(toAdd, Child::id))
+        )
     }
 
-    public void updatePlaylist(String name) {
-        playlistRepository.updatePlaylist(toEdit.getId(), name, getPlaylistSongIds());
+    fun updatePlaylist(name: String?) {
+        playlistRepository.updatePlaylist(toEdit!!.id, name, this.playlistSongIds)
     }
 
-    public void deletePlaylist() {
-        if (toEdit != null) playlistRepository.deletePlaylist(toEdit.getId());
+    fun deletePlaylist() {
+        if (toEdit != null) playlistRepository.deletePlaylist(toEdit!!.id)
     }
 
-    public void setSongsToAdd(ArrayList<Child> songs) {
-        toAdd = songs;
-    }
-
-    public ArrayList<Child> getSongsToAdd() {
-        return toAdd;
-    }
-
-    public Playlist getPlaylistToEdit() {
-        return toEdit;
-    }
-
-    public void setPlaylistToEdit(Playlist playlist) {
-        this.toEdit = playlist;
-
-        if (playlist != null) {
-            this.songLiveList = playlistRepository.getPlaylistSongs(toEdit.getId());
-        } else {
-            this.songLiveList = new MutableLiveData<>();
+    var songsToAdd: ArrayList<Child?>
+        get() = toAdd
+        set(songs) {
+            toAdd = songs
         }
-    }
 
-    public LiveData<List<Child>> getPlaylistSongLiveList() {
-        return songLiveList;
-    }
+    var playlistToEdit: Playlist?
+        get() = toEdit
+        set(playlist) {
+            this.toEdit = playlist
 
-    public void removeFromPlaylistSongLiveList(int position) {
-        List<Child> songs = songLiveList.getValue();
-        Objects.requireNonNull(songs).remove(position);
-        songLiveList.postValue(songs);
-    }
-
-    public void orderPlaylistSongLiveListAfterSwap(List<Child> songs) {
-        songLiveList.postValue(songs);
-    }
-
-    private ArrayList<String> getPlaylistSongIds() {
-        List<Child> songs = songLiveList.getValue();
-        ArrayList<String> ids = new ArrayList<>();
-
-        if (songs != null && !songs.isEmpty()) {
-            for (Child song : songs) {
-                ids.add(song.getId());
+            if (playlist != null) {
+                this.songLiveList = playlistRepository.getPlaylistSongs(toEdit!!.id)
+            } else {
+                this.songLiveList =
+                    MutableLiveData<MutableList<Child>?>()
             }
         }
 
-        return ids;
+    val playlistSongLiveList: LiveData<MutableList<Child>?>
+        get() = songLiveList
+
+    fun removeFromPlaylistSongLiveList(position: Int) {
+        val songs = songLiveList.getValue()
+        Objects.requireNonNull<MutableList<Child?>?>(songs).removeAt(position)
+        songLiveList.postValue(songs)
     }
 
-    public MutableLiveData<Share> sharePlaylist() {
-        return sharingRepository.createShare(toEdit.getId(), toEdit.getName(), null);
+    fun orderPlaylistSongLiveListAfterSwap(songs: MutableList<Child?>?) {
+        songLiveList.postValue(songs)
+    }
+
+    private val playlistSongIds: ArrayList<String?>
+        get() {
+            val songs =
+                songLiveList.getValue()
+            val ids = java.util.ArrayList<String?>()
+
+            if (songs != null && !songs.isEmpty()) {
+                for (song in songs) {
+                    ids.add(song.id)
+                }
+            }
+
+            return ids
+        }
+
+    fun sharePlaylist(): MutableLiveData<Share?>? {
+        return sharingRepository.createShare(toEdit!!.id, toEdit!!.name, null)
+    }
+
+    companion object {
+        private const val TAG = "PlaylistEditorViewModel"
     }
 }

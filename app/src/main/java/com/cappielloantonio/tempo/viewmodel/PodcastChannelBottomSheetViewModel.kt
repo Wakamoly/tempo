@@ -1,33 +1,20 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.cappielloantonio.tempo.repository.PodcastRepository
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
+class PodcastChannelBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+    private val podcastRepository: PodcastRepository
 
-import com.cappielloantonio.tempo.repository.PodcastRepository;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
+    var podcastChannel: PodcastChannel? = null
 
-public class PodcastChannelBottomSheetViewModel extends AndroidViewModel {
-    private final PodcastRepository podcastRepository;
-
-    private PodcastChannel podcastChannel;
-
-    public PodcastChannelBottomSheetViewModel(@NonNull Application application) {
-        super(application);
-
-        podcastRepository = new PodcastRepository();
+    init {
+        podcastRepository = PodcastRepository()
     }
 
-    public PodcastChannel getPodcastChannel() {
-        return podcastChannel;
-    }
-
-    public void setPodcastChannel(PodcastChannel podcastChannel) {
-        this.podcastChannel = podcastChannel;
-    }
-
-    public void deletePodcastChannel() {
-        if (podcastChannel != null) podcastRepository.deletePodcastChannel(podcastChannel.getId());
+    fun deletePodcastChannel() {
+        if (podcastChannel != null) podcastRepository.deletePodcastChannel(podcastChannel!!.id)
     }
 }

@@ -1,33 +1,52 @@
-package com.cappielloantonio.tempo.subsonic.api.albumsonglist;
+package com.cappielloantonio.tempo.subsonic.api.albumsonglist
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface AlbumSongListService {
+interface AlbumSongListService {
     @GET("getAlbumList")
-    Call<ApiResponse> getAlbumList(@QueryMap Map<String, String> params, @Query("type") String type, @Query("size") int size, @Query("offset") int offset);
+    fun getAlbumList(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("type") type: String?,
+        @Query("size") size: Int,
+        @Query("offset") offset: Int
+    ): Call<ApiResponse?>?
 
     @GET("getAlbumList2")
-    Call<ApiResponse> getAlbumList2(@QueryMap Map<String, String> params, @Query("type") String type, @Query("size") int size, @Query("offset") int offset, @Query("fromYear") Integer fromYear, @Query("toYear") Integer toYear);
+    fun getAlbumList2(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("type") type: String?,
+        @Query("size") size: Int,
+        @Query("offset") offset: Int,
+        @Query("fromYear") fromYear: Int?,
+        @Query("toYear") toYear: Int?
+    ): Call<ApiResponse?>?
 
     @GET("getRandomSongs")
-    Call<ApiResponse> getRandomSongs(@QueryMap Map<String, String> params, @Query("size") int size, @Query("fromYear") Integer fromYear, @Query("toYear") Integer toYear);
+    fun getRandomSongs(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("size") size: Int,
+        @Query("fromYear") fromYear: Int?,
+        @Query("toYear") toYear: Int?
+    ): Call<ApiResponse?>?
 
     @GET("getSongsByGenre")
-    Call<ApiResponse> getSongsByGenre(@QueryMap Map<String, String> params, @Query("genre") String genre, @Query("count") int count, @Query("offset") int offset);
+    fun getSongsByGenre(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("genre") genre: String?,
+        @Query("count") count: Int,
+        @Query("offset") offset: Int
+    ): Call<ApiResponse?>?
 
     @GET("getNowPlaying")
-    Call<ApiResponse> getNowPlaying(@QueryMap Map<String, String> params);
+    fun getNowPlaying(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getStarred")
-    Call<ApiResponse> getStarred(@QueryMap Map<String, String> params);
+    fun getStarred(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getStarred2")
-    Call<ApiResponse> getStarred2(@QueryMap Map<String, String> params);
+    fun getStarred2(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 }

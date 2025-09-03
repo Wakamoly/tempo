@@ -1,115 +1,130 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.recyclerview.widget.ItemTouchHelper;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.view.View
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProvider
+import androidx.recyclerview.widget.ItemTouchHelper
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogHomeRearrangementBinding
+import com.cappielloantonio.tempo.ui.adapter.HomeSectorHorizontalAdapter
+import com.cappielloantonio.tempo.viewmodel.HomeRearrangementViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Collections
+import java.util.Objects
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogHomeRearrangementBinding;
-import com.cappielloantonio.tempo.ui.adapter.HomeSectorHorizontalAdapter;
-import com.cappielloantonio.tempo.viewmodel.HomeRearrangementViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+class HomeRearrangementDialog : DialogFragment() {
+    private var bind: DialogHomeRearrangementBinding? = null
+    private var homeRearrangementViewModel: HomeRearrangementViewModel? = null
+    private var homeSectorHorizontalAdapter: HomeSectorHorizontalAdapter? = null
 
-import java.util.Collections;
-import java.util.Objects;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        bind = DialogHomeRearrangementBinding.inflate(getLayoutInflater())
 
-public class HomeRearrangementDialog extends DialogFragment {
-    private DialogHomeRearrangementBinding bind;
-    private HomeRearrangementViewModel homeRearrangementViewModel;
-    private HomeSectorHorizontalAdapter homeSectorHorizontalAdapter;
+        homeRearrangementViewModel =
+            ViewModelProvider(requireActivity()).get<HomeRearrangementViewModel>(
+                HomeRearrangementViewModel::class.java
+            )
 
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        bind = DialogHomeRearrangementBinding.inflate(getLayoutInflater());
-
-        homeRearrangementViewModel = new ViewModelProvider(requireActivity()).get(HomeRearrangementViewModel.class);
-
-        return new MaterialAlertDialogBuilder(requireContext())
-                .setView(bind.getRoot())
-                .setTitle(R.string.home_rearrangement_dialog_title)
-                .setPositiveButton(R.string.home_rearrangement_dialog_positive_button, (dialog, id) -> { })
-                .setNeutralButton(R.string.home_rearrangement_dialog_neutral_button, (dialog, id) -> { })
-                .setNegativeButton(R.string.home_rearrangement_dialog_negative_button, (dialog, id) -> dialog.cancel())
-                .create();
+        return MaterialAlertDialogBuilder(requireContext())
+            .setView(bind!!.getRoot())
+            .setTitle(R.string.home_rearrangement_dialog_title)
+            .setPositiveButton(
+                R.string.home_rearrangement_dialog_positive_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNeutralButton(
+                R.string.home_rearrangement_dialog_neutral_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNegativeButton(
+                R.string.home_rearrangement_dialog_negative_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+            .create()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        setButtonAction();
-        initSectorView();
+        setButtonAction()
+        initSectorView()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        homeRearrangementViewModel.closeDialog();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        homeRearrangementViewModel!!.closeDialog()
+        bind = null
     }
 
-    private void setButtonAction() {
-        androidx.appcompat.app.AlertDialog alertDialog = (androidx.appcompat.app.AlertDialog) Objects.requireNonNull(getDialog());
+    private fun setButtonAction() {
+        val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            homeRearrangementViewModel.saveHomeSectorList(homeSectorHorizontalAdapter.getItems());
-            dismiss();
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                homeRearrangementViewModel!!.saveHomeSectorList(homeSectorHorizontalAdapter!!.getItems())
+                dismiss()
+            })
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> {
-            homeRearrangementViewModel.resetHomeSectorList();
-            dismiss();
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                homeRearrangementViewModel!!.resetHomeSectorList()
+                dismiss()
+            })
     }
 
-    private void initSectorView() {
-        bind.homeSectorItemRecyclerView.setLayoutManager(new LinearLayoutManager(requireContext()));
-        bind.homeSectorItemRecyclerView.setHasFixedSize(true);
+    private fun initSectorView() {
+        bind!!.homeSectorItemRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
+        bind!!.homeSectorItemRecyclerView.setHasFixedSize(true)
 
-        homeSectorHorizontalAdapter = new HomeSectorHorizontalAdapter();
-        bind.homeSectorItemRecyclerView.setAdapter(homeSectorHorizontalAdapter);
-        homeSectorHorizontalAdapter.setItems(homeRearrangementViewModel.getHomeSectorList());
+        homeSectorHorizontalAdapter = HomeSectorHorizontalAdapter()
+        bind!!.homeSectorItemRecyclerView.setAdapter(homeSectorHorizontalAdapter)
+        homeSectorHorizontalAdapter!!.setItems(homeRearrangementViewModel!!.getHomeSectorList())
 
-        new ItemTouchHelper(new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
-            int originalPosition = -1;
-            int fromPosition = -1;
-            int toPosition = -1;
+        ItemTouchHelper(object :
+            ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+            var originalPosition: Int = -1
+            var fromPosition: Int = -1
+            var toPosition: Int = -1
 
-            @Override
-            public boolean onMove(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder, @NonNull RecyclerView.ViewHolder target) {
-                if (originalPosition == -1) originalPosition = viewHolder.getBindingAdapterPosition();
+            override fun onMove(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder,
+                target: RecyclerView.ViewHolder
+            ): Boolean {
+                if (originalPosition == -1) originalPosition =
+                    viewHolder.getBindingAdapterPosition()
 
-                fromPosition = viewHolder.getBindingAdapterPosition();
-                toPosition = target.getBindingAdapterPosition();
+                fromPosition = viewHolder.getBindingAdapterPosition()
+                toPosition = target.getBindingAdapterPosition()
 
-                Collections.swap(homeSectorHorizontalAdapter.getItems(), fromPosition, toPosition);
-                Objects.requireNonNull(recyclerView.getAdapter()).notifyItemMoved(fromPosition, toPosition);
+                Collections.swap(homeSectorHorizontalAdapter!!.getItems(), fromPosition, toPosition)
+                Objects.requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
+                    .notifyItemMoved(fromPosition, toPosition)
 
-                return false;
+                return false
             }
 
-            @Override
-            public void clearView(@NonNull RecyclerView recyclerView, @NonNull RecyclerView.ViewHolder viewHolder) {
-                super.clearView(recyclerView, viewHolder);
+            override fun clearView(
+                recyclerView: RecyclerView,
+                viewHolder: RecyclerView.ViewHolder
+            ) {
+                super.clearView(recyclerView, viewHolder)
 
-                homeRearrangementViewModel.orderSectorLiveListAfterSwap(homeSectorHorizontalAdapter.getItems());
+                homeRearrangementViewModel!!.orderSectorLiveListAfterSwap(
+                    homeSectorHorizontalAdapter!!.getItems()
+                )
 
-                originalPosition = -1;
-                fromPosition = -1;
-                toPosition = -1;
+                originalPosition = -1
+                fromPosition = -1
+                toPosition = -1
             }
 
-            @Override
-            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
-
+            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
             }
         }
-        ).attachToRecyclerView(bind.homeSectorItemRecyclerView);
+        ).attachToRecyclerView(bind!!.homeSectorItemRecyclerView)
     }
 }

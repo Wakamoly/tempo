@@ -1,52 +1,58 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.repository.PodcastRepository
+import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
+import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class PodcastViewModel(application: Application) : AndroidViewModel(application) {
+    private val podcastRepository: PodcastRepository
 
-import com.cappielloantonio.tempo.repository.PodcastRepository;
-import com.cappielloantonio.tempo.subsonic.models.PodcastChannel;
-import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode;
+    private val newestPodcastEpisodes = MutableLiveData<MutableList<PodcastEpisode?>?>(null)
+    private val podcastChannels = MutableLiveData<MutableList<PodcastChannel?>?>(null)
 
-import java.util.List;
-
-public class PodcastViewModel extends AndroidViewModel {
-    private final PodcastRepository podcastRepository;
-
-    private final MutableLiveData<List<PodcastEpisode>> newestPodcastEpisodes = new MutableLiveData<>(null);
-    private final MutableLiveData<List<PodcastChannel>> podcastChannels = new MutableLiveData<>(null);
-
-    public PodcastViewModel(@NonNull Application application) {
-        super(application);
-
-        podcastRepository = new PodcastRepository();
+    init {
+        podcastRepository = PodcastRepository()
     }
 
-    public LiveData<List<PodcastEpisode>> getNewestPodcastEpisodes(LifecycleOwner owner) {
+    fun getNewestPodcastEpisodes(owner: LifecycleOwner): LiveData<MutableList<PodcastEpisode?>?> {
         if (newestPodcastEpisodes.getValue() == null) {
-            podcastRepository.getNewestPodcastEpisodes(20).observe(owner, newestPodcastEpisodes::postValue);
+            podcastRepository.getNewestPodcastEpisodes(20).observe(
+                owner,
+                Observer { value: MutableList<PodcastEpisode?>? ->
+                    newestPodcastEpisodes.postValue(
+                        value
+                    )
+                })
         }
 
-        return newestPodcastEpisodes;
+        return newestPodcastEpisodes
     }
 
-    public LiveData<List<PodcastChannel>> getPodcastChannels(LifecycleOwner owner) {
+    fun getPodcastChannels(owner: LifecycleOwner): LiveData<MutableList<PodcastChannel?>?> {
         if (podcastChannels.getValue() == null) {
-            podcastRepository.getPodcastChannels(false, null).observe(owner, podcastChannels::postValue);
+            podcastRepository.getPodcastChannels(false, null).observe(
+                owner,
+                Observer { value: MutableList<PodcastChannel?>? -> podcastChannels.postValue(value) })
         }
 
-        return podcastChannels;
+        return podcastChannels
     }
 
-    public void refreshNewestPodcastEpisodes(LifecycleOwner owner) {
-        podcastRepository.getNewestPodcastEpisodes(20).observe(owner, newestPodcastEpisodes::postValue);
+    fun refreshNewestPodcastEpisodes(owner: LifecycleOwner) {
+        podcastRepository.getNewestPodcastEpisodes(20).observe(
+            owner,
+            Observer { value: MutableList<PodcastEpisode?>? -> newestPodcastEpisodes.postValue(value) })
     }
 
-    public void refreshPodcastChannels(LifecycleOwner owner) {
-        podcastRepository.getPodcastChannels(false, null).observe(owner, podcastChannels::postValue);
+    fun refreshPodcastChannels(owner: LifecycleOwner) {
+        podcastRepository.getPodcastChannels(false, null).observe(
+            owner,
+            Observer { value: MutableList<PodcastChannel?>? -> podcastChannels.postValue(value) })
     }
 }

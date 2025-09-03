@@ -1,382 +1,498 @@
-package com.cappielloantonio.tempo.service;
+package com.cappielloantonio.tempo.service
 
-import android.content.ComponentName;
+import android.content.ComponentName
+import androidx.annotation.OptIn
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.Observer
+import androidx.media3.common.MediaItem
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.session.MediaBrowser
+import androidx.media3.session.SessionToken
+import com.cappielloantonio.tempo.App.Companion.getContext
+import com.cappielloantonio.tempo.interfaces.MediaIndexCallback
+import com.cappielloantonio.tempo.model.Chronology
+import com.cappielloantonio.tempo.repository.ChronologyRepository
+import com.cappielloantonio.tempo.repository.QueueRepository
+import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.subsonic.models.Child
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
+import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
+import com.cappielloantonio.tempo.util.MappingUtil
+import com.cappielloantonio.tempo.util.Preferences.isContinuousPlayEnabled
+import com.cappielloantonio.tempo.util.Preferences.isInstantMixUsable
+import com.cappielloantonio.tempo.util.Preferences.isScrobblingEnabled
+import com.cappielloantonio.tempo.util.Preferences.setLastInstantMix
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import java.util.concurrent.ExecutionException
 
-import androidx.annotation.OptIn;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.Observer;
-import androidx.media3.common.MediaItem;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.session.MediaBrowser;
-import androidx.media3.session.SessionToken;
+object MediaManager {
+    private const val TAG = "MediaManager"
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.interfaces.MediaIndexCallback;
-import com.cappielloantonio.tempo.model.Chronology;
-import com.cappielloantonio.tempo.repository.ChronologyRepository;
-import com.cappielloantonio.tempo.repository.QueueRepository;
-import com.cappielloantonio.tempo.repository.SongRepository;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation;
-import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode;
-import com.cappielloantonio.tempo.util.MappingUtil;
-import com.cappielloantonio.tempo.util.Preferences;
-import com.google.common.util.concurrent.ListenableFuture;
-import com.google.common.util.concurrent.MoreExecutors;
-
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-public class MediaManager {
-    private static final String TAG = "MediaManager";
-
-    public static void reset(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture) {
+    fun reset(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (mediaBrowserListenableFuture.get().isPlaying()) {
-                            mediaBrowserListenableFuture.get().pause();
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
+                            mediaBrowserListenableFuture.get()!!.pause()
                         }
 
-                        mediaBrowserListenableFuture.get().stop();
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        clearDatabase();
+                        mediaBrowserListenableFuture.get()!!.stop()
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        clearDatabase()
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void hide(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture) {
+    fun hide(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (mediaBrowserListenableFuture.get().isPlaying()) {
-                            mediaBrowserListenableFuture.get().pause();
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
+                            mediaBrowserListenableFuture.get()!!.pause()
                         }
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void check(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture) {
+    fun check(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (mediaBrowserListenableFuture.get().getMediaItemCount() < 1) {
-                            List<Child> media = getQueueRepository().getMedia();
-                            if (media != null && media.size() >= 1) {
-                                init(mediaBrowserListenableFuture, media);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (mediaBrowserListenableFuture.get()!!.mediaItemCount < 1) {
+                            val media: MutableList<Child?>? = queueRepository.getMedia()
+                            if (media != null && media.size >= 1) {
+                                init(mediaBrowserListenableFuture, media)
                             }
                         }
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void init(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media) {
+    fun init(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        mediaBrowserListenableFuture.get().setMediaItems(MappingUtil.mapMediaItems(media));
-                        mediaBrowserListenableFuture.get().seekTo(getQueueRepository().getLastPlayedMediaIndex(), getQueueRepository().getLastPlayedMediaTimestamp());
-                        mediaBrowserListenableFuture.get().prepare();
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        mediaBrowserListenableFuture.get()!!
+                            .setMediaItems(MappingUtil.mapMediaItems(media))
+                        mediaBrowserListenableFuture.get()!!.seekTo(
+                            queueRepository.getLastPlayedMediaIndex(),
+                            queueRepository.getLastPlayedMediaTimestamp()
+                        )
+                        mediaBrowserListenableFuture.get()!!.prepare()
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void startQueue(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, int startIndex) {
+    fun startQueue(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>,
+        startIndex: Int
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        mediaBrowserListenableFuture.get().setMediaItems(MappingUtil.mapMediaItems(media));
-                        mediaBrowserListenableFuture.get().prepare();
-                        mediaBrowserListenableFuture.get().seekTo(startIndex, 0);
-                        mediaBrowserListenableFuture.get().play();
-                        enqueueDatabase(media, true, 0);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        mediaBrowserListenableFuture.get()!!
+                            .setMediaItems(MappingUtil.mapMediaItems(media))
+                        mediaBrowserListenableFuture.get()!!.prepare()
+                        mediaBrowserListenableFuture.get()!!.seekTo(startIndex, 0)
+                        mediaBrowserListenableFuture.get()!!.play()
+                        enqueueDatabase(media, true, 0)
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void startQueue(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, Child media) {
+    fun startQueue(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?, media: Child?) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        mediaBrowserListenableFuture.get().setMediaItem(MappingUtil.mapMediaItem(media));
-                        mediaBrowserListenableFuture.get().prepare();
-                        mediaBrowserListenableFuture.get().play();
-                        enqueueDatabase(media, true, 0);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        mediaBrowserListenableFuture.get()!!
+                            .setMediaItem(MappingUtil.mapMediaItem(media))
+                        mediaBrowserListenableFuture.get()!!.prepare()
+                        mediaBrowserListenableFuture.get()!!.play()
+                        enqueueDatabase(media, true, 0)
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void startRadio(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, InternetRadioStation internetRadioStation) {
+    fun startRadio(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        internetRadioStation: InternetRadioStation
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        mediaBrowserListenableFuture.get().setMediaItem(MappingUtil.mapInternetRadioStation(internetRadioStation));
-                        mediaBrowserListenableFuture.get().prepare();
-                        mediaBrowserListenableFuture.get().play();
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        mediaBrowserListenableFuture.get()!!
+                            .setMediaItem(MappingUtil.mapInternetRadioStation(internetRadioStation))
+                        mediaBrowserListenableFuture.get()!!.prepare()
+                        mediaBrowserListenableFuture.get()!!.play()
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void startPodcast(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, PodcastEpisode podcastEpisode) {
+    fun startPodcast(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        podcastEpisode: PodcastEpisode?
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().clearMediaItems();
-                        mediaBrowserListenableFuture.get().setMediaItem(MappingUtil.mapMediaItem(podcastEpisode));
-                        mediaBrowserListenableFuture.get().prepare();
-                        mediaBrowserListenableFuture.get().play();
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                        mediaBrowserListenableFuture.get()!!
+                            .setMediaItem(MappingUtil.mapMediaItem(podcastEpisode))
+                        mediaBrowserListenableFuture.get()!!.prepare()
+                        mediaBrowserListenableFuture.get()!!.play()
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void enqueue(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, boolean playImmediatelyAfter) {
+    fun enqueue(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>,
+        playImmediatelyAfter: Boolean
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (playImmediatelyAfter && mediaBrowserListenableFuture.get().getNextMediaItemIndex() != -1) {
-                            enqueueDatabase(media, false, mediaBrowserListenableFuture.get().getNextMediaItemIndex());
-                            mediaBrowserListenableFuture.get().addMediaItems(mediaBrowserListenableFuture.get().getNextMediaItemIndex(), MappingUtil.mapMediaItems(media));
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (playImmediatelyAfter && mediaBrowserListenableFuture.get()!!
+                                .getNextMediaItemIndex() != -1
+                        ) {
+                            enqueueDatabase(
+                                media,
+                                false,
+                                mediaBrowserListenableFuture.get()!!.getNextMediaItemIndex()
+                            )
+                            mediaBrowserListenableFuture.get()!!.addMediaItems(
+                                mediaBrowserListenableFuture.get()!!.getNextMediaItemIndex(),
+                                MappingUtil.mapMediaItems(media)
+                            )
                         } else {
-                            enqueueDatabase(media, false, mediaBrowserListenableFuture.get().getMediaItemCount());
-                            mediaBrowserListenableFuture.get().addMediaItems(MappingUtil.mapMediaItems(media));
+                            enqueueDatabase(
+                                media,
+                                false,
+                                mediaBrowserListenableFuture.get()!!.mediaItemCount
+                            )
+                            mediaBrowserListenableFuture.get()!!
+                                .addMediaItems(MappingUtil.mapMediaItems(media))
                         }
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void enqueue(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, Child media, boolean playImmediatelyAfter) {
+    fun enqueue(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: Child?,
+        playImmediatelyAfter: Boolean
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (playImmediatelyAfter && mediaBrowserListenableFuture.get().getNextMediaItemIndex() != -1) {
-                            enqueueDatabase(media, false, mediaBrowserListenableFuture.get().getNextMediaItemIndex());
-                            mediaBrowserListenableFuture.get().addMediaItem(mediaBrowserListenableFuture.get().getNextMediaItemIndex(), MappingUtil.mapMediaItem(media));
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (playImmediatelyAfter && mediaBrowserListenableFuture.get()!!
+                                .getNextMediaItemIndex() != -1
+                        ) {
+                            enqueueDatabase(
+                                media,
+                                false,
+                                mediaBrowserListenableFuture.get()!!.getNextMediaItemIndex()
+                            )
+                            mediaBrowserListenableFuture.get()!!.addMediaItem(
+                                mediaBrowserListenableFuture.get()!!.getNextMediaItemIndex(),
+                                MappingUtil.mapMediaItem(media)
+                            )
                         } else {
-                            enqueueDatabase(media, false, mediaBrowserListenableFuture.get().getMediaItemCount());
-                            mediaBrowserListenableFuture.get().addMediaItem(MappingUtil.mapMediaItem(media));
+                            enqueueDatabase(
+                                media,
+                                false,
+                                mediaBrowserListenableFuture.get()!!.mediaItemCount
+                            )
+                            mediaBrowserListenableFuture.get()!!
+                                .addMediaItem(MappingUtil.mapMediaItem(media))
                         }
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void shuffle(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, int startIndex, int endIndex) {
+    fun shuffle(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>,
+        startIndex: Int,
+        endIndex: Int
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().removeMediaItems(startIndex, endIndex + 1);
-                        mediaBrowserListenableFuture.get().addMediaItems(MappingUtil.mapMediaItems(media).subList(startIndex, endIndex + 1));
-                        swapDatabase(media);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!
+                            .removeMediaItems(startIndex, endIndex + 1)
+                        mediaBrowserListenableFuture.get()!!.addMediaItems(
+                            MappingUtil.mapMediaItems(media).subList(startIndex, endIndex + 1)
+                        )
+                        swapDatabase(media)
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void swap(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, int from, int to) {
+    fun swap(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>?,
+        from: Int,
+        to: Int
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().moveMediaItem(from, to);
-                        swapDatabase(media);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.moveMediaItem(from, to)
+                        swapDatabase(media)
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void remove(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, int toRemove) {
+    fun remove(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>,
+        toRemove: Int
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        if (mediaBrowserListenableFuture.get().getMediaItemCount() > 1 && mediaBrowserListenableFuture.get().getCurrentMediaItemIndex() != toRemove) {
-                            mediaBrowserListenableFuture.get().removeMediaItem(toRemove);
-                            removeDatabase(media, toRemove);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        if (mediaBrowserListenableFuture.get()!!
+                                .mediaItemCount > 1 && mediaBrowserListenableFuture.get()!!
+                                .getCurrentMediaItemIndex() != toRemove
+                        ) {
+                            mediaBrowserListenableFuture.get()!!.removeMediaItem(toRemove)
+                            removeDatabase(media, toRemove)
                         } else {
-                            removeDatabase(media, -1);
+                            removeDatabase(media, -1)
                         }
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void removeRange(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, List<Child> media, int fromItem, int toItem) {
+    fun removeRange(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        media: MutableList<Child?>,
+        fromItem: Int,
+        toItem: Int
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        mediaBrowserListenableFuture.get().removeMediaItems(fromItem, toItem);
-                        removeRangeDatabase(media, fromItem, toItem);
+                    if (mediaBrowserListenableFuture.isDone) {
+                        mediaBrowserListenableFuture.get()!!.removeMediaItems(fromItem, toItem)
+                        removeRangeDatabase(media, fromItem, toItem)
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void getCurrentIndex(ListenableFuture<MediaBrowser> mediaBrowserListenableFuture, MediaIndexCallback callback) {
+    fun getCurrentIndex(
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
+        callback: MediaIndexCallback
+    ) {
         if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(() -> {
+            mediaBrowserListenableFuture.addListener(Runnable {
                 try {
-                    if (mediaBrowserListenableFuture.isDone()) {
-                        callback.onRecovery(mediaBrowserListenableFuture.get().getCurrentMediaItemIndex());
+                    if (mediaBrowserListenableFuture.isDone) {
+                        callback.onRecovery(
+                            mediaBrowserListenableFuture.get()!!.getCurrentMediaItemIndex()
+                        )
                     }
-                } catch (ExecutionException | InterruptedException e) {
-                    e.printStackTrace();
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor());
+            }, MoreExecutors.directExecutor())
         }
     }
 
-    public static void setLastPlayedTimestamp(MediaItem mediaItem) {
-        if (mediaItem != null) getQueueRepository().setLastPlayedTimestamp(mediaItem.mediaId);
+    fun setLastPlayedTimestamp(mediaItem: MediaItem?) {
+        if (mediaItem != null) queueRepository.setLastPlayedTimestamp(mediaItem.mediaId)
     }
 
-    public static void setPlayingPausedTimestamp(MediaItem mediaItem, long ms) {
-        if (mediaItem != null)
-            getQueueRepository().setPlayingPausedTimestamp(mediaItem.mediaId, ms);
+    fun setPlayingPausedTimestamp(mediaItem: MediaItem?, ms: Long) {
+        if (mediaItem != null) queueRepository.setPlayingPausedTimestamp(mediaItem.mediaId, ms)
     }
 
-    public static void scrobble(MediaItem mediaItem, boolean submission) {
-        if (mediaItem != null && Preferences.isScrobblingEnabled()) {
-            getSongRepository().scrobble(mediaItem.mediaMetadata.extras.getString("id"), submission);
+    fun scrobble(mediaItem: MediaItem?, submission: Boolean) {
+        if (mediaItem != null && isScrobblingEnabled()) {
+            songRepository.scrobble(mediaItem.mediaMetadata.extras!!.getString("id"), submission)
         }
     }
 
-    @OptIn(markerClass = UnstableApi.class)
-    public static void continuousPlay(MediaItem mediaItem) {
-        if (mediaItem != null && Preferences.isContinuousPlayEnabled() && Preferences.isInstantMixUsable()) {
-            Preferences.setLastInstantMix();
+    @OptIn(markerClass = UnstableApi::class)
+    fun continuousPlay(mediaItem: MediaItem?) {
+        if (mediaItem != null && isContinuousPlayEnabled() && isInstantMixUsable()) {
+            setLastInstantMix()
 
-            LiveData<List<Child>> instantMix = getSongRepository().getInstantMix(mediaItem.mediaId, 10);
-            instantMix.observeForever(new Observer<List<Child>>() {
-                @Override
-                public void onChanged(List<Child> media) {
+            val instantMix: LiveData<MutableList<Child?>?> =
+                songRepository.getInstantMix(mediaItem.mediaId, 10)
+            instantMix.observeForever(object : Observer<MutableList<Child?>?> {
+                override fun onChanged(media: MutableList<Child?>?) {
                     if (media != null) {
-                        ListenableFuture<MediaBrowser> mediaBrowserListenableFuture = new MediaBrowser.Builder(
-                                App.getContext(),
-                                new SessionToken(App.getContext(), new ComponentName(App.getContext(), MediaService.class))
-                        ).buildAsync();
+                        val mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?> =
+                            MediaBrowser.Builder(
+                                getContext(),
+                                SessionToken(
+                                    getContext(),
+                                    ComponentName(getContext(), MediaService::class.java)
+                                )
+                            ).buildAsync()
 
-                        enqueue(mediaBrowserListenableFuture, media, true);
+                        enqueue(mediaBrowserListenableFuture, media, true)
                     }
 
-                    instantMix.removeObserver(this);
+                    instantMix.removeObserver(this)
                 }
-            });
+            })
         }
     }
 
-    public static void saveChronology(MediaItem mediaItem) {
+    fun saveChronology(mediaItem: MediaItem?) {
         if (mediaItem != null) {
-            getChronologyRepository().insert(new Chronology(mediaItem));
+            chronologyRepository.insert(Chronology(mediaItem))
         }
     }
 
-    private static QueueRepository getQueueRepository() {
-        return new QueueRepository();
+    private val queueRepository: QueueRepository
+        get() = QueueRepository()
+
+    private val songRepository: SongRepository
+        get() = SongRepository()
+
+    private val chronologyRepository: ChronologyRepository
+        get() = ChronologyRepository()
+
+    private fun enqueueDatabase(media: MutableList<Child?>?, reset: Boolean, afterIndex: Int) {
+        queueRepository.insertAll(media, reset, afterIndex)
     }
 
-    private static SongRepository getSongRepository() {
-        return new SongRepository();
+    private fun enqueueDatabase(media: Child?, reset: Boolean, afterIndex: Int) {
+        queueRepository.insert(media, reset, afterIndex)
     }
 
-    private static ChronologyRepository getChronologyRepository() {
-        return new ChronologyRepository();
+    private fun swapDatabase(media: MutableList<Child?>?) {
+        queueRepository.insertAll(media, true, 0)
     }
 
-    private static void enqueueDatabase(List<Child> media, boolean reset, int afterIndex) {
-        getQueueRepository().insertAll(media, reset, afterIndex);
-    }
-
-    private static void enqueueDatabase(Child media, boolean reset, int afterIndex) {
-        getQueueRepository().insert(media, reset, afterIndex);
-    }
-
-    private static void swapDatabase(List<Child> media) {
-        getQueueRepository().insertAll(media, true, 0);
-    }
-
-    private static void removeDatabase(List<Child> media, int toRemove) {
+    private fun removeDatabase(media: MutableList<Child?>, toRemove: Int) {
         if (toRemove != -1) {
-            media.remove(toRemove);
-            getQueueRepository().insertAll(media, true, 0);
+            media.removeAt(toRemove)
+            queueRepository.insertAll(media, true, 0)
         }
     }
 
-    private static void removeRangeDatabase(List<Child> media, int fromItem, int toItem) {
-        List<Child> toRemove = media.subList(fromItem, toItem);
+    private fun removeRangeDatabase(media: MutableList<Child?>, fromItem: Int, toItem: Int) {
+        val toRemove = media.subList(fromItem, toItem)
 
-        media.removeAll(toRemove);
+        media.removeAll(toRemove)
 
-        getQueueRepository().insertAll(media, true, 0);
+        queueRepository.insertAll(media, true, 0)
     }
 
-    public static void clearDatabase() {
-        getQueueRepository().deleteAll();
+    fun clearDatabase() {
+        queueRepository.deleteAll()
     }
 }

@@ -1,150 +1,163 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.ItemHomePodcastEpisodeBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.util.MusicUtil
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.text.SimpleDateFormat
+import java.util.stream.Collectors
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class PodcastEpisodeAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<PodcastEpisodeAdapter.ViewHolder?>() {
+    private var podcastEpisodes: MutableList<PodcastEpisode>
+    private var podcastEpisodesFull: MutableList<PodcastEpisode>? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.ItemHomePodcastEpisodeBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-public class PodcastEpisodeAdapter extends RecyclerView.Adapter<PodcastEpisodeAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<PodcastEpisode> podcastEpisodes;
-    private List<PodcastEpisode> podcastEpisodesFull;
-
-    public PodcastEpisodeAdapter(ClickCallback click) {
-        this.click = click;
-        this.podcastEpisodes = Collections.emptyList();
+    init {
+        this.podcastEpisodes = mutableListOf<PodcastEpisode?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomePodcastEpisodeBinding view = ItemHomePodcastEpisodeBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomePodcastEpisodeBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return PodcastEpisodeAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        PodcastEpisode podcastEpisode = podcastEpisodes.get(position);
-        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("MMM d");
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val podcastEpisode = podcastEpisodes.get(position)
+        val simpleDateFormat = SimpleDateFormat("MMM d")
 
-        holder.item.podcastTitleLabel.setText(podcastEpisode.getTitle());
-        holder.item.podcastSubtitleLabel.setText(podcastEpisode.getArtist());
-        holder.item.podcastReleasesAndDurationLabel.setText(holder.itemView.getContext().getString(R.string.podcast_release_date_duration_formatter, simpleDateFormat.format(podcastEpisode.getPublishDate()), MusicUtil.getReadablePodcastDurationString(podcastEpisode.getDuration())));
-        holder.item.podcastDescriptionText.setText(MusicUtil.getReadableString(podcastEpisode.getDescription()));
+        holder.item.podcastTitleLabel.text = podcastEpisode.title
+        holder.item.podcastSubtitleLabel.text = podcastEpisode.artist
+        holder.item.podcastReleasesAndDurationLabel.text = holder.itemView.context.getString(
+            R.string.podcast_release_date_duration_formatter,
+            simpleDateFormat.format(podcastEpisode.publishDate),
+            MusicUtil.getReadablePodcastDurationString(
+                podcastEpisode.duration!!.toLong()
+            )
+        )
+        holder.item.podcastDescriptionText.text = MusicUtil.getReadableString(podcastEpisode.description)
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), podcastEpisode.getCoverArtId(), CustomGlideRequest.ResourceType.Podcast)
-                .build()
-                .into(holder.item.podcastCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            podcastEpisode.coverArtId,
+            CustomGlideRequest.ResourceType.Podcast
+        )
+            .build()
+            .into(holder.item.podcastCoverImageView)
 
-        holder.item.podcastPlayButton.setEnabled(podcastEpisode.getStatus().equals("completed"));
-        holder.item.podcastMoreButton.setVisibility(podcastEpisode.getStatus().equals("completed") ? View.VISIBLE : View.GONE);
-        holder.item.podcastDownloadRequestButton.setVisibility(podcastEpisode.getStatus().equals("completed") ? View.GONE : View.VISIBLE);
+        holder.item.podcastPlayButton.setEnabled(podcastEpisode.status == "completed")
+        holder.item.podcastMoreButton.visibility = if (podcastEpisode.status == "completed") View.VISIBLE else View.GONE
+        holder.item.podcastDownloadRequestButton.visibility = if (podcastEpisode.status == "completed") View.GONE else View.VISIBLE
     }
 
-    @Override
-    public int getItemCount() {
-        return podcastEpisodes.size();
+    override fun getItemCount(): Int {
+        return podcastEpisodes.size
     }
 
-    public void setItems(List<PodcastEpisode> podcastEpisodes) {
-        this.podcastEpisodesFull = podcastEpisodes;
-        this.podcastEpisodes = podcastEpisodesFull.stream().filter(podcastEpisode -> Objects.equals(podcastEpisode.getStatus(), "completed")).collect(Collectors.toList());
-        notifyDataSetChanged();
+    fun setItems(podcastEpisodes: MutableList<PodcastEpisode>) {
+        this.podcastEpisodesFull = podcastEpisodes
+        this.podcastEpisodes = podcastEpisodesFull!!.stream()
+            .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
+            .collect(
+                Collectors.toList()
+            )
+        notifyDataSetChanged()
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return position;
+    override fun getItemViewType(position: Int): Int {
+        return position
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomePodcastEpisodeBinding item;
+    inner class ViewHolder internal constructor(var item: ItemHomePodcastEpisodeBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> openMore() })
 
-        ViewHolder(ItemHomePodcastEpisodeBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> openMore());
-
-            item.podcastPlayButton.setOnClickListener(v -> onClick());
-            item.podcastMoreButton.setOnClickListener(v -> openMore());
-            item.podcastDownloadRequestButton.setOnClickListener(v -> requestDownload());
+            item.podcastPlayButton.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            item.podcastMoreButton.setOnClickListener(View.OnClickListener { v: View? -> openMore() })
+            item.podcastDownloadRequestButton.setOnClickListener(View.OnClickListener { v: View? -> requestDownload() })
         }
 
-        public void onClick() {
-            PodcastEpisode podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition());
+        fun onClick() {
+            val podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition())
 
-            if (podcastEpisode.getStatus().equals("completed")) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(Constants.PODCAST_OBJECT, podcastEpisodes.get(getBindingAdapterPosition()));
+            if (podcastEpisode.status == "completed") {
+                val bundle = Bundle()
+                bundle.putParcelable(
+                    Constants.PODCAST_OBJECT,
+                    podcastEpisodes.get(getBindingAdapterPosition())
+                )
 
-                click.onPodcastEpisodeClick(bundle);
+                click.onPodcastEpisodeClick(bundle)
             }
         }
 
-        private boolean openMore() {
-            PodcastEpisode podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition());
+        private fun openMore(): Boolean {
+            val podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition())
 
-            if (podcastEpisode.getStatus().equals("completed")) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(Constants.PODCAST_OBJECT, podcastEpisodes.get(getBindingAdapterPosition()));
+            if (podcastEpisode.status == "completed") {
+                val bundle = Bundle()
+                bundle.putParcelable(
+                    Constants.PODCAST_OBJECT,
+                    podcastEpisodes.get(getBindingAdapterPosition())
+                )
 
-                click.onPodcastEpisodeLongClick(bundle);
+                click.onPodcastEpisodeLongClick(bundle)
 
-                return true;
+                return true
             }
 
-            return false;
+            return false
         }
 
-        public void requestDownload() {
-            PodcastEpisode podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition());
+        fun requestDownload() {
+            val podcastEpisode = podcastEpisodes.get(getBindingAdapterPosition())
 
-            if (!podcastEpisode.getStatus().equals("completed")) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable(Constants.PODCAST_OBJECT, podcastEpisodes.get(getBindingAdapterPosition()));
+            if (podcastEpisode.status != "completed") {
+                val bundle = Bundle()
+                bundle.putParcelable(
+                    Constants.PODCAST_OBJECT,
+                    podcastEpisodes.get(getBindingAdapterPosition())
+                )
 
-                click.onPodcastEpisodeAltClick(bundle);
+                click.onPodcastEpisodeAltClick(bundle)
             }
         }
     }
 
-    public void sort(String order) {
-        switch (order) {
-            case Constants.PODCAST_FILTER_BY_DOWNLOAD:
-                podcastEpisodes = podcastEpisodesFull.stream().filter(podcastEpisode -> Objects.equals(podcastEpisode.getStatus(), "completed")).collect(Collectors.toList());
-                break;
-            case Constants.PODCAST_FILTER_BY_ALL:
-                podcastEpisodes = podcastEpisodesFull;
-                break;
+    fun sort(order: String) {
+        when (order) {
+            Constants.PODCAST_FILTER_BY_DOWNLOAD -> podcastEpisodes = podcastEpisodesFull!!.stream()
+                .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
+                .collect(
+                    Collectors.toList()
+                )
+
+            Constants.PODCAST_FILTER_BY_ALL -> podcastEpisodes = podcastEpisodesFull!!
         }
 
-        notifyDataSetChanged();
+        notifyDataSetChanged()
     }
 }

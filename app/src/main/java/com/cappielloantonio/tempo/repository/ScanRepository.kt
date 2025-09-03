@@ -1,58 +1,64 @@
-package com.cappielloantonio.tempo.repository;
+package com.cappielloantonio.tempo.repository
 
-import androidx.annotation.NonNull;
+import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
+import com.cappielloantonio.tempo.interfaces.ScanCallback
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.interfaces.ScanCallback;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
-
-import retrofit2.Call;
-import retrofit2.Callback;
-
-public class ScanRepository {
-    public void startScan(ScanCallback callback) {
-        App.getSubsonicClientInstance(false)
-                .getMediaLibraryScanningClient()
-                .startScan()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull retrofit2.Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse() != null) {
-                            if (response.body().getSubsonicResponse().getError() != null) {
-                                callback.onError(new Exception(response.body().getSubsonicResponse().getError().getMessage()));
-                            } else if (response.body().getSubsonicResponse().getScanStatus() != null) {
-                                callback.onSuccess(response.body().getSubsonicResponse().getScanStatus().isScanning(), response.body().getSubsonicResponse().getScanStatus().getCount());
-                            }
+class ScanRepository {
+    fun startScan(callback: ScanCallback) {
+        getSubsonicClientInstance(false)
+            .getMediaLibraryScanningClient()
+            .startScan()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
+                        if (response.body()!!.subsonicResponse.error != null) {
+                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.message))
+                        } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                            callback.onSuccess(
+                                response.body()!!.subsonicResponse.scanStatus!!.isScanning,
+                                response.body()!!.subsonicResponse.scanStatus!!.count!!
+                            )
                         }
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        callback.onError(new Exception(t.getMessage()));
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    callback.onError(Exception(t.message))
+                }
+            })
     }
 
-    public void getScanStatus(ScanCallback callback) {
-        App.getSubsonicClientInstance(false)
-                .getMediaLibraryScanningClient()
-                .startScan()
-                .enqueue(new Callback<ApiResponse>() {
-                    @Override
-                    public void onResponse(@NonNull Call<ApiResponse> call, @NonNull retrofit2.Response<ApiResponse> response) {
-                        if (response.isSuccessful() && response.body() != null && response.body().getSubsonicResponse() != null) {
-                            if (response.body().getSubsonicResponse().getError() != null) {
-                                callback.onError(new Exception(response.body().getSubsonicResponse().getError().getMessage()));
-                            } else if (response.body().getSubsonicResponse().getScanStatus() != null) {
-                                callback.onSuccess(response.body().getSubsonicResponse().getScanStatus().isScanning(), response.body().getSubsonicResponse().getScanStatus().getCount());
-                            }
+    fun getScanStatus(callback: ScanCallback) {
+        getSubsonicClientInstance(false)
+            .getMediaLibraryScanningClient()
+            .startScan()
+            .enqueue(object : Callback<ApiResponse?> {
+                override fun onResponse(
+                    call: Call<ApiResponse?>,
+                    response: Response<ApiResponse?>
+                ) {
+                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
+                        if (response.body()!!.subsonicResponse.error != null) {
+                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.message))
+                        } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                            callback.onSuccess(
+                                response.body()!!.subsonicResponse.scanStatus!!.isScanning,
+                                response.body()!!.subsonicResponse.scanStatus!!.count!!
+                            )
                         }
                     }
+                }
 
-                    @Override
-                    public void onFailure(@NonNull Call<ApiResponse> call, @NonNull Throwable t) {
-                        callback.onError(new Exception(t.getMessage()));
-                    }
-                });
+                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
+                    callback.onError(Exception(t.message))
+                }
+            })
     }
 }

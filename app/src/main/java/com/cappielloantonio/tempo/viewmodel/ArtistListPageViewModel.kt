@@ -1,61 +1,56 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.Observer
+import com.cappielloantonio.tempo.model.Download
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.DownloadRepository
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.util.Constants
+import java.util.TreeSet
+import java.util.function.Function
+import java.util.function.Supplier
+import java.util.stream.Collectors
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
-import androidx.lifecycle.LifecycleOwner;
-import androidx.lifecycle.LiveData;
-import androidx.lifecycle.MutableLiveData;
+class ArtistListPageViewModel(application: Application) : AndroidViewModel(application) {
+    private val artistRepository: ArtistRepository
+    private val downloadRepository: DownloadRepository
 
-import com.cappielloantonio.tempo.model.Download;
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.DownloadRepository;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.util.Constants;
+    var title: String? = null
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
+    private var artistList: MutableLiveData<MutableList<ArtistID3?>?>? = null
 
-public class ArtistListPageViewModel extends AndroidViewModel {
-    private final ArtistRepository artistRepository;
-    private final DownloadRepository downloadRepository;
-
-    public String title;
-
-    private MutableLiveData<List<ArtistID3>> artistList;
-
-    public ArtistListPageViewModel(@NonNull Application application) {
-        super(application);
-
-        artistRepository = new ArtistRepository();
-        downloadRepository = new DownloadRepository();
+    init {
+        artistRepository = ArtistRepository()
+        downloadRepository = DownloadRepository()
     }
 
-    public LiveData<List<ArtistID3>> getArtistList(LifecycleOwner owner) {
-        artistList = new MutableLiveData<>(new ArrayList<>());
+    fun getArtistList(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?>? {
+        artistList = MutableLiveData<MutableList<ArtistID3?>?>(java.util.ArrayList<ArtistID3?>())
 
-        switch (title) {
-            case Constants.ARTIST_STARRED:
-                artistList = artistRepository.getStarredArtists(false, -1);
-                break;
-            case Constants.ARTIST_DOWNLOADED:
-                downloadRepository.getLiveDownload().observe(owner, downloads -> {
-                    List<Download> unique = downloads
-                            .stream()
-                            .collect(Collectors.collectingAndThen(
-                                    Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(Download::getArtist))), ArrayList::new)
-                            );
-
-                    // TODO
-                    // artistList.setValue(MappingUtil.mapDownloadToArtist(unique));
-                });
-                break;
+        when (title) {
+            Constants.ARTIST_STARRED -> artistList = artistRepository.getStarredArtists(false, -1)
+            Constants.ARTIST_DOWNLOADED -> downloadRepository.getLiveDownload()
+                .observe(owner, Observer { downloads: MutableList<Download?>? ->
+                    downloads!!
+                        .stream()
+                        .collect(
+                            Collectors.collectingAndThen(
+                                Collectors.toCollection(Supplier {
+                                    TreeSet<Download?>(
+                                        Comparator.comparing<Download?, String?>(
+                                            Download::artist
+                                        )
+                                    )
+                                }), Function { c: TreeSet<Download?>? -> ArrayList(c) })
+                        )
+                })
         }
 
-        return artistList;
+        return artistList
     }
 }

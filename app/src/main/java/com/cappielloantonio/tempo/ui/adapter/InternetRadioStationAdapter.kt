@@ -1,98 +1,101 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-
-import androidx.annotation.NonNull;
-import androidx.media3.common.util.UnstableApi;
-import androidx.recyclerview.widget.RecyclerView;
-
-import com.cappielloantonio.tempo.databinding.ItemHomeInternetRadioStationBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.Collections;
-import java.util.List;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import androidx.media3.common.util.UnstableApi
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHomeInternetRadioStationBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
 @UnstableApi
-public class InternetRadioStationAdapter extends RecyclerView.Adapter<InternetRadioStationAdapter.ViewHolder> {
-    private final ClickCallback click;
+class InternetRadioStationAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<InternetRadioStationAdapter.ViewHolder?>() {
+    private var internetRadioStations: MutableList<InternetRadioStation>
 
-    private List<InternetRadioStation> internetRadioStations;
-
-    public InternetRadioStationAdapter(ClickCallback click) {
-        this.click = click;
-        this.internetRadioStations = Collections.emptyList();
+    init {
+        this.internetRadioStations = mutableListOf<InternetRadioStation?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeInternetRadioStationBinding view = ItemHomeInternetRadioStationBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomeInternetRadioStationBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return InternetRadioStationAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        InternetRadioStation internetRadioStation = internetRadioStations.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val internetRadioStation = internetRadioStations.get(position)
 
-        holder.item.internetRadioStationTitleTextView.setText(internetRadioStation.getName());
-        holder.item.internetRadioStationSubtitleTextView.setText(internetRadioStation.getStreamUrl());
+        holder.item.internetRadioStationTitleTextView.text = internetRadioStation.name
+        holder.item.internetRadioStationSubtitleTextView.text = internetRadioStation.streamUrl
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), internetRadioStation.getStreamUrl(), CustomGlideRequest.ResourceType.Radio)
-                .build()
-                .into(holder.item.internetRadioStationCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            internetRadioStation.streamUrl,
+            CustomGlideRequest.ResourceType.Radio
+        )
+            .build()
+            .into(holder.item.internetRadioStationCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return internetRadioStations.size();
+    override fun getItemCount(): Int {
+        return internetRadioStations.size
     }
 
-    public void setItems(List<InternetRadioStation> internetRadioStations) {
-        this.internetRadioStations = internetRadioStations;
-        notifyDataSetChanged();
+    fun setItems(internetRadioStations: MutableList<InternetRadioStation>) {
+        this.internetRadioStations = internetRadioStations
+        notifyDataSetChanged()
     }
 
-    public InternetRadioStation getItem(int position) {
-        return internetRadioStations.get(position);
+    fun getItem(position: Int): InternetRadioStation? {
+        return internetRadioStations.get(position)
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeInternetRadioStationBinding item;
+    inner class ViewHolder internal constructor(var item: ItemHomeInternetRadioStationBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.internetRadioStationTitleTextView.setSelected(true)
+            item.internetRadioStationSubtitleTextView.setSelected(true)
 
-        ViewHolder(ItemHomeInternetRadioStationBinding item) {
-            super(item.getRoot());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
 
-            this.item = item;
-
-            item.internetRadioStationTitleTextView.setSelected(true);
-            item.internetRadioStationSubtitleTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-
-            item.internetRadioStationMoreButton.setOnClickListener(v -> onLongClick());
+            item.internetRadioStationMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onLongClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.INTERNET_RADIO_STATION_OBJECT, internetRadioStations.get(getBindingAdapterPosition()));
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.INTERNET_RADIO_STATION_OBJECT,
+                internetRadioStations.get(getBindingAdapterPosition())
+            )
 
-            click.onInternetRadioStationClick(bundle);
+            click.onInternetRadioStationClick(bundle)
         }
 
-        private boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.INTERNET_RADIO_STATION_OBJECT, internetRadioStations.get(getBindingAdapterPosition()));
+        private fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(
+                Constants.INTERNET_RADIO_STATION_OBJECT,
+                internetRadioStations.get(getBindingAdapterPosition())
+            )
 
-            click.onInternetRadioStationLongClick(bundle);
+            click.onInternetRadioStationLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 }

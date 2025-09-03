@@ -1,24 +1,21 @@
-package com.cappielloantonio.tempo.database.dao;
+package com.cappielloantonio.tempo.database.dao
 
-import androidx.lifecycle.LiveData;
-import androidx.room.Dao;
-import androidx.room.Delete;
-import androidx.room.Insert;
-import androidx.room.OnConflictStrategy;
-import androidx.room.Query;
-
-import com.cappielloantonio.tempo.model.Server;
-
-import java.util.List;
+import androidx.lifecycle.LiveData
+import androidx.room.Dao
+import androidx.room.Delete
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Query
+import com.cappielloantonio.tempo.model.Server
 
 @Dao
-public interface ServerDao {
-    @Query("SELECT * FROM server")
-    LiveData<List<Server>> getAll();
+interface ServerDao {
+    @get:Query("SELECT * FROM server")
+    val all: LiveData<MutableList<Server?>?>?
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    void insert(Server server);
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
+    fun insert(server: Server?)
 
     @Delete
-    void delete(Server server);
+    fun delete(server: Server?)
 }

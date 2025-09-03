@@ -1,31 +1,34 @@
-package com.cappielloantonio.tempo.github.utils;
+package com.cappielloantonio.tempo.github.utils
 
-import com.cappielloantonio.tempo.BuildConfig;
-import com.cappielloantonio.tempo.github.models.LatestRelease;
+import com.cappielloantonio.tempo.BuildConfig
+import com.cappielloantonio.tempo.github.models.LatestRelease
 
-public class UpdateUtil {
-
-    public static boolean showUpdateDialog(LatestRelease release) {
-        if (release.getTagName() == null) return false;
+object UpdateUtil {
+    fun showUpdateDialog(release: LatestRelease): Boolean {
+        if (release.tagName == null) return false
 
         try {
-            String[] local = BuildConfig.VERSION_NAME.split("\\.");
-            String[] remote = release.getTagName().split("\\.");
+            val local: Array<String?> =
+                BuildConfig.VERSION_NAME.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
+            val remote: Array<String?> =
+                release.tagName!!.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }
+                    .toTypedArray()
 
-            for (int i = 0; i < local.length; i++) {
-                int localPart = Integer.parseInt(local[i]);
-                int remotePart = Integer.parseInt(remote[i]);
+            for (i in local.indices) {
+                val localPart = local[i]!!.toInt()
+                val remotePart = remote[i]!!.toInt()
 
                 if (localPart > remotePart) {
-                    return false;
+                    return false
                 } else if (localPart < remotePart) {
-                    return true;
+                    return true
                 }
             }
-        } catch (Exception exception) {
-            return false;
+        } catch (exception: Exception) {
+            return false
         }
 
-        return false;
+        return false
     }
 }

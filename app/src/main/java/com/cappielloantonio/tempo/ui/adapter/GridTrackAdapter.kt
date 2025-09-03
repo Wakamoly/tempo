@@ -1,81 +1,76 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHomeGridTrackBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.model.Chronology
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class GridTrackAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<GridTrackAdapter.ViewHolder?>() {
+    private var items: MutableList<Chronology>
 
-import com.cappielloantonio.tempo.databinding.ItemHomeGridTrackBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.model.Chronology;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
-public class GridTrackAdapter extends RecyclerView.Adapter<GridTrackAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Chronology> items;
-
-    public GridTrackAdapter(ClickCallback click) {
-        this.click = click;
-        this.items = Collections.emptyList();
+    init {
+        this.items = mutableListOf<Chronology?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeGridTrackBinding view = ItemHomeGridTrackBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHomeGridTrackBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return GridTrackAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        Chronology item = items.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val item = items.get(position)
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), item.getCoverArtId(), CustomGlideRequest.ResourceType.Song)
-                .build()
-                .into(holder.item.trackCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            item.coverArtId,
+            CustomGlideRequest.ResourceType.Song
+        )
+            .build()
+            .into(holder.item.trackCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return items.size();
+    override fun getItemCount(): Int {
+        return items.size
     }
 
-    public Chronology getItem(int position) {
-        return items.get(position);
+    fun getItem(position: Int): Chronology? {
+        return items.get(position)
     }
 
-    public void setItems(List<Chronology> items) {
-        this.items = items;
-        notifyDataSetChanged();
+    fun setItems(items: MutableList<Chronology>) {
+        this.items = items
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeGridTrackBinding item;
-
-        ViewHolder(ItemHomeGridTrackBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
+    inner class ViewHolder internal constructor(var item: ItemHomeGridTrackBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, new ArrayList<>(items));
-            bundle.putBoolean(Constants.MEDIA_CHRONOLOGY, true);
-            bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition());
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, ArrayList<Chronology?>(items))
+            bundle.putBoolean(Constants.MEDIA_CHRONOLOGY, true)
+            bundle.putInt(Constants.ITEM_POSITION, getBindingAdapterPosition())
 
-            click.onMediaClick(bundle);
+            click.onMediaClick(bundle)
         }
     }
 }

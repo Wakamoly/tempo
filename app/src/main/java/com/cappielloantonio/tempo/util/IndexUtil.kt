@@ -1,29 +1,23 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import androidx.annotation.OptIn;
-import androidx.media3.common.util.UnstableApi;
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import com.cappielloantonio.tempo.subsonic.models.Artist
+import com.cappielloantonio.tempo.subsonic.models.Indexes
 
-import com.cappielloantonio.tempo.subsonic.models.Artist;
-import com.cappielloantonio.tempo.subsonic.models.Index;
-import com.cappielloantonio.tempo.subsonic.models.Indexes;
+@OptIn(markerClass = UnstableApi::class)
+object IndexUtil {
+    fun getArtist(indexes: Indexes): MutableList<Artist?> {
+        if (indexes.indices == null) return mutableListOf<Artist?>()
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+        val toReturn = ArrayList<Artist?>()
 
-@OptIn(markerClass = UnstableApi.class)
-public class IndexUtil {
-    public static List<Artist> getArtist(Indexes indexes) {
-        if (indexes.getIndices() == null) return Collections.emptyList();
-
-        ArrayList<Artist> toReturn = new ArrayList<>();
-
-        for (Index index : indexes.getIndices()) {
-            if (index.getArtists() != null) {
-                toReturn.addAll(index.getArtists());
+        for (index in indexes.indices) {
+            if (index.artists != null) {
+                toReturn.addAll(index.artists!!)
             }
         }
 
-        return toReturn;
+        return toReturn
     }
 }

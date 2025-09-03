@@ -1,111 +1,108 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.InsetDrawable;
+import android.content.Context
+import android.graphics.drawable.InsetDrawable
+import androidx.core.os.LocaleListCompat
+import androidx.recyclerview.widget.DividerItemDecoration
+import com.cappielloantonio.tempo.App.Companion.getContext
+import com.cappielloantonio.tempo.R
+import org.xmlpull.v1.XmlPullParser
+import org.xmlpull.v1.XmlPullParserException
+import java.io.IOException
+import java.lang.String
+import java.text.SimpleDateFormat
+import java.util.AbstractMap
+import java.util.Date
+import java.util.Locale
+import java.util.Map
+import kotlin.Int
+import kotlin.intArrayOf
 
-import androidx.core.os.LocaleListCompat;
-import androidx.recyclerview.widget.DividerItemDecoration;
-
-import com.cappielloantonio.tempo.App;
-import com.cappielloantonio.tempo.R;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
-
-import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.AbstractMap;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-
-public class UIUtil {
-    public static int getSpanCount(int itemCount, int maxSpan) {
-        int itemSize = itemCount == 0 ? 1 : itemCount;
+object UIUtil {
+    fun getSpanCount(itemCount: Int, maxSpan: Int): Int {
+        val itemSize = if (itemCount == 0) 1 else itemCount
 
         if (itemSize / maxSpan > 0) {
-            return maxSpan;
+            return maxSpan
         } else {
-            return itemSize % maxSpan;
+            return itemSize % maxSpan
         }
     }
 
-    public static DividerItemDecoration getDividerItemDecoration(Context context) {
-        int[] ATTRS = new int[]{android.R.attr.listDivider};
+    fun getDividerItemDecoration(context: Context): DividerItemDecoration {
+        val ATTRS = intArrayOf(android.R.attr.listDivider)
 
-        TypedArray a = context.obtainStyledAttributes(ATTRS);
-        Drawable divider = a.getDrawable(0);
-        InsetDrawable insetDivider = new InsetDrawable(divider, 42, 0, 42, 42);
-        a.recycle();
+        val a = context.obtainStyledAttributes(ATTRS)
+        val divider = a.getDrawable(0)
+        val insetDivider = InsetDrawable(divider, 42, 0, 42, 42)
+        a.recycle()
 
-        DividerItemDecoration itemDecoration = new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
-        itemDecoration.setDrawable(insetDivider);
+        val itemDecoration = DividerItemDecoration(context, DividerItemDecoration.VERTICAL)
+        itemDecoration.setDrawable(insetDivider)
 
-        return itemDecoration;
+        return itemDecoration
     }
 
-    private static LocaleListCompat getLocalesFromResources(Context context) {
-        final List<String> tagsList = new ArrayList<>();
+    private fun getLocalesFromResources(context: Context): LocaleListCompat {
+        val tagsList: MutableList<String?> = ArrayList<String?>()
 
-        XmlPullParser xpp = context.getResources().getXml(R.xml.locale_config);
+        val xpp: XmlPullParser = context.resources.getXml(R.xml.locale_config)
 
         try {
-            while (xpp.getEventType() != XmlPullParser.END_DOCUMENT) {
-                String tagName = xpp.getName();
+            while (xpp.eventType != XmlPullParser.END_DOCUMENT) {
+                val tagName = xpp.name
 
-                if (xpp.getEventType() == XmlPullParser.START_TAG) {
-                    if ("locale".equals(tagName) && xpp.getAttributeCount() > 0 && xpp.getAttributeName(0).equals("name")) {
-                        tagsList.add(xpp.getAttributeValue(0));
+                if (xpp.eventType == XmlPullParser.START_TAG) {
+                    if ("locale" == tagName && xpp.attributeCount > 0 && xpp.getAttributeName(0) == "name") {
+                        tagsList.add(xpp.getAttributeValue(0))
                     }
                 }
 
-                xpp.next();
+                xpp.next()
             }
-        } catch (XmlPullParserException | IOException e) {
-            e.printStackTrace();
+        } catch (e: XmlPullParserException) {
+            e.printStackTrace()
+        } catch (e: IOException) {
+            e.printStackTrace()
         }
 
-        return LocaleListCompat.forLanguageTags(String.join(",", tagsList));
+        return LocaleListCompat.forLanguageTags(String.join(",", tagsList))
     }
 
-    public static Map<String, String> getLangPreferenceDropdownEntries(Context context) {
-        LocaleListCompat localeList = getLocalesFromResources(context);
+    fun getLangPreferenceDropdownEntries(context: Context): MutableMap<kotlin.String?, kotlin.String?> {
+        val localeList = getLocalesFromResources(context)
 
-        List<Map.Entry<String, String>> localeArrayList = new ArrayList<>();
+        val localeArrayList: MutableList<MutableMap.MutableEntry<kotlin.String?, kotlin.String?>> =
+            ArrayList<MutableMap.MutableEntry<kotlin.String?, kotlin.String?>>()
 
-        String systemDefaultLabel = App.getContext().getString(R.string.settings_system_language);
-        String systemDefaultValue = "default";
+        val systemDefaultLabel = getContext().getString(R.string.settings_system_language)
+        val systemDefaultValue = "default"
 
-        for (int i = 0; i < localeList.size(); i++) {
-            Locale locale = localeList.get(i);
+        for (i in 0 until localeList.size()) {
+            val locale = localeList.get(i)
             if (locale != null) {
                 localeArrayList.add(
-                        new AbstractMap.SimpleEntry<>(
-                                Util.toPascalCase(locale.getDisplayName()),
-                                locale.toLanguageTag()
-                        )
-                );
+                    AbstractMap.SimpleEntry<kotlin.String?, kotlin.String?>(
+                        Util.toPascalCase(locale.displayName),
+                        locale.toLanguageTag()
+                    )
+                )
             }
         }
 
-        localeArrayList.sort(Map.Entry.comparingByKey(String.CASE_INSENSITIVE_ORDER));
+        localeArrayList.sort(Map.Entry.comparingByKey<kotlin.String?, kotlin.String?>(String.CASE_INSENSITIVE_ORDER))
 
-        LinkedHashMap<String, String> orderedMap = new LinkedHashMap<>();
-        orderedMap.put(systemDefaultLabel, systemDefaultValue);
-        for (Map.Entry<String, String> entry : localeArrayList) {
-            orderedMap.put(entry.getKey(), entry.getValue());
+        val orderedMap = LinkedHashMap<kotlin.String?, kotlin.String?>()
+        orderedMap.put(systemDefaultLabel, systemDefaultValue)
+        for (entry in localeArrayList) {
+            orderedMap.put(entry.key, entry.value)
         }
 
-        return orderedMap;
+        return orderedMap
     }
 
-    public static String getReadableDate(Date date) {
-        SimpleDateFormat formatter = new SimpleDateFormat("dd MMM, yyyy", Locale.getDefault());
-        return formatter.format(date);
+    fun getReadableDate(date: Date): kotlin.String {
+        val formatter = SimpleDateFormat("dd MMM, yyyy", Locale.getDefault())
+        return formatter.format(date)
     }
 }

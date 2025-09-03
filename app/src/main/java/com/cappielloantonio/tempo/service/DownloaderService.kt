@@ -1,115 +1,144 @@
-package com.cappielloantonio.tempo.service;
+package com.cappielloantonio.tempo.service
 
-import android.app.Notification;
-import android.content.Context;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.media3.common.util.NotificationUtil;
-import androidx.media3.common.util.UnstableApi;
-import androidx.media3.exoplayer.offline.Download;
-import androidx.media3.exoplayer.offline.DownloadManager;
-import androidx.media3.exoplayer.offline.DownloadNotificationHelper;
-import androidx.media3.exoplayer.scheduler.PlatformScheduler;
-import androidx.media3.exoplayer.scheduler.Requirements;
-import androidx.media3.exoplayer.scheduler.Scheduler;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.util.DownloadUtil;
-
-import java.util.List;
+import android.app.Notification
+import android.content.Context
+import androidx.media3.common.util.NotificationUtil
+import androidx.media3.common.util.UnstableApi
+import androidx.media3.exoplayer.offline.Download
+import androidx.media3.exoplayer.offline.DownloadManager
+import androidx.media3.exoplayer.offline.DownloadNotificationHelper
+import androidx.media3.exoplayer.offline.DownloadService
+import androidx.media3.exoplayer.scheduler.PlatformScheduler
+import androidx.media3.exoplayer.scheduler.Requirements.RequirementFlags
+import androidx.media3.exoplayer.scheduler.Scheduler
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.util.DownloadUtil
 
 @UnstableApi
-public class DownloaderService extends androidx.media3.exoplayer.offline.DownloadService {
-
-    private static final int JOB_ID = 1;
-    private static final int FOREGROUND_NOTIFICATION_ID = 1;
-
-    public DownloaderService() {
-        super(FOREGROUND_NOTIFICATION_ID, DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL, DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID, R.string.exo_download_notification_channel_name, 0);
+class DownloaderService : DownloadService(
+    FOREGROUND_NOTIFICATION_ID,
+    DEFAULT_FOREGROUND_NOTIFICATION_UPDATE_INTERVAL,
+    DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID,
+    R.string.exo_download_notification_channel_name,
+    0
+) {
+    override fun getDownloadManager(): DownloadManager {
+        val downloadManager = DownloadUtil.getDownloadManager(this)
+        val downloadNotificationHelper = DownloadUtil.getDownloadNotificationHelper(this)
+        downloadManager.addListener(
+            TerminalStateNotificationHelper(
+                this,
+                downloadNotificationHelper,
+                FOREGROUND_NOTIFICATION_ID + 1
+            )
+        )
+        return downloadManager
     }
 
-    @NonNull
-    @Override
-    protected DownloadManager getDownloadManager() {
-        DownloadManager downloadManager = DownloadUtil.getDownloadManager(this);
-        DownloadNotificationHelper downloadNotificationHelper = DownloadUtil.getDownloadNotificationHelper(this);
-        downloadManager.addListener(new TerminalStateNotificationHelper(this, downloadNotificationHelper, FOREGROUND_NOTIFICATION_ID + 1));
-        return downloadManager;
+    override fun getScheduler(): Scheduler {
+        return PlatformScheduler(this, JOB_ID)
     }
 
-    @NonNull
-    @Override
-    protected Scheduler getScheduler() {
-        return new PlatformScheduler(this, JOB_ID);
+    override fun getForegroundNotification(
+        downloads: MutableList<Download?>,
+        notMetRequirements: @RequirementFlags Int
+    ): Notification {
+        return DownloadUtil.getDownloadNotificationHelper(this).buildProgressNotification(
+            this,
+            R.drawable.ic_download,
+            null,
+            null,
+            downloads,
+            notMetRequirements
+        )
     }
 
-    @NonNull
-    @Override
-    protected Notification getForegroundNotification(@NonNull List<Download> downloads, @Requirements.RequirementFlags int notMetRequirements) {
-        return DownloadUtil.getDownloadNotificationHelper(this).buildProgressNotification(this, R.drawable.ic_download, null, null, downloads, notMetRequirements);
-    }
+    private class TerminalStateNotificationHelper(
+        context: Context,
+        private val notificationHelper: DownloadNotificationHelper,
+        private var nextNotificationId: Int
+    ) : DownloadManager.Listener {
+        private val context: Context
 
-    private static final class TerminalStateNotificationHelper implements DownloadManager.Listener {
-        private final Context context;
-        private final DownloadNotificationHelper notificationHelper;
+        private val successfulDownloadGroupNotification: Notification
+        private val failedDownloadGroupNotification: Notification
 
-        private final Notification successfulDownloadGroupNotification;
-        private final Notification failedDownloadGroupNotification;
+        private val successfulDownloadGroupNotificationId: Int
+        private val failedDownloadGroupNotificationId: Int
 
-        private final int successfulDownloadGroupNotificationId;
-        private final int failedDownloadGroupNotificationId;
-
-        private int nextNotificationId;
-
-        public TerminalStateNotificationHelper(Context context, DownloadNotificationHelper notificationHelper, int firstNotificationId) {
-            this.context = context.getApplicationContext();
-            this.notificationHelper = notificationHelper;
-            nextNotificationId = firstNotificationId;
+        init {
+            this.context = context.applicationContext
 
             successfulDownloadGroupNotification = DownloadUtil.buildGroupSummaryNotification(
-                    this.context,
-                    DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID,
-                    DownloadUtil.DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP,
-                    R.drawable.ic_check_circle,
-                    "Downloads completed"
-            );
+                this.context,
+                DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID,
+                DownloadUtil.DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP,
+                R.drawable.ic_check_circle,
+                "Downloads completed"
+            )
 
             failedDownloadGroupNotification = DownloadUtil.buildGroupSummaryNotification(
-                    this.context,
-                    DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID,
-                    DownloadUtil.DOWNLOAD_NOTIFICATION_FAILED_GROUP,
-                    R.drawable.ic_error,
-                    "Downloads failed"
-            );
+                this.context,
+                DownloadUtil.DOWNLOAD_NOTIFICATION_CHANNEL_ID,
+                DownloadUtil.DOWNLOAD_NOTIFICATION_FAILED_GROUP,
+                R.drawable.ic_error,
+                "Downloads failed"
+            )
 
-            successfulDownloadGroupNotificationId = nextNotificationId++;
-            failedDownloadGroupNotificationId = nextNotificationId++;
+            successfulDownloadGroupNotificationId = nextNotificationId++
+            failedDownloadGroupNotificationId = nextNotificationId++
         }
 
-        @Override
-        public void onDownloadChanged(@NonNull DownloadManager downloadManager, Download download, @Nullable Exception finalException) {
-            Notification notification;
+        override fun onDownloadChanged(
+            downloadManager: DownloadManager,
+            download: Download,
+            finalException: Exception?
+        ) {
+            var notification: Notification?
 
             if (download.state == Download.STATE_COMPLETED) {
-                notification = notificationHelper.buildDownloadCompletedNotification(context, R.drawable.ic_check_circle, null, DownloaderManager.getDownloadNotificationMessage(download.request.id));
-                notification = Notification.Builder.recoverBuilder(context, notification).setGroup(DownloadUtil.DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP).build();
-                NotificationUtil.setNotification(this.context, successfulDownloadGroupNotificationId, successfulDownloadGroupNotification);
-                DownloaderManager.updateRequestDownload(download);
+                notification = notificationHelper.buildDownloadCompletedNotification(
+                    context,
+                    R.drawable.ic_check_circle,
+                    null,
+                    DownloaderManager.Companion.getDownloadNotificationMessage(download.request.id)
+                )
+                notification = Notification.Builder.recoverBuilder(context, notification)
+                    .setGroup(DownloadUtil.DOWNLOAD_NOTIFICATION_SUCCESSFUL_GROUP).build()
+                NotificationUtil.setNotification(
+                    this.context,
+                    successfulDownloadGroupNotificationId,
+                    successfulDownloadGroupNotification
+                )
+                DownloaderManager.Companion.updateRequestDownload(download)
             } else if (download.state == Download.STATE_FAILED) {
-                notification = notificationHelper.buildDownloadFailedNotification(context, R.drawable.ic_error, null, DownloaderManager.getDownloadNotificationMessage(download.request.id));
-                notification = Notification.Builder.recoverBuilder(context, notification).setGroup(DownloadUtil.DOWNLOAD_NOTIFICATION_FAILED_GROUP).build();
-                NotificationUtil.setNotification(this.context, failedDownloadGroupNotificationId, failedDownloadGroupNotification);
+                notification = notificationHelper.buildDownloadFailedNotification(
+                    context,
+                    R.drawable.ic_error,
+                    null,
+                    DownloaderManager.Companion.getDownloadNotificationMessage(download.request.id)
+                )
+                notification = Notification.Builder.recoverBuilder(context, notification)
+                    .setGroup(DownloadUtil.DOWNLOAD_NOTIFICATION_FAILED_GROUP).build()
+                NotificationUtil.setNotification(
+                    this.context,
+                    failedDownloadGroupNotificationId,
+                    failedDownloadGroupNotification
+                )
             } else {
-                return;
+                return
             }
 
-            NotificationUtil.setNotification(context, nextNotificationId++, notification);
+            NotificationUtil.setNotification(context, nextNotificationId++, notification)
         }
 
-        @Override
-        public void onDownloadRemoved(@NonNull DownloadManager downloadManager, Download download) {
-            DownloaderManager.removeRequestDownload(download);
+        override fun onDownloadRemoved(downloadManager: DownloadManager, download: Download) {
+            DownloaderManager.Companion.removeRequestDownload(download)
         }
+    }
+
+    companion object {
+        private const val JOB_ID = 1
+        private const val FOREGROUND_NOTIFICATION_ID = 1
     }
 }

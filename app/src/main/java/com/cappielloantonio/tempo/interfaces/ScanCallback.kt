@@ -1,9 +1,9 @@
-package com.cappielloantonio.tempo.interfaces;
+package com.cappielloantonio.tempo.interfaces
 
-import androidx.annotation.Keep;
+import androidx.annotation.Keep
 
 @Keep
-public interface ScanCallback {
-    default void onError(Exception exception) {}
-    default void onSuccess(boolean isScanning, long count) {}
+interface ScanCallback {
+    fun onError(exception: Exception?) {}
+    fun onSuccess(isScanning: Boolean, count: Long) {}
 }

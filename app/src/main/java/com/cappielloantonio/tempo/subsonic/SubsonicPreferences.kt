@@ -1,86 +1,54 @@
-package com.cappielloantonio.tempo.subsonic;
+package com.cappielloantonio.tempo.subsonic
 
-import com.cappielloantonio.tempo.subsonic.utils.StringUtil;
+import com.cappielloantonio.tempo.subsonic.utils.StringUtil
+import java.util.UUID
 
-import java.util.UUID;
+class SubsonicPreferences {
+    var serverUrl: String? = null
+    var username: String? = null
+    var clientName: String? = "Tempo"
+    var authentication: SubsonicAuthentication? = null
+        private set
 
-public class SubsonicPreferences {
-    private String serverUrl;
-    private String username;
-    private String clientName = "Tempo";
-    private SubsonicAuthentication authentication;
-
-    public String getServerUrl() {
-        return serverUrl;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public String getClientName() {
-        return clientName;
-    }
-
-    public SubsonicAuthentication getAuthentication() {
-        return authentication;
-    }
-
-    public void setServerUrl(String serverUrl) {
-        this.serverUrl = serverUrl;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setClientName(String clientName) {
-        this.clientName = clientName;
-    }
-
-    public void setAuthentication(String password, String token, String salt, boolean isLowSecurity) {
+    fun setAuthentication(
+        password: String?,
+        token: String?,
+        salt: String?,
+        isLowSecurity: Boolean
+    ) {
         if (password != null) {
-            this.authentication = new SubsonicAuthentication(password, isLowSecurity);
+            this.authentication = SubsonicAuthentication(password, isLowSecurity)
         }
 
         if (token != null && salt != null) {
-            this.authentication = new SubsonicAuthentication(token, salt);
+            this.authentication = SubsonicAuthentication(token, salt)
         }
     }
 
-    public static class SubsonicAuthentication {
-        private String password;
-        private String salt;
-        private String token;
+    class SubsonicAuthentication {
+        var password: String? = null
+            private set
+        var salt: String? = null
+            private set
+        var token: String? = null
+            private set
 
-        public SubsonicAuthentication(String password, boolean isLowSecurity) {
+        constructor(password: String?, isLowSecurity: Boolean) {
             if (isLowSecurity) {
-                this.password = password;
+                this.password = password
             } else {
-                update(password);
+                update(password)
             }
         }
 
-        public SubsonicAuthentication(String token, String salt) {
-            this.token = token;
-            this.salt = salt;
+        constructor(token: String?, salt: String?) {
+            this.token = token
+            this.salt = salt
         }
 
-        public String getPassword() {
-            return password;
-        }
-
-        public String getSalt() {
-            return salt;
-        }
-
-        public String getToken() {
-            return token;
-        }
-
-        void update(String password) {
-            this.salt = UUID.randomUUID().toString();
-            this.token = StringUtil.tokenize(password + salt);
+        fun update(password: String?) {
+            this.salt = UUID.randomUUID().toString()
+            this.token = StringUtil.tokenize(password + salt)
         }
     }
 }

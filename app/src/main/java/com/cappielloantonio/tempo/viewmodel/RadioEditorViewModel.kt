@@ -1,43 +1,37 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.cappielloantonio.tempo.repository.RadioRepository
+import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
+class RadioEditorViewModel(application: Application) : AndroidViewModel(application) {
+    private val radioRepository: RadioRepository
 
-import com.cappielloantonio.tempo.repository.RadioRepository;
-import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation;
+    var radioToEdit: InternetRadioStation? = null
 
-public class RadioEditorViewModel extends AndroidViewModel {
-    private static final String TAG = "RadioEditorViewModel";
-
-    private final RadioRepository radioRepository;
-
-    private InternetRadioStation toEdit;
-
-    public RadioEditorViewModel(@NonNull Application application) {
-        super(application);
-
-        radioRepository = new RadioRepository();
+    init {
+        radioRepository = RadioRepository()
     }
 
-    public InternetRadioStation getRadioToEdit() {
-        return toEdit;
+    fun createRadio(name: String?, streamURL: String?, homepageURL: String?) {
+        radioRepository.createInternetRadioStation(name, streamURL, homepageURL)
     }
 
-    public void setRadioToEdit(InternetRadioStation internetRadioStation) {
-        this.toEdit = internetRadioStation;
+    fun updateRadio(name: String?, streamURL: String?, homepageURL: String?) {
+        if (this.radioToEdit != null) radioRepository.updateInternetRadioStation(
+            radioToEdit!!.id,
+            name,
+            streamURL,
+            homepageURL
+        )
     }
 
-    public void createRadio(String name, String streamURL, String homepageURL) {
-        radioRepository.createInternetRadioStation(name, streamURL, homepageURL);
+    fun deleteRadio() {
+        if (this.radioToEdit != null) radioRepository.deleteInternetRadioStation(radioToEdit!!.id)
     }
 
-    public void updateRadio(String name, String streamURL, String homepageURL) {
-        if (toEdit != null) radioRepository.updateInternetRadioStation(toEdit.getId(), name, streamURL, homepageURL);
-    }
-
-    public void deleteRadio() {
-        if (toEdit != null) radioRepository.deleteInternetRadioStation(toEdit.getId());
+    companion object {
+        private const val TAG = "RadioEditorViewModel"
     }
 }

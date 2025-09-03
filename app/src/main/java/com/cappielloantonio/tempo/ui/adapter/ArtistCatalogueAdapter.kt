@@ -1,158 +1,151 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
-import android.widget.Filter;
-import android.widget.Filterable;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemLibraryCatalogueArtistBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Collections
+import java.util.Locale
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class ArtistCatalogueAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<ArtistCatalogueAdapter.ViewHolder?>(), Filterable {
+    private val filtering: Filter = object : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            val filteredList: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
 
-import com.cappielloantonio.tempo.databinding.ItemLibraryCatalogueArtistBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-public class ArtistCatalogueAdapter extends RecyclerView.Adapter<ArtistCatalogueAdapter.ViewHolder> implements Filterable {
-    private final ClickCallback click;
-
-    private final Filter filtering = new Filter() {
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            List<ArtistID3> filteredList = new ArrayList<>();
-
-            if (constraint == null || constraint.length() == 0) {
-                filteredList.addAll(artistFull);
+            if (constraint == null || constraint.length == 0) {
+                filteredList.addAll(artistFull!!)
             } else {
-                String filterPattern = constraint.toString().toLowerCase().trim();
+                val filterPattern =
+                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
 
-                for (ArtistID3 item : artistFull) {
-                    if (item.getName().toLowerCase().contains(filterPattern)) {
-                        filteredList.add(item);
+                for (item in artistFull!!) {
+                    if (item.name!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                        filteredList.add(item)
                     }
                 }
             }
 
-            FilterResults results = new FilterResults();
-            results.values = filteredList;
+            val results = FilterResults()
+            results.values = filteredList
 
-            return results;
+            return results
         }
 
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            artists.clear();
-            if (results.count > 0) artists.addAll((List) results.values);
-            notifyDataSetChanged();
-        }
-    };
-
-    private List<ArtistID3> artists;
-    private List<ArtistID3> artistFull;
-
-    public ArtistCatalogueAdapter(ClickCallback click) {
-        this.click = click;
-        this.artists = Collections.emptyList();
-    }
-
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemLibraryCatalogueArtistBinding view = ItemLibraryCatalogueArtistBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
-    }
-
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        ArtistID3 artist = artists.get(position);
-
-        holder.item.artistNameLabel.setText(artist.getName());
-
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), artist.getCoverArtId(), CustomGlideRequest.ResourceType.Artist)
-                .build()
-                .into(holder.item.artistCatalogueCoverImageView);
-    }
-
-    @Override
-    public int getItemCount() {
-        return artists.size();
-    }
-
-    public ArtistID3 getItem(int position) {
-        return artists.get(position);
-    }
-
-    public void setItems(List<ArtistID3> artists) {
-        this.artists = artists;
-        this.artistFull = new ArrayList<>(artists);
-        notifyDataSetChanged();
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return position;
-    }
-
-    @Override
-    public long getItemId(int position) {
-        return position;
-    }
-
-    @Override
-    public Filter getFilter() {
-        return filtering;
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemLibraryCatalogueArtistBinding item;
-
-        ViewHolder(ItemLibraryCatalogueArtistBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            item.artistNameLabel.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-        }
-
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()));
-
-            click.onArtistClick(bundle);
-        }
-
-        public boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()));
-
-            click.onArtistLongClick(bundle);
-
-            return true;
+        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
+            artists.clear()
+            if (results.count > 0) artists.addAll(results.values as MutableList<*>?)
+            notifyDataSetChanged()
         }
     }
 
-    public void sort(String order) {
-        switch (order) {
-            case Constants.ARTIST_ORDER_BY_NAME:
-                artists.sort(Comparator.comparing(ArtistID3::getName));
-                break;
-            case Constants.ARTIST_ORDER_BY_RANDOM:
-                Collections.shuffle(artists);
-                break;
+    private var artists: MutableList<ArtistID3>
+    private var artistFull: MutableList<ArtistID3>? = null
+
+    init {
+        this.artists = mutableListOf<ArtistID3?>()
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemLibraryCatalogueArtistBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ArtistCatalogueAdapter.ViewHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val artist = artists.get(position)
+
+        holder.item.artistNameLabel.text = artist.name
+
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            artist.coverArtId,
+            CustomGlideRequest.ResourceType.Artist
+        )
+            .build()
+            .into(holder.item.artistCatalogueCoverImageView)
+    }
+
+    override fun getItemCount(): Int {
+        return artists.size
+    }
+
+    fun getItem(position: Int): ArtistID3? {
+        return artists.get(position)
+    }
+
+    fun setItems(artists: MutableList<ArtistID3>) {
+        this.artists = artists
+        this.artistFull = ArrayList<ArtistID3>(artists)
+        notifyDataSetChanged()
+    }
+
+    override fun getItemViewType(position: Int): Int {
+        return position
+    }
+
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
+    }
+
+    override fun getFilter(): Filter {
+        return filtering
+    }
+
+    inner class ViewHolder internal constructor(var item: ItemLibraryCatalogueArtistBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.artistNameLabel.setSelected(true)
+
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
         }
 
-        notifyDataSetChanged();
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()))
+
+            click.onArtistClick(bundle)
+        }
+
+        fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()))
+
+            click.onArtistLongClick(bundle)
+
+            return true
+        }
+    }
+
+    fun sort(order: String) {
+        when (order) {
+            Constants.ARTIST_ORDER_BY_NAME -> artists.sort(
+                Comparator.comparing<ArtistID3?, String?>(
+                    ArtistID3::name
+                )
+            )
+
+            Constants.ARTIST_ORDER_BY_RANDOM -> Collections.shuffle(artists)
+        }
+
+        notifyDataSetChanged()
     }
 }

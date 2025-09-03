@@ -1,64 +1,73 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
-import java.util.function.Predicate;
+import java.io.UnsupportedEncodingException
+import java.lang.Boolean
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
+import java.util.concurrent.ConcurrentHashMap
+import java.util.function.Function
+import java.util.function.Predicate
+import kotlin.Any
+import kotlin.Char
+import kotlin.NullPointerException
+import kotlin.String
 
-public class Util {
-    public static <T> Predicate<T> distinctByKey(Function<? super T, Object> keyExtractor) {
+object Util {
+    fun <T> distinctByKey(keyExtractor: Function<in T?, Any?>): Predicate<T?>? {
         try {
-            Map<Object, Boolean> uniqueMap = new ConcurrentHashMap<>();
-            return t -> uniqueMap.putIfAbsent(keyExtractor.apply(t), Boolean.TRUE) == null;
-        } catch (NullPointerException exception) {
-            return null;
+            val uniqueMap: MutableMap<Any?, Boolean?> = ConcurrentHashMap<Any?, Boolean?>()
+            return Predicate? { t: T? ->
+                uniqueMap.putIfAbsent(
+                    keyExtractor.apply(t),
+                    Boolean.TRUE
+                ) == null
+            }
+        } catch (exception: NullPointerException) {
+            return null
         }
     }
 
-    public static String toPascalCase(String name) {
+    fun toPascalCase(name: String?): String? {
         if (name == null || name.isEmpty()) {
-            return name;
+            return name
         }
 
-        StringBuilder pascalCase = new StringBuilder();
+        var pascalCase = StringBuilder()
 
-        char newChar;
-        boolean toUpper = false;
-        char[] charArray = name.toCharArray();
+        var newChar: Char
+        var toUpper = false
+        val charArray = name.toCharArray()
 
-        for (int ctr = 0; ctr <= charArray.length - 1; ctr++) {
+        for (ctr in 0..charArray.size - 1) {
             if (ctr == 0) {
-                newChar = Character.toUpperCase(charArray[ctr]);
-                pascalCase = new StringBuilder(Character.toString(newChar));
-                continue;
+                newChar = charArray[ctr].uppercaseChar()
+                pascalCase = StringBuilder(newChar.toString())
+                continue
             }
 
             if (charArray[ctr] == '_') {
-                toUpper = true;
-                continue;
+                toUpper = true
+                continue
             }
 
             if (toUpper) {
-                newChar = Character.toUpperCase(charArray[ctr]);
-                pascalCase.append(newChar);
-                toUpper = false;
-                continue;
+                newChar = charArray[ctr].uppercaseChar()
+                pascalCase.append(newChar)
+                toUpper = false
+                continue
             }
 
-            pascalCase.append(charArray[ctr]);
+            pascalCase.append(charArray[ctr])
         }
 
-        return pascalCase.toString();
+        return pascalCase.toString()
     }
 
-    public static String encode(String value) {
+    fun encode(value: String?): String? {
         try {
-            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString());
-        } catch (UnsupportedEncodingException ex) {
-            return value;
+            return URLEncoder.encode(value, StandardCharsets.UTF_8.toString())
+        } catch (ex: UnsupportedEncodingException) {
+            return value
         }
     }
 }

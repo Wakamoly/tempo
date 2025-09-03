@@ -1,59 +1,53 @@
-package com.cappielloantonio.tempo.subsonic.base;
+package com.cappielloantonio.tempo.subsonic.base
 
-import androidx.annotation.NonNull;
+import kotlin.math.max
 
-public class Version implements Comparable<Version> {
+class Version private constructor(versionString: String) : Comparable<Version?> {
+    val versionString: String
 
-    private static final String VERSION_PATTERN = "\\d+(\\.\\d+)*";
-    private final String versionString;
-
-    public static Version of(String versionString) {
-        return new Version(versionString);
+    init {
+        require(!(versionString == null || !versionString.matches(VERSION_PATTERN.toRegex()))) { "Invalid version format" }
+        this.versionString = versionString
     }
 
-    private Version(String versionString) {
-        if (versionString == null || !versionString.matches(VERSION_PATTERN)) {
-            throw new IllegalArgumentException("Invalid version format");
-        }
-        this.versionString = versionString;
+    fun isLowerThan(version: Version?): Boolean {
+        return compareTo(version) < 0
     }
 
-    public String getVersionString() {
-        return versionString;
-    }
-
-    public boolean isLowerThan(Version version) {
-        return compareTo(version) < 0;
-    }
-
-    @Override
-    public int compareTo(Version that) {
+    override fun compareTo(that: Version?): Int {
         if (that == null) {
-            return 1;
+            return 1
         }
 
-        String[] thisParts = this.getVersionString().split("\\.");
-        String[] thatParts = that.getVersionString().split("\\.");
+        val thisParts: Array<String?> =
+            this.versionString.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
+        val thatParts: Array<String?> =
+            that.versionString.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
 
-        int length = Math.max(thisParts.length, thatParts.length);
+        val length = max(thisParts.size, thatParts.size)
 
-        for (int i = 0; i < length; i++) {
-            int thisPart = i < thisParts.length ? Integer.parseInt(thisParts[i]) : 0;
-            int thatPart = i < thatParts.length ? Integer.parseInt(thatParts[i]) : 0;
+        for (i in 0 until length) {
+            val thisPart = if (i < thisParts.size) thisParts[i]!!.toInt() else 0
+            val thatPart = if (i < thatParts.size) thatParts[i]!!.toInt() else 0
 
             if (thisPart < thatPart) {
-                return -1;
+                return -1
             }
             if (thisPart > thatPart) {
-                return 1;
+                return 1
             }
         }
-        return 0;
+        return 0
     }
 
-    @NonNull
-    @Override
-    public String toString() {
-        return versionString;
+    override fun toString(): String {
+        return versionString
+    }
+
+    companion object {
+        private const val VERSION_PATTERN = "\\d+(\\.\\d+)*"
+        fun of(versionString: String): Version {
+            return Version(versionString)
+        }
     }
 }

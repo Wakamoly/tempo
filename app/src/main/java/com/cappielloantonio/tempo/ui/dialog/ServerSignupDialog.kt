@@ -1,142 +1,183 @@
-package com.cappielloantonio.tempo.ui.dialog;
+package com.cappielloantonio.tempo.ui.dialog
 
-import android.app.Dialog;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.view.View;
-import android.widget.Toast;
+import android.app.Dialog
+import android.content.DialogInterface
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextUtils
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
+import androidx.fragment.app.DialogFragment
+import androidx.lifecycle.ViewModelProvider
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.DialogServerSignupBinding
+import com.cappielloantonio.tempo.model.Server
+import com.cappielloantonio.tempo.util.MusicUtil
+import com.cappielloantonio.tempo.viewmodel.LoginViewModel
+import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import java.util.Objects
+import java.util.UUID
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.DialogFragment;
-import androidx.lifecycle.ViewModelProvider;
+class ServerSignupDialog : DialogFragment() {
+    private var bind: DialogServerSignupBinding? = null
+    private var loginViewModel: LoginViewModel? = null
 
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.DialogServerSignupBinding;
-import com.cappielloantonio.tempo.model.Server;
-import com.cappielloantonio.tempo.util.MusicUtil;
-import com.cappielloantonio.tempo.viewmodel.LoginViewModel;
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+    private var serverName: String? = null
+    private var username: String? = null
+    private var password: String? = null
+    private var server: String? = null
+    private var localAddress: String? = null
+    private var lowSecurity = false
 
-import java.util.Objects;
-import java.util.UUID;
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        bind = DialogServerSignupBinding.inflate(getLayoutInflater())
 
-public class ServerSignupDialog extends DialogFragment {
-    private static final String TAG = "ServerSignupDialog";
+        loginViewModel =
+            ViewModelProvider(requireActivity()).get<LoginViewModel>(LoginViewModel::class.java)
 
-    private DialogServerSignupBinding bind;
-    private LoginViewModel loginViewModel;
-
-    private String serverName;
-    private String username;
-    private String password;
-    private String server;
-    private String localAddress;
-    private boolean lowSecurity = false;
-
-    @NonNull
-    @Override
-    public Dialog onCreateDialog(Bundle savedInstanceState) {
-        bind = DialogServerSignupBinding.inflate(getLayoutInflater());
-
-        loginViewModel = new ViewModelProvider(requireActivity()).get(LoginViewModel.class);
-
-        return new MaterialAlertDialogBuilder(getActivity())
-                .setView(bind.getRoot())
-                .setTitle(R.string.server_signup_dialog_title)
-                .setNeutralButton(R.string.server_signup_dialog_neutral_button, (dialog, id) -> { })
-                .setPositiveButton(R.string.server_signup_dialog_positive_button, (dialog, id) -> { })
-                .setNegativeButton(R.string.server_signup_dialog_negative_button, (dialog, id) -> dialog.cancel())
-                .create();
+        return MaterialAlertDialogBuilder(activity!!)
+            .setView(bind!!.getRoot())
+            .setTitle(R.string.server_signup_dialog_title)
+            .setNeutralButton(
+                R.string.server_signup_dialog_neutral_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setPositiveButton(
+                R.string.server_signup_dialog_positive_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+            .setNegativeButton(
+                R.string.server_signup_dialog_negative_button,
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+            .create()
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+    override fun onStart() {
+        super.onStart()
 
-        setServerInfo();
-        setButtonAction();
+        setServerInfo()
+        setButtonAction()
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void setServerInfo() {
-        if (getArguments() != null) {
-            loginViewModel.setServerToEdit(requireArguments().getParcelable("server_object"));
+    private fun setServerInfo() {
+        if (arguments != null) {
+            loginViewModel!!.setServerToEdit(requireArguments().getParcelable<Server?>("server_object"))
 
-            if (loginViewModel.getServerToEdit() != null) {
-                bind.serverNameTextView.setText(loginViewModel.getServerToEdit().getServerName());
-                bind.usernameTextView.setText(loginViewModel.getServerToEdit().getUsername());
-                bind.passwordTextView.setText("");
-                bind.serverTextView.setText(loginViewModel.getServerToEdit().getAddress());
-                bind.localAddressTextView.setText(loginViewModel.getServerToEdit().getLocalAddress());
-                bind.lowSecurityCheckbox.setChecked(loginViewModel.getServerToEdit().isLowSecurity());
+            if (loginViewModel!!.getServerToEdit() != null) {
+                bind!!.serverNameTextView.setText(loginViewModel!!.getServerToEdit().serverName)
+                bind!!.usernameTextView.setText(loginViewModel!!.getServerToEdit().username)
+                bind!!.passwordTextView.setText("")
+                bind!!.serverTextView.setText(loginViewModel!!.getServerToEdit().address)
+                bind!!.localAddressTextView.setText(loginViewModel!!.getServerToEdit().localAddress)
+                bind!!.lowSecurityCheckbox.setChecked(loginViewModel!!.getServerToEdit().isLowSecurity)
             }
         } else {
-            loginViewModel.setServerToEdit(null);
+            loginViewModel!!.setServerToEdit(null)
         }
     }
 
-    private void setButtonAction() {
-        androidx.appcompat.app.AlertDialog alertDialog = (androidx.appcompat.app.AlertDialog) Objects.requireNonNull(getDialog());
+    private fun setButtonAction() {
+        val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener(v -> {
-            if (validateInput()) {
-                saveServerPreference();
-                Objects.requireNonNull(getDialog()).dismiss();
-            }
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                if (validateInput()) {
+                    saveServerPreference()
+                    Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                }
+            })
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnClickListener(v -> Toast.makeText(requireContext(), R.string.server_signup_dialog_action_delete_toast, Toast.LENGTH_SHORT).show());
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(View.OnClickListener { v: View? ->
+                Toast.makeText(
+                    requireContext(),
+                    R.string.server_signup_dialog_action_delete_toast,
+                    Toast.LENGTH_SHORT
+                ).show()
+            })
 
-        alertDialog.getButton(androidx.appcompat.app.AlertDialog.BUTTON_NEUTRAL).setOnLongClickListener(v -> {
-            loginViewModel.deleteServer(null);
-            Objects.requireNonNull(getDialog()).dismiss();
-            return true;
-        });
+        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnLongClickListener(OnLongClickListener { v: View? ->
+                loginViewModel!!.deleteServer(null)
+                Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                true
+            })
     }
 
-    private boolean validateInput() {
-        serverName = Objects.requireNonNull(bind.serverNameTextView.getText()).toString().trim();
-        username = Objects.requireNonNull(bind.usernameTextView.getText()).toString().trim();
-        password = bind.lowSecurityCheckbox.isChecked() ? MusicUtil.passwordHexEncoding(Objects.requireNonNull(bind.passwordTextView.getText()).toString()) : Objects.requireNonNull(bind.passwordTextView.getText()).toString();
-        server = bind.serverTextView.getText() != null && !bind.serverTextView.getText().toString().trim().isBlank() ? bind.serverTextView.getText().toString().trim() : null;
-        localAddress = bind.localAddressTextView.getText() != null && !bind.localAddressTextView.getText().toString().trim().isBlank() ? bind.localAddressTextView.getText().toString().trim() : null;
-        lowSecurity = bind.lowSecurityCheckbox.isChecked();
+    private fun validateInput(): Boolean {
+        serverName =
+            Objects.requireNonNull<Editable?>(bind!!.serverNameTextView.getText()).toString()
+                .trim { it <= ' ' }
+        username = Objects.requireNonNull<Editable?>(bind!!.usernameTextView.getText()).toString()
+            .trim { it <= ' ' }
+        password = if (bind!!.lowSecurityCheckbox.isChecked) MusicUtil.passwordHexEncoding(
+            Objects.requireNonNull<Editable?>(
+                bind!!.passwordTextView.getText()
+            ).toString()
+        ) else Objects.requireNonNull<Editable?>(
+            bind!!.passwordTextView.getText()
+        ).toString()
+        server = if (bind!!.serverTextView.getText() != null && !bind!!.serverTextView.getText()
+                .toString().trim { it <= ' ' }.isBlank()
+        ) bind!!.serverTextView.getText().toString().trim { it <= ' ' } else null
+        localAddress =
+            if (bind!!.localAddressTextView.getText() != null && !bind!!.localAddressTextView.getText()
+                    .toString().trim { it <= ' ' }.isBlank()
+            ) bind!!.localAddressTextView.getText().toString().trim { it <= ' ' } else null
+        lowSecurity = bind!!.lowSecurityCheckbox.isChecked
 
         if (TextUtils.isEmpty(serverName)) {
-            bind.serverNameTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.serverNameTextView.error = getString(R.string.error_required)
+            return false
         }
 
         if (TextUtils.isEmpty(username)) {
-            bind.usernameTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.usernameTextView.error = getString(R.string.error_required)
+            return false
         }
 
         if (TextUtils.isEmpty(server)) {
-            bind.serverTextView.setError(getString(R.string.error_required));
-            return false;
+            bind!!.serverTextView.error = getString(R.string.error_required)
+            return false
         }
 
-        if (!TextUtils.isEmpty(localAddress) && !localAddress.matches("^https?://(.*)")) {
-            bind.localAddressTextView.setError(getString(R.string.error_server_prefix));
-            return false;
+        if (!TextUtils.isEmpty(localAddress) && !localAddress!!.matches("^https?://(.*)".toRegex())) {
+            bind!!.localAddressTextView.error = getString(R.string.error_server_prefix)
+            return false
         }
 
-        if (!server.matches("^https?://(.*)")) {
-            bind.serverTextView.setError(getString(R.string.error_server_prefix));
-            return false;
+        if (!server!!.matches("^https?://(.*)".toRegex())) {
+            bind!!.serverTextView.error = getString(R.string.error_server_prefix)
+            return false
         }
 
-        return true;
+        return true
     }
 
-    private void saveServerPreference() {
-        String serverID = loginViewModel.getServerToEdit() != null ? loginViewModel.getServerToEdit().getServerId() : UUID.randomUUID().toString();
-        loginViewModel.addServer(new Server(serverID, this.serverName, this.username, this.password, this.server, this.localAddress, System.currentTimeMillis(), this.lowSecurity));
+    private fun saveServerPreference() {
+        val serverID =
+            if (loginViewModel!!.getServerToEdit() != null) loginViewModel!!.getServerToEdit().serverId else UUID.randomUUID()
+                .toString()
+        loginViewModel!!.addServer(
+            Server(
+                serverID,
+                this.serverName!!,
+                this.username!!,
+                this.password!!,
+                this.server!!,
+                this.localAddress,
+                System.currentTimeMillis(),
+                this.lowSecurity
+            )
+        )
+    }
+
+    companion object {
+        private const val TAG = "ServerSignupDialog"
     }
 }

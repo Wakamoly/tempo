@@ -1,63 +1,103 @@
-package com.cappielloantonio.tempo.subsonic.api.browsing;
+package com.cappielloantonio.tempo.subsonic.api.browsing
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface BrowsingService {
+interface BrowsingService {
     @GET("getMusicFolders")
-    Call<ApiResponse> getMusicFolders(@QueryMap Map<String, String> params);
+    fun getMusicFolders(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getIndexes")
-    Call<ApiResponse> getIndexes(@QueryMap Map<String, String> params, @Query("musicFolderId") String musicFolderId, @Query("ifModifiedSince") Long ifModifiedSince);
+    fun getIndexes(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("musicFolderId") musicFolderId: String?,
+        @Query("ifModifiedSince") ifModifiedSince: Long?
+    ): Call<ApiResponse?>?
 
     @GET("getMusicDirectory")
-    Call<ApiResponse> getMusicDirectory(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getMusicDirectory(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getGenres")
-    Call<ApiResponse> getGenres(@QueryMap Map<String, String> params);
+    fun getGenres(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getArtists")
-    Call<ApiResponse> getArtists(@QueryMap Map<String, String> params);
+    fun getArtists(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getArtist")
-    Call<ApiResponse> getArtist(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getArtist(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getAlbum")
-    Call<ApiResponse> getAlbum(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getAlbum(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getSong")
-    Call<ApiResponse> getSong(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getSong(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getVideos")
-    Call<ApiResponse> getVideos(@QueryMap Map<String, String> params);
+    fun getVideos(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getVideoInfo")
-    Call<ApiResponse> getVideoInfo(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getVideoInfo(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getArtistInfo")
-    Call<ApiResponse> getArtistInfo(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getArtistInfo(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getArtistInfo2")
-    Call<ApiResponse> getArtistInfo2(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getArtistInfo2(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getAlbumInfo")
-    Call<ApiResponse> getAlbumInfo(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getAlbumInfo(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getAlbumInfo2")
-    Call<ApiResponse> getAlbumInfo2(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getAlbumInfo2(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("getSimilarSongs")
-    Call<ApiResponse> getSimilarSongs(@QueryMap Map<String, String> params, @Query("id") String id, @Query("count") int count);
+    fun getSimilarSongs(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("count") count: Int
+    ): Call<ApiResponse?>?
 
     @GET("getSimilarSongs2")
-    Call<ApiResponse> getSimilarSongs2(@QueryMap Map<String, String> params, @Query("id") String id, @Query("count") int count);
+    fun getSimilarSongs2(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?,
+        @Query("count") count: Int
+    ): Call<ApiResponse?>?
 
     @GET("getTopSongs")
-    Call<ApiResponse> getTopSongs(@QueryMap Map<String, String> params, @Query("artist") String artist, @Query("count") int count);
+    fun getTopSongs(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("artist") artist: String?,
+        @Query("count") count: Int
+    ): Call<ApiResponse?>?
 }

@@ -1,175 +1,176 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.Filter;
-import android.widget.Filterable;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.View.OnLongClickListener
+import android.view.ViewGroup
+import android.widget.Filter
+import android.widget.Filterable
+import androidx.recyclerview.widget.RecyclerView
+import androidx.room.RoomDatabase.Builder.build
+import com.cappielloantonio.tempo.databinding.ItemHorizontalArtistBinding
+import com.cappielloantonio.tempo.glide.CustomGlideRequest
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.util.Constants
+import okhttp3.Request.Builder.build
+import okhttp3.Response.Builder.build
+import java.util.Date
+import java.util.Locale
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class ArtistHorizontalAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<ArtistHorizontalAdapter.ViewHolder?>(), Filterable {
+    private var artistsFull: MutableList<ArtistID3>
+    private var artists: MutableList<ArtistID3>
+    private var currentFilter: String? = ""
 
-import com.cappielloantonio.tempo.databinding.ItemHorizontalArtistBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.subsonic.models.AlbumID3;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
+    private val filtering: Filter = object : Filter() {
+        override fun performFiltering(constraint: CharSequence?): FilterResults {
+            val filteredList: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
-public class ArtistHorizontalAdapter extends RecyclerView.Adapter<ArtistHorizontalAdapter.ViewHolder> implements Filterable {
-    private final ClickCallback click;
-
-    private List<ArtistID3> artistsFull;
-    private List<ArtistID3> artists;
-    private String currentFilter;
-
-    private final Filter filtering = new Filter() {
-        @Override
-        protected FilterResults performFiltering(CharSequence constraint) {
-            List<ArtistID3> filteredList = new ArrayList<>();
-
-            if (constraint == null || constraint.length() == 0) {
-                filteredList.addAll(artistsFull);
+            if (constraint == null || constraint.length == 0) {
+                filteredList.addAll(artistsFull)
             } else {
-                String filterPattern = constraint.toString().toLowerCase().trim();
-                currentFilter = filterPattern;
+                val filterPattern =
+                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
+                currentFilter = filterPattern
 
-                for (ArtistID3 item : artistsFull) {
-                    if (item.getName().toLowerCase().contains(filterPattern)) {
-                        filteredList.add(item);
+                for (item in artistsFull) {
+                    if (item.name!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                        filteredList.add(item)
                     }
                 }
             }
 
-            FilterResults results = new FilterResults();
-            results.values = filteredList;
+            val results = FilterResults()
+            results.values = filteredList
 
-            return results;
+            return results
         }
 
-        @Override
-        protected void publishResults(CharSequence constraint, FilterResults results) {
-            artists = (List<ArtistID3>) results.values;
-            notifyDataSetChanged();
+        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
+            artists = results.values as MutableList<ArtistID3>
+            notifyDataSetChanged()
         }
-    };
-
-    public ArtistHorizontalAdapter(ClickCallback click) {
-        this.click = click;
-        this.artists = Collections.emptyList();
-        this.artistsFull = Collections.emptyList();
-        this.currentFilter = "";
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalArtistBinding view = ItemHorizontalArtistBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    init {
+        this.artists = mutableListOf<ArtistID3?>()
+        this.artistsFull = mutableListOf<ArtistID3?>()
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        ArtistID3 artist = artists.get(position);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalArtistBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return ArtistHorizontalAdapter.ViewHolder(view)
+    }
 
-        holder.item.artistNameTextView.setText(artist.getName());
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val artist = artists.get(position)
 
-        if (artist.getAlbumCount() > 0) {
-            holder.item.artistInfoTextView.setText("Album count: " + artist.getAlbumCount());
+        holder.item.artistNameTextView.text = artist.name
+
+        if (artist.albumCount > 0) {
+            holder.item.artistInfoTextView.text = "Album count: " + artist.albumCount
         } else {
-            holder.item.artistInfoTextView.setVisibility(View.GONE);
+            holder.item.artistInfoTextView.visibility = View.GONE
         }
 
-        CustomGlideRequest.Builder
-                .from(holder.itemView.getContext(), artist.getCoverArtId(), CustomGlideRequest.ResourceType.Artist)
-                .build()
-                .into(holder.item.artistCoverImageView);
+        CustomGlideRequest.Builder.Companion.from(
+            holder.itemView.context,
+            artist.coverArtId,
+            CustomGlideRequest.ResourceType.Artist
+        )
+            .build()
+            .into(holder.item.artistCoverImageView)
     }
 
-    @Override
-    public int getItemCount() {
-        return artists.size();
+    override fun getItemCount(): Int {
+        return artists.size
     }
 
-    public void setItems(List<ArtistID3> artists) {
-        this.artistsFull = artists != null ? artists : Collections.emptyList();
-        filtering.filter(currentFilter);
-        notifyDataSetChanged();
+    fun setItems(artists: MutableList<ArtistID3>?) {
+        this.artistsFull = if (artists != null) artists else mutableListOf<ArtistID3?>()
+        filtering.filter(currentFilter)
+        notifyDataSetChanged()
     }
 
-    @Override
-    public Filter getFilter() {
-        return filtering;
+    override fun getFilter(): Filter {
+        return filtering
     }
 
-    public ArtistID3 getItem(int id) {
-        return artists.get(id);
+    fun getItem(id: Int): ArtistID3? {
+        return artists.get(id)
     }
 
-    @Override
-    public int getItemViewType(int position) {
-        return position;
+    override fun getItemViewType(position: Int): Int {
+        return position
     }
 
-    @Override
-    public long getItemId(int position) {
-        return position;
+    override fun getItemId(position: Int): Long {
+        return position.toLong()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalArtistBinding item;
+    inner class ViewHolder internal constructor(var item: ItemHorizontalArtistBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            item.artistNameTextView.setSelected(true)
 
-        ViewHolder(ItemHorizontalArtistBinding item) {
-            super(item.getRoot());
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
+            itemView.setOnLongClickListener(OnLongClickListener { v: View? -> onLongClick() })
 
-            this.item = item;
-
-            item.artistNameTextView.setSelected(true);
-
-            itemView.setOnClickListener(v -> onClick());
-            itemView.setOnLongClickListener(v -> onLongClick());
-
-            item.artistMoreButton.setOnClickListener(v -> onLongClick());
+            item.artistMoreButton.setOnClickListener(View.OnClickListener { v: View? -> onLongClick() })
         }
 
-        private void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()));
+        private fun onClick() {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()))
 
-            click.onArtistClick(bundle);
+            click.onArtistClick(bundle)
         }
 
-        public boolean onLongClick() {
-            Bundle bundle = new Bundle();
-            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()));
+        fun onLongClick(): Boolean {
+            val bundle = Bundle()
+            bundle.putParcelable(Constants.ARTIST_OBJECT, artists.get(getBindingAdapterPosition()))
 
-            click.onArtistLongClick(bundle);
+            click.onArtistLongClick(bundle)
 
-            return true;
+            return true
         }
     }
 
-    public void sort(String order) {
-        switch (order) {
-            case Constants.ARTIST_ORDER_BY_NAME:
-                artists.sort(Comparator.comparing(ArtistID3::getName));
-                break;
-            case Constants.ARTIST_ORDER_BY_MOST_RECENTLY_STARRED:
-                artists.sort(Comparator.comparing(ArtistID3::getStarred, Comparator.nullsLast(Comparator.reverseOrder())));
-                break;
-            case Constants.ARTIST_ORDER_BY_LEAST_RECENTLY_STARRED:
-                artists.sort(Comparator.comparing(ArtistID3::getStarred, Comparator.nullsLast(Comparator.naturalOrder())));
+    fun sort(order: String) {
+        when (order) {
+            Constants.ARTIST_ORDER_BY_NAME -> artists.sort(
+                Comparator.comparing<ArtistID3?, String?>(
+                    ArtistID3::name
+                )
+            )
 
-                break;
+            Constants.ARTIST_ORDER_BY_MOST_RECENTLY_STARRED -> artists.sort(
+                Comparator.comparing<ArtistID3?, Date?>(
+                    ArtistID3::starred, Comparator.nullsLast<Date?>(
+                        Comparator.reverseOrder<Date?>()
+                    )
+                )
+            )
+
+            Constants.ARTIST_ORDER_BY_LEAST_RECENTLY_STARRED -> artists.sort(
+                Comparator.comparing<ArtistID3?, Date?>(
+                    ArtistID3::starred, Comparator.nullsLast<Date?>(
+                        Comparator.naturalOrder<Date?>()
+                    )
+                )
+            )
+
         }
 
-        notifyDataSetChanged();
+        notifyDataSetChanged()
     }
 }

@@ -1,29 +1,23 @@
-package com.cappielloantonio.tempo.github;
+package com.cappielloantonio.tempo.github
 
-import com.cappielloantonio.tempo.github.api.release.ReleaseClient;
+import com.cappielloantonio.tempo.github.api.release.ReleaseClient
 
-public class Github {
-    private static final String OWNER = "CappielloAntonio";
-    private static final String REPO = "Tempo";
-    private ReleaseClient releaseClient;
+class Github {
+    var releaseClient: ReleaseClient? = null
+        get() {
+            if (field == null) {
+                field = ReleaseClient(this)
+            }
 
-    public ReleaseClient getReleaseClient() {
-        if (releaseClient == null) {
-            releaseClient = new ReleaseClient(this);
+            return field
         }
+        private set
 
-        return releaseClient;
-    }
+    val url: String
+        get() = "https://api.github.com/"
 
-    public String getUrl() {
-        return "https://api.github.com/";
-    }
-
-    public static String getOwner() {
-        return OWNER;
-    }
-
-    public static String getRepo() {
-        return REPO;
+    companion object {
+        const val owner: String = "CappielloAntonio"
+        const val repo: String = "Tempo"
     }
 }

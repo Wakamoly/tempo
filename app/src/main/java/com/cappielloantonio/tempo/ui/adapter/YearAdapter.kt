@@ -1,74 +1,61 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.ItemHomeYearBinding
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.util.Constants
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class YearAdapter(private val click: ClickCallback) :
+    RecyclerView.Adapter<YearAdapter.ViewHolder?>() {
+    private var years: MutableList<Int?>
 
-import com.cappielloantonio.tempo.databinding.ItemHomeYearBinding;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.util.Constants;
-
-import java.util.Collections;
-import java.util.List;
-
-public class YearAdapter extends RecyclerView.Adapter<YearAdapter.ViewHolder> {
-    private final ClickCallback click;
-
-    private List<Integer> years;
-
-    public YearAdapter(ClickCallback click) {
-        this.click = click;
-        this.years = Collections.emptyList();
+    init {
+        this.years = mutableListOf<Int?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHomeYearBinding view = ItemHomeYearBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view =
+            ItemHomeYearBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return YearAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        int year = years.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val year = years.get(position)!!
 
-        holder.item.yearLabel.setText(Integer.toString(year));
+        holder.item.yearLabel.text = year.toString()
     }
 
-    @Override
-    public int getItemCount() {
-        return years.size();
+    override fun getItemCount(): Int {
+        return years.size
     }
 
-    public Integer getItem(int position) {
-        return years.get(position);
+    fun getItem(position: Int): Int? {
+        return years.get(position)
     }
 
-    public void setItems(List<Integer> years) {
-        this.years = years;
-        notifyDataSetChanged();
+    fun setItems(years: MutableList<Int?>) {
+        this.years = years
+        notifyDataSetChanged()
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHomeYearBinding item;
-
-        ViewHolder(ItemHomeYearBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            itemView.setOnClickListener(v -> onClick());
+    inner class ViewHolder internal constructor(var item: ItemHomeYearBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
         }
 
-        public void onClick() {
-            Bundle bundle = new Bundle();
-            bundle.putString(Constants.MEDIA_BY_YEAR, Constants.MEDIA_BY_YEAR);
-            bundle.putInt("year_object", years.get(getBindingAdapterPosition()));
+        fun onClick() {
+            val bundle = Bundle()
+            bundle.putString(Constants.MEDIA_BY_YEAR, Constants.MEDIA_BY_YEAR)
+            bundle.putInt("year_object", years.get(getBindingAdapterPosition())!!)
 
-            click.onYearClick(bundle);
+            click.onYearClick(bundle)
         }
     }
 }

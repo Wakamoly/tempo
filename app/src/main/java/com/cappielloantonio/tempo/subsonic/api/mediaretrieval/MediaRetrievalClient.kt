@@ -1,36 +1,35 @@
-package com.cappielloantonio.tempo.subsonic.api.mediaretrieval;
+package com.cappielloantonio.tempo.subsonic.api.mediaretrieval
 
-import android.util.Log;
+import android.util.Log
+import com.cappielloantonio.tempo.subsonic.RetrofitClient
+import com.cappielloantonio.tempo.subsonic.Subsonic
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
 
-import com.cappielloantonio.tempo.subsonic.RetrofitClient;
-import com.cappielloantonio.tempo.subsonic.Subsonic;
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+class MediaRetrievalClient(private val subsonic: Subsonic) {
+    private val mediaRetrievalService: MediaRetrievalService
 
-import retrofit2.Call;
-
-public class MediaRetrievalClient {
-    private static final String TAG = "MediaRetrievalClient";
-
-    private final Subsonic subsonic;
-    private final MediaRetrievalService mediaRetrievalService;
-
-    public MediaRetrievalClient(Subsonic subsonic) {
-        this.subsonic = subsonic;
-        this.mediaRetrievalService = new RetrofitClient(subsonic).getRetrofit().create(MediaRetrievalService.class);
+    init {
+        this.mediaRetrievalService =
+            RetrofitClient(subsonic).retrofit.create<MediaRetrievalService>(MediaRetrievalService::class.java)
     }
 
-    public Call<ApiResponse> stream(String id, Integer maxBitRate, String format) {
-        Log.d(TAG, "stream()");
-        return mediaRetrievalService.stream(subsonic.getParams(), id, maxBitRate, format);
+    fun stream(id: String?, maxBitRate: Int?, format: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "stream()")
+        return mediaRetrievalService.stream(subsonic.getParams(), id, maxBitRate, format)
     }
 
-    public Call<ApiResponse> download(String id) {
-        Log.d(TAG, "download()");
-        return mediaRetrievalService.download(subsonic.getParams(), id);
+    fun download(id: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "download()")
+        return mediaRetrievalService.download(subsonic.getParams(), id)
     }
 
-    public Call<ApiResponse> getLyrics(String artist, String title) {
-        Log.d(TAG, "getLyrics()");
-        return mediaRetrievalService.getLyrics(subsonic.getParams(), artist, title);
+    fun getLyrics(artist: String?, title: String?): Call<ApiResponse?>? {
+        Log.d(TAG, "getLyrics()")
+        return mediaRetrievalService.getLyrics(subsonic.getParams(), artist, title)
+    }
+
+    companion object {
+        private const val TAG = "MediaRetrievalClient"
     }
 }

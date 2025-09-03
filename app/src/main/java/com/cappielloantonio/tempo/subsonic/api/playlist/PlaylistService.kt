@@ -1,28 +1,42 @@
-package com.cappielloantonio.tempo.subsonic.api.playlist;
+package com.cappielloantonio.tempo.subsonic.api.playlist
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.Query
+import retrofit2.http.QueryMap
 
-import java.util.ArrayList;
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.Query;
-import retrofit2.http.QueryMap;
-
-public interface PlaylistService {
+interface PlaylistService {
     @GET("getPlaylists")
-    Call<ApiResponse> getPlaylists(@QueryMap Map<String, String> params);
+    fun getPlaylists(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getPlaylist")
-    Call<ApiResponse> getPlaylist(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun getPlaylist(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 
     @GET("createPlaylist")
-    Call<ApiResponse> createPlaylist(@QueryMap Map<String, String> params, @Query("playlistId") String playlistId, @Query("name") String name, @Query("songId") ArrayList<String> songsId);
+    fun createPlaylist(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("playlistId") playlistId: String?,
+        @Query("name") name: String?,
+        @Query("songId") songsId: ArrayList<String?>?
+    ): Call<ApiResponse?>?
 
     @GET("updatePlaylist")
-    Call<ApiResponse> updatePlaylist(@QueryMap Map<String, String> params, @Query("playlistId") String playlistId, @Query("name") String name, @Query("public") boolean isPublic, @Query("songIdToAdd") ArrayList<String> songIdToAdd, @Query("songIndexToRemove") ArrayList<Integer> songIndexToRemove);
+    fun updatePlaylist(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("playlistId") playlistId: String?,
+        @Query("name") name: String?,
+        @Query("public") isPublic: Boolean,
+        @Query("songIdToAdd") songIdToAdd: ArrayList<String?>?,
+        @Query("songIndexToRemove") songIndexToRemove: ArrayList<Int?>?
+    ): Call<ApiResponse?>?
 
     @GET("deletePlaylist")
-    Call<ApiResponse> deletePlaylist(@QueryMap Map<String, String> params, @Query("id") String id);
+    fun deletePlaylist(
+        @QueryMap params: MutableMap<String?, String?>?,
+        @Query("id") id: String?
+    ): Call<ApiResponse?>?
 }

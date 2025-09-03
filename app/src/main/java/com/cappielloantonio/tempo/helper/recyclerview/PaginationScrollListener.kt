@@ -1,33 +1,25 @@
-package com.cappielloantonio.tempo.helper.recyclerview;
+package com.cappielloantonio.tempo.helper.recyclerview
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 
+abstract class PaginationScrollListener protected constructor(private val layoutManager: LinearLayoutManager) :
+    RecyclerView.OnScrollListener() {
+    override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+        super.onScrolled(recyclerView, dx, dy)
 
-public abstract class PaginationScrollListener extends RecyclerView.OnScrollListener {
-    private final LinearLayoutManager layoutManager;
+        val visibleItemCount = layoutManager.childCount
+        val totalItemCount = layoutManager.getItemCount()
+        val firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition()
 
-    protected PaginationScrollListener(LinearLayoutManager layoutManager) {
-        this.layoutManager = layoutManager;
-    }
-
-    @Override
-    public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-        super.onScrolled(recyclerView, dx, dy);
-
-        int visibleItemCount = layoutManager.getChildCount();
-        int totalItemCount = layoutManager.getItemCount();
-        int firstVisibleItemPosition = layoutManager.findFirstVisibleItemPosition();
-
-        if (!isLoading()) {
+        if (!this.isLoading) {
             if (firstVisibleItemPosition >= 0 && (visibleItemCount + firstVisibleItemPosition) >= (totalItemCount / 4 * 3)) {
-                loadMoreItems();
+                loadMoreItems()
             }
         }
     }
 
-    protected abstract void loadMoreItems();
+    protected abstract fun loadMoreItems()
 
-    public abstract boolean isLoading();
+    abstract val isLoading: Boolean
 }

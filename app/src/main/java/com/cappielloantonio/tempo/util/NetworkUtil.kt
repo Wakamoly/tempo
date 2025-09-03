@@ -1,29 +1,32 @@
-package com.cappielloantonio.tempo.util;
+package com.cappielloantonio.tempo.util
 
-import android.content.Context;
-import android.net.ConnectivityManager;
-import android.net.Network;
-import android.net.NetworkCapabilities;
-import android.net.NetworkInfo;
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
+import com.cappielloantonio.tempo.App.Companion.getContext
 
-import com.cappielloantonio.tempo.App;
+object NetworkUtil {
+    val isOffline: Boolean
+        get() {
+            val connectivityManager =
+                getContext()
+                    .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
 
-public class NetworkUtil {
-    public static boolean isOffline() {
-        ConnectivityManager connectivityManager = (ConnectivityManager) App.getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connectivityManager != null) {
+                val network = connectivityManager.activeNetwork
 
-        if (connectivityManager != null) {
-            Network network = connectivityManager.getActiveNetwork();
+                if (network != null) {
+                    val capabilities =
+                        connectivityManager.getNetworkCapabilities(network)
 
-            if (network != null) {
-                NetworkCapabilities capabilities = connectivityManager.getNetworkCapabilities(network);
-
-                if (capabilities != null) {
-                    return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) || !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+                    if (capabilities != null) {
+                        return !capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) || !capabilities.hasCapability(
+                            NetworkCapabilities.NET_CAPABILITY_VALIDATED
+                        )
+                    }
                 }
             }
-        }
 
-        return true;
-    }
+            return true
+        }
 }

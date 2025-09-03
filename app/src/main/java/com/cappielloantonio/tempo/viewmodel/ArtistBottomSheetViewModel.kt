@@ -1,86 +1,78 @@
-package com.cappielloantonio.tempo.viewmodel;
+package com.cappielloantonio.tempo.viewmodel
 
-import android.app.Application;
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.cappielloantonio.tempo.interfaces.StarCallback
+import com.cappielloantonio.tempo.repository.ArtistRepository
+import com.cappielloantonio.tempo.repository.FavoriteRepository
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.util.NetworkUtil
+import java.util.Date
 
-import androidx.annotation.NonNull;
-import androidx.lifecycle.AndroidViewModel;
+class ArtistBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+    private val artistRepository: ArtistRepository
+    private val favoriteRepository: FavoriteRepository
 
-import com.cappielloantonio.tempo.interfaces.StarCallback;
-import com.cappielloantonio.tempo.repository.ArtistRepository;
-import com.cappielloantonio.tempo.repository.FavoriteRepository;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-import com.cappielloantonio.tempo.util.NetworkUtil;
+    private var artist: ArtistID3? = null
 
-import java.util.Date;
-
-public class ArtistBottomSheetViewModel extends AndroidViewModel {
-    private final ArtistRepository artistRepository;
-    private final FavoriteRepository favoriteRepository;
-
-    private ArtistID3 artist;
-
-    public ArtistBottomSheetViewModel(@NonNull Application application) {
-        super(application);
-
-        artistRepository = new ArtistRepository();
-        favoriteRepository = new FavoriteRepository();
+    init {
+        artistRepository = ArtistRepository()
+        favoriteRepository = FavoriteRepository()
     }
 
-    public ArtistID3 getArtist() {
-        return artist;
+    fun getArtist(): ArtistID3 {
+        return artist!!
     }
 
-    public void setArtist(ArtistID3 artist) {
-        this.artist = artist;
+    fun setArtist(artist: ArtistID3) {
+        this.artist = artist
     }
 
-    public void setFavorite() {
-        if (artist.getStarred() != null) {
+    fun setFavorite() {
+        if (artist!!.starred != null) {
             if (NetworkUtil.isOffline()) {
-                removeFavoriteOffline();
+                removeFavoriteOffline()
             } else {
-                removeFavoriteOnline();
+                removeFavoriteOnline()
             }
         } else {
             if (NetworkUtil.isOffline()) {
-                setFavoriteOffline();
+                setFavoriteOffline()
             } else {
-                setFavoriteOnline();
+                setFavoriteOnline()
             }
         }
     }
 
-    private void removeFavoriteOffline() {
-        favoriteRepository.starLater(null, null, artist.getId(), false);
-        artist.setStarred(null);
+    private fun removeFavoriteOffline() {
+        favoriteRepository.starLater(null, null, artist!!.id, false)
+        artist!!.starred = null
     }
 
-    private void removeFavoriteOnline() {
-        favoriteRepository.unstar(null, null, artist.getId(), new StarCallback() {
-            @Override
-            public void onError() {
+    private fun removeFavoriteOnline() {
+        favoriteRepository.unstar(null, null, artist!!.id, object : StarCallback {
+            override fun onError() {
                 // artist.setStarred(new Date());
-                favoriteRepository.starLater(null, null, artist.getId(), false);
+                favoriteRepository.starLater(null, null, artist!!.id, false)
             }
-        });
+        })
 
-        artist.setStarred(null);
+        artist!!.starred = null
     }
 
-    private void setFavoriteOffline() {
-        favoriteRepository.starLater(null, null, artist.getId(), true);
-        artist.setStarred(new Date());
+    private fun setFavoriteOffline() {
+        favoriteRepository.starLater(null, null, artist!!.id, true)
+        artist!!.starred = Date()
     }
 
-    private void setFavoriteOnline() {
-        favoriteRepository.star(null, null, artist.getId(), new StarCallback() {
-            @Override
-            public void onError() {
+    private fun setFavoriteOnline() {
+        favoriteRepository.star(null, null, artist!!.id, object : StarCallback {
+            override fun onError() {
                 // artist.setStarred(null);
-                favoriteRepository.starLater(null, null, artist.getId(), true);
+                favoriteRepository.starLater(null, null, artist!!.id, true)
             }
-        });
+        })
 
-        artist.setStarred(new Date());
+        artist!!.starred = Date()
     }
 }

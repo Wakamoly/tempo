@@ -1,20 +1,17 @@
-package com.cappielloantonio.tempo.subsonic.api.system;
+package com.cappielloantonio.tempo.subsonic.api.system
 
-import com.cappielloantonio.tempo.subsonic.base.ApiResponse;
+import com.cappielloantonio.tempo.subsonic.base.ApiResponse
+import retrofit2.Call
+import retrofit2.http.GET
+import retrofit2.http.QueryMap
 
-import java.util.Map;
-
-import retrofit2.Call;
-import retrofit2.http.GET;
-import retrofit2.http.QueryMap;
-
-public interface SystemService {
+interface SystemService {
     @GET("ping")
-    Call<ApiResponse> ping(@QueryMap Map<String, String> params);
+    fun ping(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getLicense")
-    Call<ApiResponse> getLicense(@QueryMap Map<String, String> params);
+    fun getLicense(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 
     @GET("getOpenSubsonicExtensions")
-    Call<ApiResponse> getOpenSubsonicExtensions(@QueryMap Map<String, String> params);
+    fun getOpenSubsonicExtensions(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
 }

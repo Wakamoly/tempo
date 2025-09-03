@@ -1,76 +1,65 @@
-package com.cappielloantonio.tempo.ui.adapter;
+package com.cappielloantonio.tempo.ui.adapter
 
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.ViewGroup;
+import android.view.LayoutInflater
+import android.view.ViewGroup
+import android.widget.CompoundButton
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.databinding.ItemHorizontalHomeSectorBinding
+import com.cappielloantonio.tempo.model.HomeSector
 
-import androidx.annotation.NonNull;
-import androidx.recyclerview.widget.RecyclerView;
+class HomeSectorHorizontalAdapter :
+    RecyclerView.Adapter<HomeSectorHorizontalAdapter.ViewHolder?>() {
+    private var sectors: MutableList<HomeSector>
 
-import com.cappielloantonio.tempo.databinding.ItemHorizontalHomeSectorBinding;
-import com.cappielloantonio.tempo.databinding.ItemHorizontalPlaylistDialogTrackBinding;
-import com.cappielloantonio.tempo.glide.CustomGlideRequest;
-import com.cappielloantonio.tempo.model.HomeSector;
-import com.cappielloantonio.tempo.subsonic.models.Child;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.util.MusicUtil;
-
-import java.util.Collections;
-import java.util.List;
-
-public class HomeSectorHorizontalAdapter extends RecyclerView.Adapter<HomeSectorHorizontalAdapter.ViewHolder> {
-    private List<HomeSector> sectors;
-
-    public HomeSectorHorizontalAdapter() {
-        this.sectors = Collections.emptyList();
+    init {
+        this.sectors = mutableListOf<HomeSector?>()
     }
 
-    @NonNull
-    @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        ItemHorizontalHomeSectorBinding view = ItemHorizontalHomeSectorBinding.inflate(LayoutInflater.from(parent.getContext()), parent, false);
-        return new ViewHolder(view);
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = ItemHorizontalHomeSectorBinding.inflate(
+            LayoutInflater.from(parent.context),
+            parent,
+            false
+        )
+        return HomeSectorHorizontalAdapter.ViewHolder(view)
     }
 
-    @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
-        HomeSector sector = sectors.get(position);
+    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+        val sector = sectors.get(position)
 
-        holder.item.homeSectorTitleCheckBox.setText(sector.getSectorTitle());
-        holder.item.homeSectorTitleCheckBox.setChecked(sector.isVisible());
+        holder.item.homeSectorTitleCheckBox.text = sector.sectorTitle
+        holder.item.homeSectorTitleCheckBox.setChecked(sector.isVisible)
     }
 
-    @Override
-    public int getItemCount() {
-        return sectors.size();
+    override fun getItemCount(): Int {
+        return sectors.size
     }
 
-    public List<HomeSector> getItems() {
-        return this.sectors;
-    }
-
-    public void setItems(List<HomeSector> sectors) {
-        this.sectors = sectors;
-        notifyDataSetChanged();
-    }
-
-    public HomeSector getItem(int id) {
-        return sectors.get(id);
-    }
-
-    public class ViewHolder extends RecyclerView.ViewHolder {
-        ItemHorizontalHomeSectorBinding item;
-
-        ViewHolder(ItemHorizontalHomeSectorBinding item) {
-            super(item.getRoot());
-
-            this.item = item;
-
-            this.item.homeSectorTitleCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> onCheck(isChecked));
+    var items: MutableList<HomeSector>
+        get() = this.sectors
+        set(sectors) {
+            this.sectors = sectors
+            notifyDataSetChanged()
         }
 
-        private void onCheck(boolean isChecked) {
-            sectors.get(getBindingAdapterPosition()).setVisible(isChecked);
+    fun getItem(id: Int): HomeSector? {
+        return sectors.get(id)
+    }
+
+    inner class ViewHolder internal constructor(var item: ItemHorizontalHomeSectorBinding) :
+        RecyclerView.ViewHolder(
+            item.getRoot()
+        ) {
+        init {
+            this.item.homeSectorTitleCheckBox.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView: CompoundButton?, isChecked: Boolean ->
+                onCheck(
+                    isChecked
+                )
+            })
+        }
+
+        private fun onCheck(isChecked: Boolean) {
+            sectors.get(getBindingAdapterPosition()).isVisible = isChecked
         }
     }
 }

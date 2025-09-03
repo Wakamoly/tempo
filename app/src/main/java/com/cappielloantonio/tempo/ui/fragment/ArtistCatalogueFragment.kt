@@ -1,213 +1,221 @@
-package com.cappielloantonio.tempo.ui.fragment;
+package com.cappielloantonio.tempo.ui.fragment
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputMethodManager;
-import android.widget.PopupMenu;
-import android.widget.SearchView;
-import android.widget.Toast;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.core.view.ViewCompat;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
-import androidx.media3.common.util.UnstableApi;
-import androidx.navigation.Navigation;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
-import android.util.Log;
-
-import com.cappielloantonio.tempo.R;
-import com.cappielloantonio.tempo.databinding.FragmentArtistCatalogueBinding;
-import com.cappielloantonio.tempo.helper.recyclerview.GridItemDecoration;
-import com.cappielloantonio.tempo.interfaces.ClickCallback;
-import com.cappielloantonio.tempo.ui.activity.MainActivity;
-import com.cappielloantonio.tempo.ui.adapter.ArtistCatalogueAdapter;
-import com.cappielloantonio.tempo.util.Constants;
-import com.cappielloantonio.tempo.viewmodel.ArtistCatalogueViewModel;
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3;
-
-import java.util.ArrayList;
-import java.util.List;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
+import android.view.View.OnTouchListener
+import android.view.ViewGroup
+import android.view.inputmethod.EditorInfo
+import android.view.inputmethod.InputMethodManager
+import android.widget.PopupMenu
+import android.widget.SearchView
+import android.widget.Toast
+import androidx.core.view.ViewCompat
+import androidx.fragment.app.Fragment
+import androidx.lifecycle.Observer
+import androidx.lifecycle.ViewModelProvider
+import androidx.media3.common.util.UnstableApi
+import androidx.navigation.Navigation.findNavController
+import androidx.recyclerview.widget.GridLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.cappielloantonio.tempo.R
+import com.cappielloantonio.tempo.databinding.FragmentArtistCatalogueBinding
+import com.cappielloantonio.tempo.helper.recyclerview.GridItemDecoration
+import com.cappielloantonio.tempo.interfaces.ClickCallback
+import com.cappielloantonio.tempo.subsonic.models.ArtistID3
+import com.cappielloantonio.tempo.ui.activity.MainActivity
+import com.cappielloantonio.tempo.ui.adapter.ArtistCatalogueAdapter
+import com.cappielloantonio.tempo.util.Constants
+import com.cappielloantonio.tempo.viewmodel.ArtistCatalogueViewModel
+import com.google.android.material.appbar.AppBarLayout
+import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
+import java.util.Locale
 
 @UnstableApi
-public class ArtistCatalogueFragment extends Fragment implements ClickCallback {
-    private static final String TAG = "ArtistCatalogueFragment";
+class ArtistCatalogueFragment : Fragment(), ClickCallback {
+    private var bind: FragmentArtistCatalogueBinding? = null
+    private var activity: MainActivity? = null
+    private var artistCatalogueViewModel: ArtistCatalogueViewModel? = null
 
-    private FragmentArtistCatalogueBinding bind;
-    private MainActivity activity;
-    private ArtistCatalogueViewModel artistCatalogueViewModel;
+    private var artistAdapter: ArtistCatalogueAdapter? = null
 
-    private ArtistCatalogueAdapter artistAdapter;
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
 
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
-
-        initData();
+        initData()
     }
 
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        activity = (MainActivity) getActivity();
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View {
+        activity = activity as MainActivity?
 
-        bind = FragmentArtistCatalogueBinding.inflate(inflater, container, false);
-        View view = bind.getRoot();
+        bind = FragmentArtistCatalogueBinding.inflate(inflater, container, false)
+        val view: View = bind!!.getRoot()
 
-        initAppBar();
-        initArtistCatalogueView();
+        initAppBar()
+        initArtistCatalogueView()
 
-        return view;
+        return view
     }
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        bind = null;
+    override fun onDestroyView() {
+        super.onDestroyView()
+        bind = null
     }
 
-    private void initData() {
-        artistCatalogueViewModel = new ViewModelProvider(requireActivity()).get(ArtistCatalogueViewModel.class);
-        artistCatalogueViewModel.loadArtists();
+    private fun initData() {
+        artistCatalogueViewModel =
+            ViewModelProvider(requireActivity()).get<ArtistCatalogueViewModel>(
+                ArtistCatalogueViewModel::class.java
+            )
+        artistCatalogueViewModel!!.loadArtists()
     }
 
-    private void initAppBar() {
-        activity.setSupportActionBar(bind.toolbar);
+    private fun initAppBar() {
+        activity!!.setSupportActionBar(bind!!.toolbar)
 
-        if (activity.getSupportActionBar() != null) {
-            activity.getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            activity.getSupportActionBar().setDisplayShowHomeEnabled(true);
+        if (activity!!.supportActionBar != null) {
+            activity!!.supportActionBar!!.setDisplayHomeAsUpEnabled(true)
+            activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind.toolbar.setNavigationOnClickListener(v -> {
-            hideKeyboard(v);
-            activity.navController.navigateUp();
-        });
+        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
+            hideKeyboard(v!!)
+            activity!!.navController.navigateUp()
+        })
 
 
-        bind.appBarLayout.addOnOffsetChangedListener((appBarLayout, verticalOffset) -> {
-            if ((bind.artistInfoSector.getHeight() + verticalOffset) < (2 * ViewCompat.getMinimumHeight(bind.toolbar))) {
-                bind.toolbar.setTitle(R.string.artist_catalogue_title);
+        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+            if ((bind!!.artistInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
+                    bind!!.toolbar
+                ))
+            ) {
+                bind!!.toolbar.setTitle(R.string.artist_catalogue_title)
             } else {
-                bind.toolbar.setTitle(R.string.empty_string);
+                bind!!.toolbar.setTitle(R.string.empty_string)
             }
-        });
+        })
     }
 
     @SuppressLint("ClickableViewAccessibility")
-    private void initArtistCatalogueView() {
-        bind.artistCatalogueRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
-        bind.artistCatalogueRecyclerView.addItemDecoration(new GridItemDecoration(2, 20, false));
-        bind.artistCatalogueRecyclerView.setHasFixedSize(true);
+    private fun initArtistCatalogueView() {
+        bind!!.artistCatalogueRecyclerView.setLayoutManager(GridLayoutManager(requireContext(), 2))
+        bind!!.artistCatalogueRecyclerView.addItemDecoration(GridItemDecoration(2, 20, false))
+        bind!!.artistCatalogueRecyclerView.setHasFixedSize(true)
 
-        artistAdapter = new ArtistCatalogueAdapter(this);
-        artistAdapter.setStateRestorationPolicy(RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY);
-        bind.artistCatalogueRecyclerView.setAdapter(artistAdapter);
-        artistCatalogueViewModel.getArtistList().observe(getViewLifecycleOwner(), artistList -> artistAdapter.setItems(artistList));
+        artistAdapter = ArtistCatalogueAdapter(this)
+        artistAdapter!!.setStateRestorationPolicy(RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY)
+        bind!!.artistCatalogueRecyclerView.setAdapter(artistAdapter)
+        artistCatalogueViewModel!!.getArtistList().observe(
+            getViewLifecycleOwner(),
+            Observer { artistList: MutableList<ArtistID3>? -> artistAdapter!!.setItems(artistList) })
 
-        bind.artistCatalogueRecyclerView.setOnTouchListener((v, event) -> {
-            hideKeyboard(v);
-            return false;
-        });
+        bind!!.artistCatalogueRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
+            hideKeyboard(v!!)
+            false
+        })
 
-        bind.artistListSortImageView.setOnClickListener(view -> showPopupMenu(view, R.menu.sort_artist_popup_menu));
+        bind!!.artistListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
+            showPopupMenu(
+                view,
+                R.menu.sort_artist_popup_menu
+            )
+        })
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.toolbar_menu, menu);
+    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+        inflater.inflate(R.menu.toolbar_menu, menu)
 
-        MenuItem searchItem = menu.findItem(R.id.action_search);
+        val searchItem = menu.findItem(R.id.action_search)
 
-        SearchView searchView = (SearchView) searchItem.getActionView();
-        searchView.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        val searchView = searchItem.actionView as SearchView?
+        searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
 
-        searchView.setQueryHint(getString(R.string.filter_artist));
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
+        searchView.setQueryHint(getString(R.string.filter_artist))
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
                 // this toast may be overkill...
-                Toast.makeText(requireContext(), "Search: " + query, Toast.LENGTH_SHORT).show();
-                filterArtists(query);
-                return true;
+                Toast.makeText(requireContext(), "Search: " + query, Toast.LENGTH_SHORT).show()
+                filterArtists(query)
+                return true
             }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                filterArtists(newText);
-                return true;
+            override fun onQueryTextChange(newText: String?): Boolean {
+                filterArtists(newText)
+                return true
             }
-        });
+        })
 
-        searchView.setPadding(-32, 0, 0, 0);
+        searchView.setPadding(-32, 0, 0, 0)
     }
 
-    private void filterArtists(String query) {
-        List<ArtistID3> allArtists = artistCatalogueViewModel.getArtistList().getValue();
-        
+    private fun filterArtists(query: String?) {
+        val allArtists = artistCatalogueViewModel!!.getArtistList().getValue()
+
         if (allArtists == null || allArtists.isEmpty()) {
-            return;
+            return
         }
-        
-        if (query == null || query.trim().isEmpty()) {
-            artistAdapter.setItems(allArtists);
+
+        if (query == null || query.trim { it <= ' ' }.isEmpty()) {
+            artistAdapter!!.setItems(allArtists)
         } else {
-            String searchQuery = query.toLowerCase().trim();
-            List<ArtistID3> filteredArtists = new ArrayList<>();
-            
-            for (ArtistID3 artist : allArtists) {
-                if (artist.getName() != null && 
-                    artist.getName().toLowerCase().contains(searchQuery)) {
-                    filteredArtists.add(artist);
+            val searchQuery = query.lowercase(Locale.getDefault()).trim { it <= ' ' }
+            val filteredArtists: MutableList<ArtistID3> = ArrayList<ArtistID3>()
+
+            for (artist in allArtists) {
+                if (artist.name != null &&
+                    artist.name!!.lowercase(Locale.getDefault()).contains(searchQuery)
+                ) {
+                    filteredArtists.add(artist)
                 }
             }
-            artistAdapter.setItems(filteredArtists);
+            artistAdapter!!.setItems(filteredArtists)
         }
     }
 
-    private void hideKeyboard(View view) {
-        InputMethodManager imm = (InputMethodManager) activity.getSystemService(Context.INPUT_METHOD_SERVICE);
-        imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    private fun hideKeyboard(view: View) {
+        val imm = activity!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private void showPopupMenu(View view, int menuResource) {
-        PopupMenu popup = new PopupMenu(requireContext(), view);
-        popup.getMenuInflater().inflate(menuResource, popup.getMenu());
+    private fun showPopupMenu(view: View?, menuResource: Int) {
+        val popup = PopupMenu(requireContext(), view)
+        popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(menuItem -> {
-            if (menuItem.getItemId() == R.id.menu_artist_sort_name) {
-                artistAdapter.sort(Constants.ARTIST_ORDER_BY_NAME);
-                return true;
-            } else if (menuItem.getItemId() == R.id.menu_artist_sort_random) {
-                artistAdapter.sort(Constants.ARTIST_ORDER_BY_RANDOM);
-                return true;
+        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+            if (menuItem!!.itemId == R.id.menu_artist_sort_name) {
+                artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_NAME)
+                return@setOnMenuItemClickListener true
+            } else if (menuItem.itemId == R.id.menu_artist_sort_random) {
+                artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_RANDOM)
+                return@setOnMenuItemClickListener true
             }
+            false
+        })
 
-            return false;
-        });
-
-        popup.show();
+        popup.show()
     }
 
-    @Override
-    public void onArtistClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.artistPageFragment, bundle);
-        hideKeyboard(requireView());
+    override fun onArtistClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.artistPageFragment, bundle)
+        hideKeyboard(requireView())
     }
 
-    @Override
-    public void onArtistLongClick(Bundle bundle) {
-        Navigation.findNavController(requireView()).navigate(R.id.artistBottomSheetDialog, bundle);
+    override fun onArtistLongClick(bundle: Bundle?) {
+        findNavController(requireView()).navigate(R.id.artistBottomSheetDialog, bundle)
+    }
+
+    companion object {
+        private const val TAG = "ArtistCatalogueFragment"
     }
 }
