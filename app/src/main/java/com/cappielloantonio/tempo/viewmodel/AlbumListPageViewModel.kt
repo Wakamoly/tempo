@@ -24,7 +24,7 @@ class AlbumListPageViewModel(
     var title: String? = null
     var artist: ArtistID3? = null
 
-    private var albumList: MutableLiveData<MutableList<AlbumID3?>?>? = null
+    private var albumList = MutableLiveData<MutableList<AlbumID3>>(ArrayList())
 
     var maxNumber: Int = 500
 
@@ -34,8 +34,6 @@ class AlbumListPageViewModel(
     }
 
     fun getAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
-        albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
-
         when (title) {
             Constants.ALBUM_RECENTLY_PLAYED ->
                 albumRepository
@@ -73,7 +71,8 @@ class AlbumListPageViewModel(
                         Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums },
                     )
 
-            Constants.ALBUM_STARRED -> albumList = albumRepository.getStarredAlbums(false, -1)
+            Constants.ALBUM_STARRED ->
+                albumList = albumRepository.getStarredAlbums(false, -1)
             Constants.ALBUM_NEW_RELEASES -> {
                 val currentYear = Calendar.getInstance().get(Calendar.YEAR)
                 albumRepository

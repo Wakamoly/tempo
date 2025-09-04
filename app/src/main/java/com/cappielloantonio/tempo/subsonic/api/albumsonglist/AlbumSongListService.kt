@@ -9,44 +9,44 @@ import retrofit2.http.QueryMap
 interface AlbumSongListService {
     @GET("getAlbumList")
     fun getAlbumList(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>,
         @Query("type") type: String?,
         @Query("size") size: Int,
-        @Query("offset") offset: Int
-    ): Call<ApiResponse?>?
+        @Query("offset") offset: Int,
+    ): Call<ApiResponse>
 
     @GET("getAlbumList2")
     fun getAlbumList2(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>,
         @Query("type") type: String?,
         @Query("size") size: Int,
         @Query("offset") offset: Int,
         @Query("fromYear") fromYear: Int?,
-        @Query("toYear") toYear: Int?
-    ): Call<ApiResponse?>?
+        @Query("toYear") toYear: Int?,
+    ): Call<ApiResponse>
 
     @GET("getRandomSongs")
     fun getRandomSongs(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>,
         @Query("size") size: Int,
         @Query("fromYear") fromYear: Int?,
-        @Query("toYear") toYear: Int?
-    ): Call<ApiResponse?>?
+        @Query("toYear") toYear: Int?,
+    ): Call<ApiResponse>
 
     @GET("getSongsByGenre")
     fun getSongsByGenre(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>,
         @Query("genre") genre: String?,
         @Query("count") count: Int,
-        @Query("offset") offset: Int
-    ): Call<ApiResponse?>?
+        @Query("offset") offset: Int,
+    ): Call<ApiResponse>
 
     @GET("getNowPlaying")
-    fun getNowPlaying(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getNowPlaying(@QueryMap params: MutableMap<String, String>): Call<ApiResponse>
 
     @GET("getStarred")
-    fun getStarred(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getStarred(@QueryMap params: MutableMap<String, String>): Call<ApiResponse>
 
     @GET("getStarred2")
-    fun getStarred2(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getStarred2(@QueryMap params: MutableMap<String, String>): Call<ApiResponse>
 }

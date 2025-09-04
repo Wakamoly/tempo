@@ -4,45 +4,53 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.preference.PreferenceManager
+import androidx.work.Configuration
 import com.cappielloantonio.tempo.github.Github
 import com.cappielloantonio.tempo.helper.ThemeHelper
+import com.cappielloantonio.tempo.helper.ThemeHelper.DEFAULT_MODE
 import com.cappielloantonio.tempo.subsonic.Subsonic
 import com.cappielloantonio.tempo.subsonic.SubsonicPreferences
 import com.cappielloantonio.tempo.util.Preferences.getInUseServerAddress
+import com.cappielloantonio.tempo.util.Preferences.getIsLowSecurity
 import com.cappielloantonio.tempo.util.Preferences.getPassword
 import com.cappielloantonio.tempo.util.Preferences.getSalt
 import com.cappielloantonio.tempo.util.Preferences.getToken
 import com.cappielloantonio.tempo.util.Preferences.getUser
-import com.cappielloantonio.tempo.util.Preferences.isLowSecurity
 import com.cappielloantonio.tempo.util.Preferences.setPassword
 import com.cappielloantonio.tempo.util.Preferences.setSalt
 import com.cappielloantonio.tempo.util.Preferences.setToken
+import com.cappielloantonio.tempo.work.TempoWorkConfigProvider
 
-class App : Application() {
+class App :
+    Application(),
+    Configuration.Provider {
     override fun onCreate() {
         super.onCreate()
 
         val sharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val themePref: String =
+        val themePref =
             sharedPreferences.getString(
                 com.cappielloantonio.tempo.util.Preferences.THEME,
-                ThemeHelper.DEFAULT_MODE,
-            )!!
-        ThemeHelper.applyTheme(themePref)
+                DEFAULT_MODE,
+            )
+        ThemeHelper.applyTheme(themePref ?: DEFAULT_MODE)
 
         instance = App()
         context = applicationContext
-        Companion.preferences = PreferenceManager.getDefaultSharedPreferences(context!!)
+        Companion.preferences = PreferenceManager.getDefaultSharedPreferences(applicationContext)
     }
 
     val preferences: SharedPreferences
         get() =
             Companion.preferences ?: run {
-                val prefs = PreferenceManager.getDefaultSharedPreferences(context!!)
+                val prefs = PreferenceManager.getDefaultSharedPreferences(applicationContext)
                 Companion.preferences = prefs
                 prefs
             }
+
+    override val workManagerConfiguration: Configuration
+        get() = TempoWorkConfigProvider(isDebug = BuildConfig.DEBUG).workManagerConfiguration
 
     companion object {
         private var instance: App? = null
@@ -68,21 +76,22 @@ class App : Application() {
 
         @JvmStatic
         fun getSubsonicClientInstance(override: Boolean): Subsonic {
-            if (subsonic == null || override) {
-                subsonic =
-                    subsonicClient
+            var subclient = subsonic
+            if (subclient == null || override) {
+                subsonic = subsonicClient
+                subclient = subsonicClient
             }
-            return subsonic!!
+            return subclient
         }
 
         @JvmStatic
         val githubClientInstance: Github
-            get() {
-                if (github == null) {
-                    github = Github()
+            get() =
+                github ?: run {
+                    val gh = Github()
+                    github = gh
+                    gh
                 }
-                return github!!
-            }
 
         @JvmStatic
         fun refreshSubsonicClient() {
@@ -91,24 +100,21 @@ class App : Application() {
         }
 
         private val subsonicClient: Subsonic
-            get() {
-                val preferences: SubsonicPreferences =
-                    subsonicPreferences
-
-                if (preferences.authentication != null) {
-                    if (preferences.authentication.password != null) {
-                        setPassword(preferences.authentication.password)
+            get() =
+                subsonicPreferences.run {
+                    authentication?.let { authentication ->
+                        if (authentication.password != null) {
+                            setPassword(authentication.password)
+                        }
+                        if (authentication.token != null) {
+                            setToken(authentication.token)
+                        }
+                        if (authentication.salt != null) {
+                            setSalt(authentication.salt)
+                        }
                     }
-                    if (preferences.authentication.token != null) {
-                        setToken(preferences.authentication.token)
-                    }
-                    if (preferences.authentication.salt != null) {
-                        setSalt(preferences.authentication.salt)
-                    }
+                    return Subsonic(this)
                 }
-
-                return Subsonic(preferences)
-            }
 
         private val subsonicPreferences: SubsonicPreferences
             get() {
@@ -117,7 +123,7 @@ class App : Application() {
                 val password = getPassword()
                 val token = getToken()
                 val salt = getSalt()
-                val isLowSecurity = isLowSecurity()
+                val isLowSecurity = getIsLowSecurity()
 
                 val preferences = SubsonicPreferences()
                 preferences.serverUrl = server

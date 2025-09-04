@@ -68,9 +68,9 @@ class FastScrollbar : LinearLayout {
     ) {
         val inflater = LayoutInflater.from(context)
         inflater.inflate(layoutResId, this, true)
-        bubble = findViewById<TextView?>(bubbleResId)
-        if (bubble != null) bubble!!.visibility = INVISIBLE
-        handle = findViewById<View>(handleResId)
+        bubble = findViewById(bubbleResId)
+        if (bubble != null) bubble?.visibility = INVISIBLE
+        handle = findViewById(handleResId)
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
@@ -203,14 +203,14 @@ class FastScrollbar : LinearLayout {
             BUBBLE_ANIMATION_DURATION.toLong()
         )
         currentAnimator!!.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: Animator?) {
-                super.onAnimationEnd(animation!!)
+            override fun onAnimationEnd(animation: Animator) {
+                super.onAnimationEnd(animation)
                 bubble!!.visibility = INVISIBLE
                 currentAnimator = null
             }
 
-            override fun onAnimationCancel(animation: Animator?) {
-                super.onAnimationCancel(animation!!)
+            override fun onAnimationCancel(animation: Animator) {
+                super.onAnimationCancel(animation)
                 bubble!!.visibility = INVISIBLE
                 currentAnimator = null
             }

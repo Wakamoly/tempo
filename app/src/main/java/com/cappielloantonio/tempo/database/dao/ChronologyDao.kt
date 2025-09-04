@@ -13,7 +13,7 @@ interface ChronologyDao {
     fun getLastPlayed(
         server: String?,
         count: Int,
-    ): LiveData<MutableList<Chronology?>?>?
+    ): LiveData<MutableList<Chronology>>
 
     @Query(
         "SELECT * FROM chronology WHERE timestamp >= :endDate AND timestamp < :startDate AND server == :server GROUP BY id ORDER BY COUNT(id) DESC LIMIT 20",
@@ -22,8 +22,8 @@ interface ChronologyDao {
         startDate: Long,
         endDate: Long,
         server: String?,
-    ): LiveData<MutableList<Chronology?>?>?
+    ): LiveData<MutableList<Chronology>>
 
     @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
-    fun insert(chronologyObject: Chronology?)
+    fun insert(chronologyObject: Chronology)
 }

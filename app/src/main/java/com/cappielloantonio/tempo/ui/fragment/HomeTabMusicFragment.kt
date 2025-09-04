@@ -1295,7 +1295,7 @@ class HomeTabMusicFragment :
                     requireView(),
                     R.string.artist_adapter_radio_station_starting,
                     Snackbar.LENGTH_LONG,
-                ).setAnchorView(activity!!.bind.playerBottomSheet)
+                ).setAnchorView(activity!!._binding.playerBottomSheet)
                 .show()
 
             if (mediaBrowserListenableFuture != null) {

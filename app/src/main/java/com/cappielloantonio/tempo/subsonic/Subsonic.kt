@@ -18,138 +18,146 @@ import com.cappielloantonio.tempo.subsonic.base.Version
 class Subsonic(private val preferences: SubsonicPreferences) {
     val apiVersion: Version? = API_MAX_VERSION
 
-    var systemClient: SystemClient? = null
+    private var _systemClient: SystemClient? = null
         get() {
             if (field == null) {
                 field = SystemClient(this)
             }
             return field
         }
-        private set
-    var browsingClient: BrowsingClient? = null
+    private var _browsingClient: BrowsingClient? = null
         get() {
             if (field == null) {
                 field = BrowsingClient(this)
             }
             return field
         }
-        private set
-    var mediaRetrievalClient: MediaRetrievalClient? = null
+    private var _mediaRetrievalClient: MediaRetrievalClient? = null
         get() {
             if (field == null) {
                 field = MediaRetrievalClient(this)
             }
             return field
         }
-        private set
-    var playlistClient: PlaylistClient? = null
+    private var _playlistClient: PlaylistClient? = null
         get() {
             if (field == null) {
                 field = PlaylistClient(this)
             }
             return field
         }
-        private set
-    var searchingClient: SearchingClient? = null
+    private var _searchingClient: SearchingClient? = null
         get() {
             if (field == null) {
                 field = SearchingClient(this)
             }
             return field
         }
-        private set
-    var albumSongListClient: AlbumSongListClient? = null
+    private var _albumSongListClient: AlbumSongListClient? = null
         get() {
             if (field == null) {
                 field = AlbumSongListClient(this)
             }
             return field
         }
-        private set
-    var mediaAnnotationClient: MediaAnnotationClient? = null
+    private var _mediaAnnotationClient: MediaAnnotationClient? = null
         get() {
             if (field == null) {
                 field = MediaAnnotationClient(this)
             }
             return field
         }
-        private set
-    var podcastClient: PodcastClient? = null
+    private var _podcastClient: PodcastClient? = null
         get() {
             if (field == null) {
                 field = PodcastClient(this)
             }
             return field
         }
-        private set
-    var mediaLibraryScanningClient: MediaLibraryScanningClient? = null
+    private var _mediaLibraryScanningClient: MediaLibraryScanningClient? = null
         get() {
             if (field == null) {
                 field = MediaLibraryScanningClient(this)
             }
             return field
         }
-        private set
-    var bookmarksClient: BookmarksClient? = null
+    private var _bookmarksClient: BookmarksClient? = null
         get() {
             if (field == null) {
                 field = BookmarksClient(this)
             }
             return field
         }
-        private set
-    var internetRadioClient: InternetRadioClient? = null
+    private var _internetRadioClient: InternetRadioClient? = null
         get() {
             if (field == null) {
                 field = InternetRadioClient(this)
             }
             return field
         }
-        private set
-    var sharingClient: SharingClient? = null
+    private var _sharingClient: SharingClient? = null
         get() {
             if (field == null) {
                 field = SharingClient(this)
             }
             return field
         }
-        private set
-    var openClient: OpenClient? = null
+    private var _openClient: OpenClient? = null
         get() {
             if (field == null) {
                 field = OpenClient(this)
             }
             return field
         }
-        private set
+
+    val systemClient: SystemClient
+        get() = requireNotNull(_systemClient)
+    val browsingClient: BrowsingClient
+        get() = requireNotNull(_browsingClient)
+    val mediaRetrievalClient: MediaRetrievalClient
+        get() = requireNotNull(_mediaRetrievalClient)
+    val playlistClient: PlaylistClient
+        get() = requireNotNull(_playlistClient)
+    val searchingClient: SearchingClient
+        get() = requireNotNull(_searchingClient)
+    val albumSongListClient: AlbumSongListClient
+        get() = requireNotNull(_albumSongListClient)
+    val mediaAnnotationClient: MediaAnnotationClient
+        get() = requireNotNull(_mediaAnnotationClient)
+    val podcastClient: PodcastClient
+        get() = requireNotNull(_podcastClient)
+    val mediaLibraryScanningClient: MediaLibraryScanningClient
+        get() = requireNotNull(_mediaLibraryScanningClient)
+    val bookmarksClient: BookmarksClient
+        get() = requireNotNull(_bookmarksClient)
+    val internetRadioClient: InternetRadioClient
+        get() = requireNotNull(_internetRadioClient)
+    val sharingClient: SharingClient
+        get() = requireNotNull(_sharingClient)
+    val openClient: OpenClient
+        get() = requireNotNull(_openClient)
 
     val url: String
+        get() = (preferences.serverUrl + "/rest/").replace("//rest", "/rest")
+
+    val params: MutableMap<String, String>
         get() {
-            val url = preferences.getServerUrl() + "/rest/"
-            return url.replace("//rest", "/rest")
-        }
+            val params: MutableMap<String, String> =
+                HashMap()
+            params.put("u", preferences.username ?: "Unknown")
 
-    val params: MutableMap<String?, String?>
-        get() {
-            val params: MutableMap<String?, String?> =
-                HashMap<String?, String?>()
-            params.put("u", preferences.getUsername())
+            preferences.authentication?.password?.let {
+                params.put("p", it)
+            }
+            preferences.authentication?.token?.let {
+                params.put("t", it)
+            }
+            preferences.authentication?.salt?.let {
+                params.put("s", it)
+            }
 
-            if (preferences.getAuthentication().getPassword() != null) params.put(
-                "p",
-                preferences.getAuthentication().getPassword()
-            )
-            if (preferences.getAuthentication().getSalt() != null) params.put(
-                "s",
-                preferences.getAuthentication().getSalt()
-            )
-            if (preferences.getAuthentication().getToken() != null) params.put(
-                "t",
-                preferences.getAuthentication().getToken()
-            )
-
-            params.put("v", this.apiVersion!!.getVersionString())
-            params.put("c", preferences.getClientName())
+            params.put("v", apiVersion?.versionString ?: "Unknown")
+            params.put("c", preferences.clientName ?: "Unknown")
             params.put("f", "json")
 
             return params

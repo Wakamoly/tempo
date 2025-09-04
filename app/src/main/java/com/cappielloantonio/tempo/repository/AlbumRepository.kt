@@ -21,11 +21,11 @@ class AlbumRepository {
         size: Int,
         fromYear: Int?,
         toYear: Int?,
-    ): MutableLiveData<MutableList<AlbumID3?>?> {
-        val listLiveAlbums = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
+    ): MutableLiveData<List<AlbumID3?>?> {
+        val listLiveAlbums = MutableLiveData<List<AlbumID3?>?>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getAlbumList2(type, size, 0, fromYear, toYear)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -33,25 +33,20 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.albumList2!!
-                                .albums != null
-                        ) {
-                            listLiveAlbums.setValue(
+                        if (response.isSuccessful) {
+                            listLiveAlbums.value =
                                 response
-                                    .body()!!
-                                    .subsonicResponse.albumList2!!
-                                    .albums,
-                            )
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.albumList2
+                                    ?.albums
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -62,24 +57,25 @@ class AlbumRepository {
     fun getStarredAlbums(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<AlbumID3?>?> {
-        val starredAlbums = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
+    ): MutableLiveData<List<AlbumID3>> {
+        val starredAlbums = MutableLiveData<List<AlbumID3>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
-            .getStarred2()
+            .albumSongListClient
+            .starred2
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null) {
-                            val albums: MutableList<AlbumID3?>? =
+                        if (response.isSuccessful) {
+                            val albums: List<AlbumID3>? =
                                 response
-                                    .body()!!
-                                    .subsonicResponse.starred2!!
-                                    .albums
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.starred2
+                                    ?.albums
 
                             if (albums != null) {
                                 if (random) {
@@ -95,7 +91,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -108,20 +104,20 @@ class AlbumRepository {
         rating: Int,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .setRating(id, rating)
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
-                    ) {
+                    ) { /*TODO*/
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -131,7 +127,7 @@ class AlbumRepository {
         val albumTracks = MutableLiveData<MutableList<Child?>?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getAlbum(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -139,30 +135,24 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val tracks: MutableList<Child?> = ArrayList<Child?>()
-
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.album != null) {
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.album!!
-                                    .songs != null
-                            ) {
-                                tracks.addAll(
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.album!!
-                                        .songs!!,
-                                )
-                            }
+                        val tracks: MutableList<Child?> = ArrayList()
+                        if (response.isSuccessful) {
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.album
+                                ?.songs
+                                ?.let {
+                                    tracks.addAll(it)
+                                }
                         }
-
                         albumTracks.value = tracks
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -170,11 +160,11 @@ class AlbumRepository {
         return albumTracks
     }
 
-    fun getArtistAlbums(id: String?): MutableLiveData<MutableList<AlbumID3?>?> {
-        val artistsAlbum = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
+    fun getArtistAlbums(id: String?): MutableLiveData<MutableList<AlbumID3>> {
+        val artistsAlbum = MutableLiveData<MutableList<AlbumID3>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtist(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -182,27 +172,25 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null &&
+                        if (response.isSuccessful) {
                             response
-                                .body()!!
-                                .subsonicResponse.artist!!
-                                .albums != null
-                        ) {
-                            val albums: MutableList<AlbumID3?>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.artist!!
-                                    .albums
-                            albums!!.sort(Comparator.comparing<AlbumID3?, Int?>(AlbumID3::year))
-                            Collections.reverse(albums)
-                            artistsAlbum.value = albums
+                                .body()
+                                ?.subsonicResponse
+                                ?.artist
+                                ?.albums
+                                ?.let {
+                                    val albums = it.toMutableList()
+                                    albums.sortWith(Comparator.comparing(AlbumID3::year))
+                                    albums.reverse()
+                                    artistsAlbum.value = albums
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -214,7 +202,7 @@ class AlbumRepository {
         val album = MutableLiveData<AlbumID3?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getAlbum(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -222,15 +210,17 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.album != null) {
-                            album.value = response.body()!!.subsonicResponse.album
+                        if (response.isSuccessful) {
+                            response.body()?.subsonicResponse?.album?.let {
+                                album.value = it
+                            }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -242,7 +232,7 @@ class AlbumRepository {
         val albumInfo = MutableLiveData<AlbumInfo?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getAlbumInfo2(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -250,15 +240,15 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumInfo != null) {
-                            albumInfo.value = response.body()!!.subsonicResponse.albumInfo
+                        if (response.isSuccessful) {
+                            albumInfo.value = response.body()?.subsonicResponse?.albumInfo
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -272,7 +262,7 @@ class AlbumRepository {
         callback: MediaCallback,
     ) {
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getSimilarSongs2(album.id, count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -280,15 +270,12 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val songs: MutableList<Child?> = ArrayList<Child?>()
+                        val songs: MutableList<Child> = ArrayList()
 
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.similarSongs2 != null) {
-                            songs.addAll(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.similarSongs2!!
-                                    .songs!!,
-                            )
+                        if (response.isSuccessful) {
+                            response.body()?.subsonicResponse?.similarSongs2?.songs?.let {
+                                songs.addAll(it)
+                            }
                         }
 
                         callback.onLoadMedia(songs)
@@ -297,8 +284,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
-                        callback.onLoadMedia(ArrayList<Any?>())
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -316,8 +302,7 @@ class AlbumRepository {
                             object : DecadesCallback {
                                 override fun onLoadYear(last: Int) {
                                     if (first != -1 && last != -1) {
-                                        val decadeList: MutableList<Int?> =
-                                            ArrayList<Any?>()
+                                        val decadeList: MutableList<Int?> = ArrayList()
 
                                         var startDecade = first - (first % 10)
                                         val lastDecade = last - (last % 10)
@@ -341,7 +326,7 @@ class AlbumRepository {
 
     private fun getFirstAlbum(callback: DecadesCallback) {
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getAlbumList2("byYear", 1, 0, 1900, Calendar.getInstance().get(Calendar.YEAR))
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -349,34 +334,24 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
+                        if (response.isSuccessful) {
                             response
-                                .body()!!
-                                .subsonicResponse.albumList2!!
-                                .albums != null &&
-                            !response
-                                .body()!!
-                                .subsonicResponse.albumList2!!
-                                .albums!!
-                                .isEmpty()
-                        ) {
-                            callback.onLoadYear(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.albumList2!!
-                                    .albums!!
-                                    .get(
-                                        0,
-                                    ).year,
-                            )
+                                .body()
+                                ?.subsonicResponse
+                                ?.albumList2
+                                ?.albums
+                                ?.let {
+                                    if (it.isNotEmpty()) {
+                                        callback.onLoadYear(it[0].year)
+                                    }
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
-                        callback.onLoadYear(-1)
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -384,7 +359,7 @@ class AlbumRepository {
 
     private fun getLastAlbum(callback: DecadesCallback) {
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getAlbumList2("byYear", 1, 0, Calendar.getInstance().get(Calendar.YEAR), 1900)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -392,35 +367,19 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
+                        if (response.isSuccessful) {
                             response
-                                .body()!!
-                                .subsonicResponse.albumList2!!
-                                .albums != null
-                        ) {
-                            if (!response
-                                    .body()!!
-                                    .subsonicResponse.albumList2!!
-                                    .albums!!
-                                    .isEmpty() &&
-                                !response
-                                    .body()!!
-                                    .subsonicResponse.albumList2!!
-                                    .albums!!
-                                    .isEmpty()
-                            ) {
-                                callback.onLoadYear(
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.albumList2!!
-                                        .albums!!
-                                        .get(
-                                            0,
-                                        ).year,
-                                )
-                            } else {
-                                callback.onLoadYear(-1)
-                            }
+                                .body()
+                                ?.subsonicResponse
+                                ?.albumList2
+                                ?.albums
+                                ?.let {
+                                    if (it.isNotEmpty()) {
+                                        callback.onLoadYear(it[0].year)
+                                    } else {
+                                        callback.onLoadYear(-1)
+                                    }
+                                }
                         }
                     }
 

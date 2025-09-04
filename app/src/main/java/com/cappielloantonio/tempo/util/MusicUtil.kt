@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.text.Html
 import android.util.Log
+import androidx.core.net.toUri
 import com.cappielloantonio.tempo.App.Companion.getContext
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.R
@@ -51,43 +52,43 @@ import kotlin.toString
 object MusicUtil {
     private const val TAG = "MusicUtil"
 
-    fun getStreamUri(id: String?): Uri? {
-        val params = getSubsonicClientInstance(false).getParams()
+    fun getStreamUri(id: String?): Uri {
+        val params = getSubsonicClientInstance(false).params
 
         val uri = StringBuilder()
 
-        uri.append(getSubsonicClientInstance(false).getUrl())
+        uri.append(getSubsonicClientInstance(false).url)
         uri.append("stream")
 
-        if (params.containsKey("u") && params.get("u") != null) {
+        if (params.containsKey("u") && params["u"] != null) {
             uri
                 .append("?u=")
-                .append(Util.encode(params.get("u")))
+                .append(Util.encode(params["u"]))
         }
-        if (params.containsKey("p") && params.get("p") != null) {
+        if (params.containsKey("p") && params["p"] != null) {
             uri
                 .append("&p=")
-                .append(params.get("p"))
+                .append(params["p"])
         }
-        if (params.containsKey("s") && params.get("s") != null) {
+        if (params.containsKey("s") && params["s"] != null) {
             uri
                 .append("&s=")
-                .append(params.get("s"))
+                .append(params["s"])
         }
-        if (params.containsKey("t") && params.get("t") != null) {
+        if (params.containsKey("t") && params["t"] != null) {
             uri
                 .append("&t=")
-                .append(params.get("t"))
+                .append(params["t"])
         }
-        if (params.containsKey("v") && params.get("v") != null) {
+        if (params.containsKey("v") && params["v"] != null) {
             uri
                 .append("&v=")
-                .append(params.get("v"))
+                .append(params["v"])
         }
-        if (params.containsKey("c") && params.get("c") != null) {
+        if (params.containsKey("c") && params["c"] != null) {
             uri
                 .append("&c=")
-                .append(params.get("c"))
+                .append(params["c"])
         }
 
         if (!isServerPrioritized()) {
@@ -106,7 +107,7 @@ object MusicUtil {
 
         Log.d(TAG, "getStreamUri: " + uri)
 
-        return Uri.parse(uri.toString())
+        return uri.toString().toUri()
     }
 
     fun getDownloadUri(id: String?): Uri? {
@@ -115,40 +116,40 @@ object MusicUtil {
         val download = DownloadRepository().getDownload(id)
 
         if (download == null || download.downloadUri!!.isEmpty()) {
-            val params = getSubsonicClientInstance(false).getParams()
+            val params = getSubsonicClientInstance(false).params
 
-            uri.append(getSubsonicClientInstance(false).getUrl())
+            uri.append(getSubsonicClientInstance(false).url)
             uri.append("download")
 
-            if (params.containsKey("u") && params.get("u") != null) {
+            if (params.containsKey("u") && params["u"] != null) {
                 uri
                     .append("?u=")
-                    .append(Util.encode(params.get("u")))
+                    .append(Util.encode(params["u"]))
             }
-            if (params.containsKey("p") && params.get("p") != null) {
+            if (params.containsKey("p") && params["p"] != null) {
                 uri
                     .append("&p=")
-                    .append(params.get("p"))
+                    .append(params["p"])
             }
-            if (params.containsKey("s") && params.get("s") != null) {
+            if (params.containsKey("s") && params["s"] != null) {
                 uri
                     .append("&s=")
-                    .append(params.get("s"))
+                    .append(params["s"])
             }
-            if (params.containsKey("t") && params.get("t") != null) {
+            if (params.containsKey("t") && params["t"] != null) {
                 uri
                     .append("&t=")
-                    .append(params.get("t"))
+                    .append(params["t"])
             }
-            if (params.containsKey("v") && params.get("v") != null) {
+            if (params.containsKey("v") && params["v"] != null) {
                 uri
                     .append("&v=")
-                    .append(params.get("v"))
+                    .append(params["v"])
             }
-            if (params.containsKey("c") && params.get("c") != null) {
+            if (params.containsKey("c") && params["c"] != null) {
                 uri
                     .append("&c=")
-                    .append(params.get("c"))
+                    .append(params["c"])
             }
 
             uri.append("&id=").append(id)
@@ -158,46 +159,46 @@ object MusicUtil {
 
         Log.d(TAG, "getDownloadUri: " + uri)
 
-        return Uri.parse(uri.toString())
+        return uri.toString().toUri()
     }
 
     fun getTranscodedDownloadUri(id: String?): Uri? {
-        val params = getSubsonicClientInstance(false).getParams()
+        val params = getSubsonicClientInstance(false).params
 
         val uri = StringBuilder()
 
-        uri.append(getSubsonicClientInstance(false).getUrl())
+        uri.append(getSubsonicClientInstance(false).url)
         uri.append("stream")
 
-        if (params.containsKey("u") && params.get("u") != null) {
+        if (params.containsKey("u") && params["u"] != null) {
             uri
                 .append("?u=")
-                .append(Util.encode(params.get("u")))
+                .append(Util.encode(params["u"]))
         }
-        if (params.containsKey("p") && params.get("p") != null) {
+        if (params.containsKey("p") && params["p"] != null) {
             uri
                 .append("&p=")
-                .append(params.get("p"))
+                .append(params["p"])
         }
-        if (params.containsKey("s") && params.get("s") != null) {
+        if (params.containsKey("s") && params["s"] != null) {
             uri
                 .append("&s=")
-                .append(params.get("s"))
+                .append(params["s"])
         }
-        if (params.containsKey("t") && params.get("t") != null) {
+        if (params.containsKey("t") && params["t"] != null) {
             uri
                 .append("&t=")
-                .append(params.get("t"))
+                .append(params["t"])
         }
-        if (params.containsKey("v") && params.get("v") != null) {
+        if (params.containsKey("v") && params["v"] != null) {
             uri
                 .append("&v=")
-                .append(params.get("v"))
+                .append(params["v"])
         }
-        if (params.containsKey("c") && params.get("c") != null) {
+        if (params.containsKey("c") && params["c"] != null) {
             uri
                 .append("&c=")
-                .append(params.get("c"))
+                .append(params["c"])
         }
 
         if (!isServerPrioritizedInTranscodedDownload()) {
@@ -215,7 +216,7 @@ object MusicUtil {
 
         Log.d(TAG, "getTranscodedDownloadUri: " + uri)
 
-        return Uri.parse(uri.toString())
+        return uri.toString().toUri()
     }
 
     fun getReadableDurationString(

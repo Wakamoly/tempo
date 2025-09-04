@@ -2,6 +2,7 @@ package com.cappielloantonio.tempo.repository
 
 import android.net.Uri
 import androidx.annotation.OptIn
+import androidx.core.net.toUri
 import androidx.lifecycle.Observer
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
@@ -32,17 +33,14 @@ import com.google.common.util.concurrent.SettableFuture
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.Collections
 import java.util.function.Consumer
 import java.util.stream.Collectors
-import kotlin.collections.ArrayList
-import kotlin.collections.MutableList
-import kotlin.collections.mutableListOf
 
+@UnstableApi
 class AutomotiveRepository {
     private val sessionMediaItemDao: SessionMediaItemDao =
-        AppDatabase.Companion.getInstance().sessionMediaItemDao()
-    private val chronologyDao: ChronologyDao = AppDatabase.Companion.getInstance().chronologyDao()
+        AppDatabase.Companion.instance.sessionMediaItemDao()
+    private val chronologyDao: ChronologyDao = AppDatabase.Companion.instance.chronologyDao()
 
     fun getAlbums(
         prefix: String?,
@@ -52,7 +50,7 @@ class AutomotiveRepository {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getAlbumList2(type, size, 0, null, null)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -76,12 +74,11 @@ class AutomotiveRepository {
 
                             for (album in albums!!) {
                                 val artworkUri =
-                                    Uri.parse(
-                                        CustomGlideRequest.createUrl(
+                                    CustomGlideRequest
+                                        .createUrl(
                                             album.coverArtId,
                                             getImageSize(),
-                                        ),
-                                    )
+                                        ).toUri()
 
                                 val mediaMetadata =
                                     MediaMetadata
@@ -141,8 +138,8 @@ class AutomotiveRepository {
                 SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
             getSubsonicClientInstance(false)
-                .getAlbumSongListClient()
-                .getStarred2()
+                .albumSongListClient
+                .starred2
                 .enqueue(
                     object : Callback<ApiResponse?> {
                         override fun onResponse(
@@ -200,7 +197,7 @@ class AutomotiveRepository {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getRandomSongs(100, null, null)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -261,10 +258,10 @@ class AutomotiveRepository {
         chronologyDao
             .getLastPlayed(server, count)
             .observeForever(
-                object : Observer<MutableList<Chronology?>?> {
-                    override fun onChanged(chronology: MutableList<Chronology?>?) {
-                        if (chronology != null && !chronology.isEmpty()) {
-                            val songs: MutableList<Child> = ArrayList<Child>(chronology)
+                object : Observer<MutableList<Chronology>> {
+                    override fun onChanged(value: MutableList<Chronology>) {
+                        if (!value.isEmpty()) {
+                            val songs: MutableList<Child> = ArrayList(value)
 
                             setChildrenMetadata(songs)
 
@@ -297,8 +294,8 @@ class AutomotiveRepository {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
-            .getStarred2()
+            .albumSongListClient
+            .starred2
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
@@ -382,8 +379,8 @@ class AutomotiveRepository {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
-            .getStarred2()
+            .albumSongListClient
+            .starred2
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
@@ -402,9 +399,9 @@ class AutomotiveRepository {
                                     .subsonicResponse.starred2!!
                                     .artists
 
-                            Collections.shuffle(artists)
+                            artists.shuffle()
 
-                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList()
 
                             for (artist in artists!!) {
                                 val artworkUri =

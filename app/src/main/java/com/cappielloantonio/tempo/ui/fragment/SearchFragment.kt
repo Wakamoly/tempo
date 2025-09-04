@@ -10,7 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
-import android.widget.TextView.OnEditorActionListener
+import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -132,16 +132,14 @@ class SearchFragment :
         bind!!
             .searchView
             .getEditText()
-            .setOnEditorActionListener(
-                OnEditorActionListener { textView: TextView?, actionId: Int, keyEvent: KeyEvent? ->
-                    val query = bind!!.searchView.text.toString()
-                    if (isQueryValid(query)) {
-                        search(query)
-                        return@setOnEditorActionListener true
-                    }
-                    false
-                },
-            )
+            .setOnEditorActionListener { textView: TextView?, actionId: Int, keyEvent: KeyEvent? ->
+                val query = bind!!.searchView.text.toString()
+                if (isQueryValid(query)) {
+                    search(query)
+                    return@setOnEditorActionListener true
+                }
+                false
+            }
 
         bind!!
             .searchView
@@ -178,7 +176,7 @@ class SearchFragment :
     fun setRecentSuggestions() {
         bind!!.searchViewSuggestionContainer.removeAllViews()
 
-        for (suggestion in searchViewModel!!.getRecentSearchSuggestion()) {
+        for (suggestion in searchViewModel!!.recentSearchSuggestion) {
             val view =
                 LayoutInflater
                     .from(bind!!.searchViewSuggestionContainer.context)
@@ -193,21 +191,16 @@ class SearchFragment :
             val tailingImageView = view.findViewById<ImageView>(R.id.search_suggestion_delete_icon)
 
             leadingImageView.setImageDrawable(
-                resources.getDrawable(
-                    R.drawable.ic_history,
-                    null,
-                ),
+                ResourcesCompat.getDrawable(resources, R.drawable.ic_history, null),
             )
-            titleView.setText(suggestion)
+            titleView.text = suggestion
 
-            view.setOnClickListener(View.OnClickListener { v: View? -> search(suggestion) })
+            view.setOnClickListener { v: View? -> search(suggestion) }
 
-            tailingImageView.setOnClickListener(
-                View.OnClickListener { v: View? ->
-                    searchViewModel!!.deleteRecentSearch(suggestion)
-                    setRecentSuggestions()
-                },
-            )
+            tailingImageView.setOnClickListener { v: View? ->
+                searchViewModel!!.deleteRecentSearch(suggestion)
+                setRecentSuggestions()
+            }
 
             bind!!.searchViewSuggestionContainer.addView(view)
         }
@@ -216,7 +209,7 @@ class SearchFragment :
     fun setSearchSuggestions(query: String?) {
         searchViewModel!!
             .getSearchSuggestion(query)
-            .observe(
+            ?.observe(
                 getViewLifecycleOwner(),
                 Observer { suggestions: MutableList<String>? ->
                     bind!!.searchViewSuggestionContainer.removeAllViews()
@@ -244,7 +237,7 @@ class SearchFragment :
                         titleView.text = suggestion
                         tailingImageView.setVisibility(View.GONE)
 
-                        view.setOnClickListener(View.OnClickListener { v: View? -> search(suggestion) })
+                        view.setOnClickListener { v: View? -> search(suggestion) }
 
                         bind!!.searchViewSuggestionContainer.addView(view)
                     }

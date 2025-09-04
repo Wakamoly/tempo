@@ -16,30 +16,32 @@ class ArtistRepository {
     fun getStarredArtists(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<ArtistID3?>?> {
-        val starredArtists = MutableLiveData<MutableList<ArtistID3?>?>(ArrayList<ArtistID3?>())
+    ): MutableLiveData<MutableList<ArtistID3>> {
+        val starredArtists = MutableLiveData<MutableList<ArtistID3>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
-            .getStarred2()
+            .albumSongListClient
+            .starred2
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null) {
+                        if (response.isSuccessful) {
                             val artists: MutableList<ArtistID3>? =
                                 response
-                                    .body()!!
-                                    .subsonicResponse.starred2!!
-                                    .artists
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.starred2
+                                    ?.artists
+                                    ?.toMutableList()
 
                             if (artists != null) {
                                 if (!random) {
                                     getArtistInfo(artists, starredArtists)
                                 } else {
-                                    Collections.shuffle(artists)
+                                    artists.shuffle()
                                     getArtistInfo(
                                         artists.subList(0, min(size, artists.size)),
                                         starredArtists,
@@ -52,7 +54,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -67,7 +69,7 @@ class ArtistRepository {
         val listLiveArtists = MutableLiveData<MutableList<ArtistID3?>?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtists()
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -112,7 +114,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -125,15 +127,15 @@ class ArtistRepository {
      */
     fun getArtistInfo(
         artists: MutableList<ArtistID3>,
-        list: MutableLiveData<MutableList<ArtistID3?>?>,
+        list: MutableLiveData<MutableList<ArtistID3>>,
     ) {
         var liveArtists = list.getValue()
-        if (liveArtists == null) liveArtists = ArrayList<ArtistID3?>()
+        if (liveArtists == null) liveArtists = ArrayList<ArtistID3>()
         list.value = liveArtists
 
         for (artist in artists) {
             getSubsonicClientInstance(false)
-                .getBrowsingClient()
+                .browsingClient
                 .getArtist(artist.id)
                 .enqueue(
                     object : Callback<ApiResponse?> {
@@ -149,7 +151,7 @@ class ArtistRepository {
                         override fun onFailure(
                             call: Call<ApiResponse?>,
                             t: Throwable,
-                        ) {
+                        ) { /*TODO*/
                         }
                     },
                 )
@@ -160,7 +162,7 @@ class ArtistRepository {
         val artist = MutableLiveData<ArtistID3?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtist(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -176,7 +178,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -188,7 +190,7 @@ class ArtistRepository {
         val artistFullInfo = MutableLiveData<ArtistInfo2?>(null)
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtistInfo2(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -204,7 +206,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -217,20 +219,20 @@ class ArtistRepository {
         rating: Int,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .setRating(id, rating)
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
-                    ) {
+                    ) { /* TODO */
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -240,7 +242,7 @@ class ArtistRepository {
         val artist = MutableLiveData<ArtistID3?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtist(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -256,7 +258,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -267,11 +269,11 @@ class ArtistRepository {
     fun getInstantMix(
         artist: ArtistID3,
         count: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val instantMix = MutableLiveData<MutableList<Child?>?>()
+    ): MutableLiveData<MutableList<Child>> {
+        val instantMix = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getSimilarSongs2(artist.id, count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -279,20 +281,22 @@ class ArtistRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.similarSongs2 != null) {
-                            instantMix.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.similarSongs2!!
-                                    .songs,
-                            )
+                        if (response.isSuccessful) {
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.similarSongs2
+                                ?.songs
+                                ?.let {
+                                    instantMix.value = it.toMutableList()
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -307,7 +311,7 @@ class ArtistRepository {
         val randomSongs = MutableLiveData<MutableList<Child?>?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getTopSongs(artist.name, count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -338,7 +342,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -353,7 +357,7 @@ class ArtistRepository {
         val topSongs = MutableLiveData<MutableList<Child?>?>(ArrayList<Child?>())
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getTopSongs(artistName, count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -379,7 +383,7 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) {
+                    ) { /*TODO*/
                     }
                 },
             )
@@ -392,7 +396,7 @@ class ArtistRepository {
         artist: ArtistID3?,
     ) {
         val liveArtists = liveData.getValue()
-        if (liveArtists != null) liveArtists.add(artist)
+        liveArtists?.add(artist)
         liveData.value = liveArtists
     }
 }

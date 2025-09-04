@@ -40,42 +40,43 @@ import com.cappielloantonio.tempo.subsonic.models.Playlist
     ],
     autoMigrations = [AutoMigration(from = 10, to = 11)],
 )
-@TypeConverters([DateConverters::class])
+@TypeConverters(DateConverters::class)
 abstract class AppDatabase : RoomDatabase() {
-    abstract fun queueDao(): QueueDao?
+    abstract fun queueDao(): QueueDao
 
-    abstract fun serverDao(): ServerDao?
+    abstract fun serverDao(): ServerDao
 
-    abstract fun recentSearchDao(): RecentSearchDao?
+    abstract fun recentSearchDao(): RecentSearchDao
 
-    abstract fun downloadDao(): DownloadDao?
+    abstract fun downloadDao(): DownloadDao
 
-    abstract fun chronologyDao(): ChronologyDao?
+    abstract fun chronologyDao(): ChronologyDao
 
-    abstract fun favoriteDao(): FavoriteDao?
+    abstract fun favoriteDao(): FavoriteDao
 
-    abstract fun sessionMediaItemDao(): SessionMediaItemDao?
+    abstract fun sessionMediaItemDao(): SessionMediaItemDao
 
-    abstract fun playlistDao(): PlaylistDao?
+    abstract fun playlistDao(): PlaylistDao
 
     companion object {
         private const val DB_NAME = "tempo_db"
 
         @get:Synchronized
-        var instance: AppDatabase? = null
+        private var _instance: AppDatabase? = null
             get() {
                 if (field == null) {
                     field =
-                        databaseBuilder<AppDatabase?>(
+                        databaseBuilder<AppDatabase>(
                             getContext(),
                             AppDatabase::class.java,
                             DB_NAME,
-                        ).fallbackToDestructiveMigration()
+                        ).fallbackToDestructiveMigration(true)
                             .build()
                 }
 
                 return field
             }
-            private set
+        val instance: AppDatabase
+            get() = requireNotNull(_instance)
     }
 }

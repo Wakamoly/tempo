@@ -6,14 +6,11 @@ import android.view.View
 import android.view.View.OnLongClickListener
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
-import androidx.room.RoomDatabase.Builder.build
 import com.cappielloantonio.tempo.databinding.ItemLibraryAlbumBinding
 import com.cappielloantonio.tempo.glide.CustomGlideRequest
 import com.cappielloantonio.tempo.interfaces.ClickCallback
 import com.cappielloantonio.tempo.subsonic.models.AlbumID3
 import com.cappielloantonio.tempo.util.Constants
-import okhttp3.Request.Builder.build
-import okhttp3.Response.Builder.build
 
 class AlbumAdapter(
     private val click: ClickCallback,
@@ -37,7 +34,7 @@ class AlbumAdapter(
         holder: ViewHolder,
         position: Int,
     ) {
-        val album = albums.get(position)
+        val album = albums[position]
 
         holder.item.albumNameLabel.text = album.name
         holder.item.artistNameLabel.text = album.artist
@@ -53,7 +50,7 @@ class AlbumAdapter(
 
     override fun getItemCount(): Int = albums.size
 
-    fun getItem(position: Int): AlbumID3? = albums.get(position)
+    fun getItem(position: Int): AlbumID3? = albums[position]
 
     fun setItems(albums: MutableList<AlbumID3>) {
         this.albums = albums
@@ -75,14 +72,14 @@ class AlbumAdapter(
 
         private fun onClick() {
             val bundle = Bundle()
-            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()))
+            bundle.putParcelable(Constants.ALBUM_OBJECT, albums[getBindingAdapterPosition()])
 
             click.onAlbumClick(bundle)
         }
 
         private fun onLongClick(): Boolean {
             val bundle = Bundle()
-            bundle.putParcelable(Constants.ALBUM_OBJECT, albums.get(getBindingAdapterPosition()))
+            bundle.putParcelable(Constants.ALBUM_OBJECT, albums[getBindingAdapterPosition()])
 
             click.onAlbumLongClick(bundle)
 

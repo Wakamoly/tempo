@@ -1,10 +1,10 @@
 package com.cappielloantonio.tempo.glide
 
 import android.content.Context
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.Drawable
 import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.graphics.drawable.toDrawable
 import com.bumptech.glide.Glide
 import com.bumptech.glide.RequestBuilder
 import com.bumptech.glide.RequestManager
@@ -32,86 +32,96 @@ object CustomGlideRequest {
 
     fun createRequestOptions(context: Context, item: String?, type: ResourceType): RequestOptions {
         return RequestOptions()
-            .placeholder(ColorDrawable(SurfaceColors.SURFACE_5.getColor(context)))
+            .placeholder(SurfaceColors.SURFACE_5.getColor(context).toDrawable())
             .fallback(getPlaceholder(context, type))
             .error(getPlaceholder(context, type))
             .diskCacheStrategy(DEFAULT_DISK_CACHE_STRATEGY)
-            .signature(ObjectKey(if (item != null) item else 0))
+            .signature(ObjectKey(item ?: 0))
             .transform(CenterCrop(), RoundedCorners(CORNER_RADIUS))
     }
 
-    private fun getPlaceholder(context: Context, type: ResourceType): Drawable? {
+    private fun getPlaceholder(context: Context, type: ResourceType): Drawable? =
         when (type) {
-            ResourceType.Album -> return AppCompatResources.getDrawable(
+            ResourceType.Album -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_album
             )
 
-            ResourceType.Artist -> return AppCompatResources.getDrawable(
+            ResourceType.Artist -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_artist
             )
 
-            ResourceType.Folder -> return AppCompatResources.getDrawable(
+            ResourceType.Folder -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_folder
             )
 
-            ResourceType.Directory -> return AppCompatResources.getDrawable(
+            ResourceType.Directory -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_directory
             )
 
-            ResourceType.Playlist -> return AppCompatResources.getDrawable(
+            ResourceType.Playlist -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_playlist
             )
 
-            ResourceType.Podcast -> return AppCompatResources.getDrawable(
+            ResourceType.Podcast -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_podcast
             )
 
-            ResourceType.Radio -> return AppCompatResources.getDrawable(
+            ResourceType.Radio -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_radio
             )
 
-            ResourceType.Song -> return AppCompatResources.getDrawable(
+            ResourceType.Song -> AppCompatResources.getDrawable(
                 context,
                 R.drawable.ic_placeholder_song
             )
 
-            ResourceType.Unknown -> return ColorDrawable(SurfaceColors.SURFACE_5.getColor(context))
-            else -> return ColorDrawable(SurfaceColors.SURFACE_5.getColor(context))
+            ResourceType.Unknown -> SurfaceColors.SURFACE_5.getColor(context).toDrawable()
         }
-    }
 
     fun createUrl(item: String?, size: Int): String {
-        val params = getSubsonicClientInstance(false).getParams()
+        val params = getSubsonicClientInstance(false).params
 
         val uri = StringBuilder()
 
-        uri.append(getSubsonicClientInstance(false).getUrl())
+        uri.append(getSubsonicClientInstance(false).url)
         uri.append("getCoverArt")
 
-        if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
-            .append(Util.encode(params.get("u")))
-        if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
-            .append(params.get("p"))
-        if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
-            .append(params.get("s"))
-        if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
-            .append(params.get("t"))
-        if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
-            .append(params.get("v"))
-        if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
-            .append(params.get("c"))
+        if (params.containsKey("u") && params["u"] != null) {
+            uri.append("?u=")
+                .append(Util.encode(params["u"]))
+        }
+        if (params.containsKey("p") && params["p"] != null) {
+            uri.append("&p=")
+                .append(params["p"])
+        }
+        if (params.containsKey("s") && params["s"] != null) {
+            uri.append("&s=")
+                .append(params["s"])
+        }
+        if (params.containsKey("t") && params["t"] != null) {
+            uri.append("&t=")
+                .append(params["t"])
+        }
+        if (params.containsKey("v") && params["v"] != null) {
+            uri.append("&v=")
+                .append(params["v"])
+        }
+        if (params.containsKey("c") && params["c"] != null) {
+            uri.append("&c=")
+                .append(params["c"])
+        }
         if (size != -1) uri.append("&size=").append(size)
 
         uri.append("&id=").append(item)
 
-        Log.d(TAG, "createUrl() " + uri)
+        Log.d(TAG, "createUrl() $uri")
 
         return uri.toString()
     }
@@ -129,11 +139,10 @@ object CustomGlideRequest {
     }
 
     class Builder private constructor(context: Context, item: String?, type: ResourceType) {
-        private val requestManager: RequestManager
+        private val requestManager: RequestManager = Glide.with(context)
         private var item: Any? = null
 
         init {
-            this.requestManager = Glide.with(context)
 
             if (item != null && !isDataSavingMode()) {
                 this.item = createUrl(item, getImageSize())

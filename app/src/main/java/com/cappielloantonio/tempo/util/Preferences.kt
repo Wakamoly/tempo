@@ -110,7 +110,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isLowSecurity(): Boolean = App.getInstance().preferences.getBoolean(LOW_SECURITY, false)
+    fun getIsLowSecurity(): Boolean = App.getInstance().preferences.getBoolean(LOW_SECURITY, false)
 
     @JvmStatic
     fun setLowSecurity(isLowSecurity: Boolean) {

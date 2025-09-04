@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.fragment.app.FragmentManager
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
@@ -68,7 +69,9 @@ import kotlin.math.min
 
 @UnstableApi
 class MainActivity : BaseActivity() {
-    var bind: ActivityMainBinding? = null
+    private var _binding: ActivityMainBinding? = null
+    val binding: ActivityMainBinding
+        get() = _binding!!
     private var mainViewModel: MainViewModel? = null
 
     private var fragmentManager: FragmentManager? = null
@@ -82,13 +85,13 @@ class MainActivity : BaseActivity() {
     var connectivityStatusBroadcastReceiver: ConnectivityStatusBroadcastReceiver? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        installSplashScreen.installSplashScreen(this)
+        installSplashScreen()
         DynamicColors.applyToActivityIfAvailable(this)
 
         super.onCreate(savedInstanceState)
 
-        bind = ActivityMainBinding.inflate(layoutInflater)
-        val view: View = bind!!.getRoot()
+        _binding = ActivityMainBinding.inflate(layoutInflater)
+        val view: View = _binding!!.getRoot()
         setContentView(view)
 
         mainViewModel = ViewModelProvider(this).get<MainViewModel>(MainViewModel::class.java)
@@ -115,7 +118,7 @@ class MainActivity : BaseActivity() {
     override fun onDestroy() {
         super.onDestroy()
         connectivityStatusReceiverManager(false)
-        bind = null
+        _binding = null
     }
 
     override fun onBackPressed() {
@@ -243,12 +246,12 @@ class MainActivity : BaseActivity() {
         if (slideOffset < 0) return
 
         if (navigationHeight == 0) {
-            navigationHeight = bind!!.bottomNavigation.height
+            navigationHeight = _binding!!.bottomNavigation.height
         }
 
         val slideY = navigationHeight - navigationHeight * (1 - slideOffset)
 
-        bind!!.bottomNavigation.translationY = slideY
+        _binding!!.bottomNavigation.translationY = slideY
     }
 
     private fun initNavigation() {

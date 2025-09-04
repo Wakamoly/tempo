@@ -230,7 +230,7 @@ class PodcastChannelPageFragment :
                 requireView(),
                 R.string.podcast_episode_download_request_snackbar,
                 Snackbar.LENGTH_SHORT,
-            ).setAnchorView(activity!!.bind.bottomNavigation)
+            ).setAnchorView(activity!!._binding.bottomNavigation)
             .show()
     }
 }

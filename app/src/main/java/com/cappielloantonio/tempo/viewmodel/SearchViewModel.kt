@@ -44,7 +44,7 @@ class SearchViewModel(
         get() {
             val suggestions =
                 ArrayList<String?>()
-            suggestions.addAll(searchingRepository.getRecentSearchSuggestion())
+            suggestions.addAll(searchingRepository.recentSearchSuggestion)
 
             return suggestions
         }
