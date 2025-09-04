@@ -28,7 +28,16 @@ import com.cappielloantonio.tempo.subsonic.models.Playlist
 @UnstableApi
 @Database(
     version = 11,
-    entities = [Queue::class, Server::class, RecentSearch::class, Download::class, Chronology::class, Favorite::class, SessionMediaItem::class, Playlist::class],
+    entities = [
+        Queue::class,
+        Server::class,
+        RecentSearch::class,
+        Download::class,
+        Chronology::class,
+        Favorite::class,
+        SessionMediaItem::class,
+        Playlist::class,
+    ],
     autoMigrations = [AutoMigration(from = 10, to = 11)],
 )
 @TypeConverters([DateConverters::class])

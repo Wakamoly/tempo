@@ -102,28 +102,26 @@ class PodcastEpisodeBottomSheetDialog :
         )
 
         val download = view.findViewById<TextView>(R.id.download_text_view)
-        download.setOnClickListener(
-            View.OnClickListener { v: View? ->
-                // TODO
-            /* DownloadUtil.getDownloadTracker(requireContext()).download(
+        download.setOnClickListener { v: View? ->
+            /*
+             TODO
+            DownloadUtil.getDownloadTracker(requireContext()).download(
                     MappingUtil.mapMediaItem(podcast, false),
                     MappingUtil.mapDownload(podcast, null, null)
             ); */
-                dismissBottomSheet()
-            },
-        )
+            dismissBottomSheet()
+        }
 
         val remove = view.findViewById<TextView>(R.id.remove_text_view)
-        remove.setOnClickListener(
-            View.OnClickListener { v: View? ->
-                // TODO
-            /* DownloadUtil.getDownloadTracker(requireContext()).remove(
+        remove.setOnClickListener { v: View? ->
+            /*
+             TODO
+            DownloadUtil.getDownloadTracker(requireContext()).remove(
                     MappingUtil.mapMediaItem(podcast, false),
                     MappingUtil.mapDownload(podcast, null, null)
             ); */
-                dismissBottomSheet()
-            },
-        )
+            dismissBottomSheet()
+        }
 
         initDownloadUI(download, remove)
 
@@ -156,8 +154,9 @@ class PodcastEpisodeBottomSheetDialog :
         download: TextView?,
         remove: TextView?,
     ) {
-        // TODO
-        /* if (DownloadUtil.getDownloadTracker(requireContext()).isDownloaded(MappingUtil.mapMediaItem(podcast, false))) {
+        /*
+         TODO
+        if (DownloadUtil.getDownloadTracker(requireContext()).isDownloaded(MappingUtil.mapMediaItem(podcast, false))) {
             download.setVisibility(View.GONE);
             remove.setVisibility(View.VISIBLE);
         } else {

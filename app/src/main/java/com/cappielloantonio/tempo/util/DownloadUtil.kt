@@ -80,7 +80,11 @@ object DownloadUtil {
     ): RenderersFactory {
         val extensionRendererMode: @ExtensionRendererMode Int =
             if (useExtensionRenderers()) {
-                (if (preferExtensionRenderer) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
+                if (preferExtensionRenderer) {
+                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER
+                } else {
+                    DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON
+                }
             } else {
                 DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF
             }

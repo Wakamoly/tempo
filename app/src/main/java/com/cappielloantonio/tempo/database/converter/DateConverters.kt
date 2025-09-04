@@ -1,7 +1,7 @@
 package com.cappielloantonio.tempo.database.converter
 
 import androidx.room.TypeConverter
-import java.util.*
+import java.util.Date
 
 class DateConverters {
     @TypeConverter

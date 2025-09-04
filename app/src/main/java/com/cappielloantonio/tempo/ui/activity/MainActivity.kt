@@ -201,14 +201,15 @@ class MainActivity : BaseActivity() {
                     supportFragmentManager.findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
 
                 when (state) {
-                    BottomSheetBehavior.STATE_HIDDEN -> resetMusicSession()
+                    BottomSheetBehavior.STATE_HIDDEN ->
+                        resetMusicSession()
                     BottomSheetBehavior.STATE_COLLAPSED ->
-                        if (playerBottomSheetFragment !=
-                            null
-                        ) {
-                            playerBottomSheetFragment.goBackToFirstPage()
-                        }
-                    BottomSheetBehavior.STATE_SETTLING, BottomSheetBehavior.STATE_EXPANDED, BottomSheetBehavior.STATE_DRAGGING, BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                        playerBottomSheetFragment?.goBackToFirstPage()
+                    BottomSheetBehavior.STATE_SETTLING,
+                    BottomSheetBehavior.STATE_EXPANDED,
+                    BottomSheetBehavior.STATE_DRAGGING,
+                    BottomSheetBehavior.STATE_HALF_EXPANDED,
+                    -> {
                     }
                 }
             }

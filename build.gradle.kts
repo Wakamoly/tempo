@@ -14,6 +14,10 @@ java {
     }
 }
 
+tasks.check {
+    dependsOn("installKotlinterPrePushHook")
+}
+
 subprojects {
     plugins.withId("java") {
         extensions.configure<JavaPluginExtension> {
@@ -39,7 +43,6 @@ tasks.register("detektProjectBaseline", DetektCreateBaselineTask::class) {
 
     setSource(files(rootDir))
     config.setFrom(file("$rootDir/config/detekt/detekt.yml"))
-    baseline.set(file("$rootDir/config/detekt/baseline.xml"))
 
     ignoreFailures.set(true)
     parallel.set(true)
