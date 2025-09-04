@@ -2,18 +2,34 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.parcelize)
+    alias(libs.plugins.detekt)
+}
+
+detekt {
+    autoCorrect = true
+    source.setFrom(
+        "app/src/main",
+        "app/src/notquitemy",
+        "app/src/play",
+        "app/src/tempo",
+    )
+}
+
+dependencies {
+    //Detekt
+    detektPlugins(libs.detekt.formatting)
 }
 
 android {
-    compileSdk = 35
+    compileSdk = 36
     buildToolsVersion = "35.0.0"
 
     defaultConfig {
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
 
         versionCode = 31
-        versionName = "3.14.8"
+        versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -88,6 +104,15 @@ dependencies {
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.appcompat)
+    implementation(libs.lifecycle.runtime.ktx)
+    implementation(libs.gson)
+    implementation(libs.coil)
+    implementation(libs.coil.svg)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.material)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.work.runtime.ktx)
+    implementation(libs.datastore.preferences)
 
     // Material
     implementation(libs.material)
@@ -113,6 +138,12 @@ dependencies {
     implementation(libs.retrofit.core)
     implementation(libs.okhttp.logging)
     implementation(libs.retrofit.converter.gson)
+
+    // Koin
+    implementation(libs.koin.core)
+    implementation(libs.koin.android)
+    testImplementation(libs.koin.test)
+    testImplementation(libs.koin.test.junit4)
 }
 
 java {

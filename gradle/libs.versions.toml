@@ -4,27 +4,40 @@ android-gradle = "8.8.0"
 kotlin = "1.8.0"
 
 # AndroidX
-constraintlayout = "2.2.0"
-coordinatorlayout = "1.2.0"
+constraintlayout = "2.2.1"
+coordinatorlayout = "1.3.0"
 preference-ktx = "1.2.1"
-navigation = "2.8.6"
+navigation = "2.9.3"
 recyclerview = "1.4.0"
-room = "2.6.1"
+room = "2.7.2"
 core-splashscreen = "1.0.1"
-appcompat = "1.7.0"
+appcompat = "1.7.1"
+lifecycle-runtime-ktx = "2.9.3"
+datastore-preferences = "1.1.7"
+work = "2.10.3"
+gson = "2.13.1"
 
 # Material
-material = "1.10.0"
+material = "1.12.0"
 
 # Glide
-glide = "4.16.0"
+glide = "5.0.4"
+
+# Coil TODO: Replace Glide^
+coil = "2.7.0"
 
 # Media3
-media3 = "1.5.1"
+media3 = "1.8.0"
 
 # Retrofit
-retrofit = "2.11.0"
-okhttp = "5.0.0-alpha.14"
+retrofit = "3.0.0"
+okhttp = "5.1.0"
+
+# Koin
+koin = "4.1.0"
+
+# detekt
+detekt-version = "1.23.8"
 
 [libraries]
 # AndroidX
@@ -38,6 +51,9 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "core-splashscreen" }
 androidx-appcompat = { group = "androidx.appcompat", name = "appcompat", version.ref = "appcompat" }
+lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle-runtime-ktx" }
+datastore-preferences = { group = "androidx.datastore", name = "datastore-preferences", version.ref = "datastore-preferences" }
+work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "work" }
 
 # Material
 material = { group = "com.google.android.material", name = "material", version.ref = "material" }
@@ -46,6 +62,10 @@ material = { group = "com.google.android.material", name = "material", version.r
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
 glide-annotations = { group = "com.github.bumptech.glide", name = "annotations", version.ref = "glide" }
 glide-compiler = { group = "com.github.bumptech.glide", name = "compiler", version.ref = "glide" }
+
+# Coil
+coil = { group = "io.coil-kt", name = "coil", version.ref = "coil" }
+coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
 
 # Media3
 media3-session = { group = "androidx.media3", name = "media3-session", version.ref = "media3" }
@@ -59,8 +79,19 @@ media3-cast = { group = "androidx.media3", name = "media3-cast", version.ref = "
 retrofit-core = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
 retrofit-converter-gson = { group = "com.squareup.retrofit2", name = "converter-gson", version.ref = "retrofit" }
 okhttp-logging = { group = "com.squareup.okhttp3", name = "logging-interceptor", version.ref = "okhttp" }
+gson = { group = "com.google.code.gson", name = "gson", version.ref = "gson" }
+
+# Koin
+koin-core = { group = "io.insert-koin", name = "koin-core", version.ref = "koin" }
+koin-android = { group = "io.insert-koin", name = "koin-android", version.ref = "koin" }
+koin-test = { group = "io.insert-koin", name = "koin-test", version.ref = "koin" }
+koin-test-junit4 = { group = "io.insert-koin", name = "koin-test-junit4", version.ref = "koin" }
+
+# Detekt
+detekt-formatting = { group = "io.gitlab.arturbosch.detekt", name = "detekt-formatting", version.ref = "detekt-version" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "android-gradle" }
 kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-parcelize = { id = "org.jetbrains.kotlin.plugin.parcelize", version.ref = "kotlin" }
+detekt = { id = "io.gitlab.arturbosch.detekt", version.ref = "detekt-version" }

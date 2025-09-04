@@ -17,7 +17,7 @@ class Github {
         get() = "https://api.github.com/"
 
     companion object {
-        const val owner: String = "CappielloAntonio"
-        const val repo: String = "Tempo"
+        const val OWNER: String = "Wakamoly" // CappielloAntonio, eddyizm
+        const val REPO: String = "Tempo"
     }
 }

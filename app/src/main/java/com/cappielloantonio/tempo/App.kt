@@ -96,21 +96,12 @@ class App : Application() {
                     subsonicPreferences
 
                 if (preferences.authentication != null) {
-                    if (preferences.authentication
-                            .password != null
-                    ) setPassword(
-                        preferences.authentication.password
-                    )
-                    if (preferences.authentication
-                            .token != null
-                    ) setToken(
-                        preferences.authentication.token
-                    )
-                    if (preferences.authentication
-                            .salt != null
-                    ) setSalt(
-                        preferences.authentication.salt
-                    )
+                    if (preferences.authentication.password != null)
+                        setPassword(preferences.authentication.password)
+                    if (preferences.authentication.token != null)
+                        setToken(preferences.authentication.token)
+                    if (preferences.authentication.salt != null)
+                        setSalt(preferences.authentication.salt)
                 }
 
                 return Subsonic(preferences)

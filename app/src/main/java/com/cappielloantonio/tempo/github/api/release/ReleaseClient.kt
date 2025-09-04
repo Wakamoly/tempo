@@ -4,21 +4,18 @@ import android.util.Log
 import com.cappielloantonio.tempo.github.Github
 import com.cappielloantonio.tempo.github.GithubRetrofitClient
 import com.cappielloantonio.tempo.github.models.LatestRelease
+import retrofit2.Call
 
 class ReleaseClient(github: Github) {
-    private val releaseService: ReleaseService
-
-    init {
-        this.releaseService =
-            GithubRetrofitClient(github).retrofit.create<ReleaseService>(ReleaseService::class.java)
-    }
+    private val releaseService: ReleaseService =
+        GithubRetrofitClient(github).retrofit.create(ReleaseService::class.java)
 
     val latestRelease: Call<LatestRelease?>?
         get() {
             Log.d(TAG, "getLatestRelease()")
             return releaseService.getLatestRelease(
-                Github.Companion.getOwner(),
-                Github.Companion.getRepo()
+                Github.Companion.OWNER,
+                Github.Companion.REPO
             )
         }
 
