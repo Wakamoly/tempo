@@ -1,8 +1,11 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
-    alias(libs.plugins.kotlin.parcelize)
+    id("kotlin-parcelize")
     alias(libs.plugins.detekt)
+    alias(libs.plugins.kotlinter)
 }
 
 detekt {
@@ -13,22 +16,25 @@ detekt {
         "app/src/play",
         "app/src/tempo",
     )
+    basePath = projectDir.toString()
+    buildUponDefaultConfig = true
+    allRules = false
+    config.setFrom("$rootDir/config/detekt/detekt.yml")
 }
 
 dependencies {
-    //Detekt
+    // Detekt
     detektPlugins(libs.detekt.formatting)
 }
 
 android {
     compileSdk = 36
-    buildToolsVersion = "35.0.0"
 
     defaultConfig {
         minSdk = 24
         targetSdk = 36
 
-        versionCode = 31
+        versionCode = 32
         versionName = "4.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
@@ -75,12 +81,10 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-    }
-
-    kotlinOptions {
-        jvmTarget = "1.8"
+        // TODO (BA, 9/4/25): Necessary?
+        //isCoreLibraryDesugaringEnabled = true // Required for kotlinx-datetime support on API 24 and 25
+        sourceCompatibility(JavaVersion.VERSION_17)
+        targetCompatibility(JavaVersion.VERSION_17)
     }
 
     buildFeatures {
@@ -89,6 +93,12 @@ android {
     }
 
     namespace = "com.cappielloantonio.tempo"
+}
+
+kotlin {
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 dependencies {
@@ -113,6 +123,7 @@ dependencies {
     implementation(libs.androidx.constraintlayout)
     implementation(libs.work.runtime.ktx)
     implementation(libs.datastore.preferences)
+    implementation(libs.androidx.startup.runtime)
 
     // Material
     implementation(libs.material)
@@ -140,10 +151,20 @@ dependencies {
     implementation(libs.retrofit.converter.gson)
 
     // Koin
+    implementation(project.dependencies.platform(libs.koin.bom))
     implementation(libs.koin.core)
     implementation(libs.koin.android)
+    implementation(libs.koin.androidx.workmanager)
+    testImplementation(project.dependencies.platform(libs.koin.bom))
     testImplementation(libs.koin.test)
     testImplementation(libs.koin.test.junit4)
+    androidTestImplementation(project.dependencies.platform(libs.koin.bom))
+
+    // Additional testing libraries
+    testImplementation(libs.core.testing)
+    implementation(libs.kotlin.test)
+    androidTestImplementation(libs.androidx.test.core)
+    androidTestUtil(libs.android.test.orchestrator)
 }
 
 java {
