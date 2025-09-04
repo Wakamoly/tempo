@@ -21,8 +21,8 @@ class AlbumRepository {
         size: Int,
         fromYear: Int?,
         toYear: Int?,
-    ): MutableLiveData<List<AlbumID3?>?> {
-        val listLiveAlbums = MutableLiveData<List<AlbumID3?>?>(ArrayList())
+    ): MutableLiveData<List<AlbumID3>> {
+        val listLiveAlbums = MutableLiveData<List<AlbumID3>>(ArrayList())
 
         getSubsonicClientInstance(false)
             .albumSongListClient
@@ -123,8 +123,8 @@ class AlbumRepository {
             )
     }
 
-    fun getAlbumTracks(id: String?): MutableLiveData<MutableList<Child?>?> {
-        val albumTracks = MutableLiveData<MutableList<Child?>?>()
+    fun getAlbumTracks(id: String?): MutableLiveData<MutableList<Child>> {
+        val albumTracks = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
             .browsingClient
@@ -135,7 +135,7 @@ class AlbumRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val tracks: MutableList<Child?> = ArrayList()
+                        val tracks: MutableList<Child> = ArrayList()
                         if (response.isSuccessful) {
                             response
                                 .body()
@@ -290,10 +290,10 @@ class AlbumRepository {
             )
     }
 
-    val decades: MutableLiveData<MutableList<Int?>?>
+    val decades: MutableLiveData<MutableList<Int>>
         get() {
             val decades =
-                MutableLiveData<MutableList<Int?>?>()
+                MutableLiveData<MutableList<Int>>()
 
             getFirstAlbum(
                 object : DecadesCallback {
@@ -302,7 +302,7 @@ class AlbumRepository {
                             object : DecadesCallback {
                                 override fun onLoadYear(last: Int) {
                                     if (first != -1 && last != -1) {
-                                        val decadeList: MutableList<Int?> = ArrayList()
+                                        val decadeList: MutableList<Int> = ArrayList()
 
                                         var startDecade = first - (first % 10)
                                         val lastDecade = last - (last % 10)

@@ -9,7 +9,7 @@ import retrofit2.http.QueryMap
 interface OpenService {
     @GET("getLyricsBySongId")
     fun getLyricsBySongId(
-        @QueryMap params: MutableMap<String?, String?>?,
-        @Query("id") id: String?
-    ): Call<ApiResponse?>?
+        @QueryMap params: MutableMap<String, String>?,
+        @Query("id") id: String?,
+    ): Call<ApiResponse>
 }

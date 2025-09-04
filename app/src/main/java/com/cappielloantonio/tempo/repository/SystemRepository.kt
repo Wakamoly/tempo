@@ -108,10 +108,10 @@ class SystemRepository {
         return pingResult
     }
 
-    val openSubsonicExtensions: MutableLiveData<MutableList<OpenSubsonicExtension?>?>
+    val openSubsonicExtensions: MutableLiveData<MutableList<OpenSubsonicExtension>>
         get() {
             val extensionsResult =
-                MutableLiveData<MutableList<OpenSubsonicExtension?>?>()
+                MutableLiveData<MutableList<OpenSubsonicExtension>>()
 
             getSubsonicClientInstance(false)
                 .getSystemClient()

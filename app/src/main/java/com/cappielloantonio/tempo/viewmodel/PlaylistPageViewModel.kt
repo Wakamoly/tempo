@@ -21,7 +21,7 @@ class PlaylistPageViewModel(
         playlistRepository = PlaylistRepository()
     }
 
-    val playlistSongLiveList: LiveData<MutableList<Child?>?>?
+    val playlistSongLiveList: LiveData<MutableList<Child>>?
         get() = playlistRepository.getPlaylistSongs(playlist!!.id)
 
     fun getPlaylist(): Playlist = playlist!!

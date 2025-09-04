@@ -16,14 +16,14 @@ class PlaylistChooserViewModel(
 ) : AndroidViewModel(application) {
     private val playlistRepository: PlaylistRepository
 
-    private val playlists = MutableLiveData<MutableList<Playlist?>?>(null)
+    private val playlists = MutableLiveData<MutableList<Playlist>>(null)
     var songsToAdd: ArrayList<Child?> = ArrayList<Child?>()
 
     init {
         playlistRepository = PlaylistRepository()
     }
 
-    fun getPlaylistList(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
+    fun getPlaylistList(owner: LifecycleOwner): LiveData<MutableList<Playlist>> {
         playlistRepository.getPlaylists(false, -1).observe(
             owner,
             Observer { value: MutableList<Playlist?>? -> playlists.postValue(value) },

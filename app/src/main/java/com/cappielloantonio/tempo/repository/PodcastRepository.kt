@@ -13,9 +13,9 @@ class PodcastRepository {
     fun getPodcastChannels(
         includeEpisodes: Boolean,
         channelId: String?,
-    ): MutableLiveData<MutableList<PodcastChannel?>?> {
+    ): MutableLiveData<MutableList<PodcastChannel>> {
         val livePodcastChannel =
-            MutableLiveData<MutableList<PodcastChannel?>?>(ArrayList<PodcastChannel?>())
+            MutableLiveData<MutableList<PodcastChannel>>(ArrayList<PodcastChannel?>())
 
         getSubsonicClientInstance(false)
             .getPodcastClient()
@@ -47,9 +47,9 @@ class PodcastRepository {
         return livePodcastChannel
     }
 
-    fun getNewestPodcastEpisodes(count: Int): MutableLiveData<MutableList<PodcastEpisode?>?> {
+    fun getNewestPodcastEpisodes(count: Int): MutableLiveData<MutableList<PodcastEpisode>> {
         val liveNewestPodcastEpisodes =
-            MutableLiveData<MutableList<PodcastEpisode?>?>(ArrayList<PodcastEpisode?>())
+            MutableLiveData<MutableList<PodcastEpisode>>(ArrayList<PodcastEpisode?>())
 
         getSubsonicClientInstance(false)
             .getPodcastClient()

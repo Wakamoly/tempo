@@ -10,7 +10,7 @@ import com.cappielloantonio.tempo.model.Download
 @Dao
 interface DownloadDao {
     @get:Query("SELECT * FROM download WHERE download_state = 1 ORDER BY artist, album, disc_number, track ASC")
-    val all: LiveData<MutableList<Download?>?>?
+    val all: LiveData<MutableList<Download>>?
 
     @Query("SELECT * FROM download WHERE id = :id")
     fun getOne(id: String?): Download?

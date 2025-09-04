@@ -26,7 +26,7 @@ class MainViewModel(
 
     fun ping(): LiveData<SubsonicResponse?>? = systemRepository.ping()
 
-    val openSubsonicExtensions: LiveData<MutableList<OpenSubsonicExtension?>?>?
+    val openSubsonicExtensions: LiveData<MutableList<OpenSubsonicExtension>>?
         get() = systemRepository.getOpenSubsonicExtensions()
 
     fun checkTempoUpdate(): LiveData<LatestRelease?>? = systemRepository.checkTempoUpdate()

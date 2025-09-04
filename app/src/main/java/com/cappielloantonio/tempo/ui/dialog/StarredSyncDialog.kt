@@ -21,7 +21,7 @@ import com.cappielloantonio.tempo.viewmodel.StarredSyncViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.stream.Collectors
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class StarredSyncDialog(
     private val onCancel: Runnable?,
 ) : DialogFragment() {

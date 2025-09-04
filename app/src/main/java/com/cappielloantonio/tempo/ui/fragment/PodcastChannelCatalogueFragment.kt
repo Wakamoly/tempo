@@ -33,7 +33,7 @@ import com.cappielloantonio.tempo.viewmodel.PodcastChannelCatalogueViewModel
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PodcastChannelCatalogueFragment :
     Fragment(),
     ClickCallback {

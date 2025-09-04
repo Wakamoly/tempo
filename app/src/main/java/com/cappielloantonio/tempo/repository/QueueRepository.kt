@@ -2,6 +2,7 @@ package com.cappielloantonio.tempo.repository
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.QueueDao
@@ -14,16 +15,16 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.util.stream.Collectors
 
+@UnstableApi
 class QueueRepository {
-    private val queueDao: QueueDao = AppDatabase.Companion.getInstance().queueDao()
+    private val queueDao: QueueDao = AppDatabase.Companion.instance.queueDao()
 
-    val liveQueue: LiveData<MutableList<Queue?>?>?
-        get() = queueDao.getAll()
+    val liveQueue: LiveData<MutableList<Queue>>?
+        get() = queueDao.all
 
-    val media: MutableList<Child?>
+    val media: MutableList<Child>
         get() {
-            var media: MutableList<Child?> =
-                ArrayList<Child?>()
+            var media: MutableList<Child> = ArrayList()
 
             val getMedia = GetMediaThreadSafe(queueDao)
             val thread = Thread(getMedia)
@@ -52,8 +53,8 @@ class QueueRepository {
             val playQueue = MutableLiveData<PlayQueue?>()
 
             getSubsonicClientInstance(false)
-                .getBookmarksClient()
-                .getPlayQueue()
+                .bookmarksClient
+                .playQueue
                 .enqueue(
                     object : Callback<ApiResponse?> {
                         override fun onResponse(
@@ -83,7 +84,7 @@ class QueueRepository {
         position: Long,
     ) {
         getSubsonicClientInstance(false)
-            .getBookmarksClient()
+            .bookmarksClient
             .savePlayQueue(ids, current, position)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -108,7 +109,7 @@ class QueueRepository {
         afterIndex: Int,
     ) {
         try {
-            var mediaList: MutableList<Queue?> = ArrayList<Queue?>()
+            var mediaList: MutableList<Queue?> = ArrayList()
 
             if (!reset) {
                 val getMediaThreadSafe = GetMediaThreadSafe(queueDao)
@@ -139,12 +140,12 @@ class QueueRepository {
     }
 
     fun insertAll(
-        toAdd: MutableList<Child?>,
+        toAdd: MutableList<Child>,
         reset: Boolean,
         afterIndex: Int,
     ) {
         try {
-            var media: MutableList<Queue?> = ArrayList<Queue?>()
+            var media: MutableList<Queue?> = ArrayList()
 
             if (!reset) {
                 val getMediaThreadSafe = GetMediaThreadSafe(queueDao)
@@ -156,12 +157,12 @@ class QueueRepository {
             }
 
             for (i in toAdd.indices) {
-                val queueItem = Queue(toAdd.get(i)!!)
+                val queueItem = Queue(toAdd[i])
                 media.add(afterIndex + i, queueItem)
             }
 
             for (i in media.indices) {
-                media.get(i)!!.trackOrder = i
+                media[i]!!.trackOrder = i
             }
 
             val delete = Thread(DeleteAllThreadSafe(queueDao))
@@ -268,7 +269,7 @@ class QueueRepository {
         private var media: MutableList<Queue?>? = null
 
         override fun run() {
-            media = queueDao.getAllSimple()
+            media = queueDao.allSimple
         }
 
         fun getMedia(): MutableList<Queue?> = media!!
@@ -336,10 +337,10 @@ class QueueRepository {
         private var lastMediaPlayed: Queue? = null
 
         override fun run() {
-            lastMediaPlayed = queueDao.getLastPlayed()
+            lastMediaPlayed = queueDao.lastPlayed
         }
 
-        val queueItem: Queue
+        val queueItem: Queue?
             get() = lastMediaPlayed
     }
 

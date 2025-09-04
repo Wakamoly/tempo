@@ -15,21 +15,19 @@ class GenreRepository {
     fun getGenres(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<Genre?>?> {
-        val genres = MutableLiveData<MutableList<Genre?>?>()
+    ): MutableLiveData<MutableList<Genre>> {
+        val genres = MutableLiveData<MutableList<Genre>>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
-            .getGenres()
+            .browsingClient
+            .genres
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null &&
-                            response.body()!!.subsonicResponse.genres != null
-                        ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.genres != null) {
                             val genreList: MutableList<Genre?>? =
                                 response
                                     .body()!!
@@ -37,7 +35,7 @@ class GenreRepository {
                                     .genres
 
                             if (genreList == null || genreList.isEmpty()) {
-                                genres.value = mutableListOf<Genre?>()
+                                genres.value = mutableListOf<Genre>()
                                 return
                             }
 
@@ -51,7 +49,7 @@ class GenreRepository {
                                 genres.value =
                                     genreList
                                         .stream()
-                                        .sorted(Comparator.comparing<Genre?, String?>(Genre::genre))
+                                        .sorted(Comparator.comparing<Genre?, String>(Genre::genre))
                                         .collect(
                                             Collectors.toList(),
                                         )

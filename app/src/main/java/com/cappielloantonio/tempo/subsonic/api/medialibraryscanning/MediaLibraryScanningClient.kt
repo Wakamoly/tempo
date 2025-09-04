@@ -16,12 +16,12 @@ class MediaLibraryScanningClient(private val subsonic: Subsonic) {
             )
     }
 
-    fun startScan(): Call<ApiResponse?>? {
+    fun startScan(): Call<ApiResponse> {
         Log.d(TAG, "startScan()")
         return mediaLibraryScanningService.startScan(subsonic.getParams())
     }
 
-    val scanStatus: Call<ApiResponse?>?
+    val scanStatus: Call<ApiResponse>
         get() {
             Log.d(TAG, "getScanStatus()")
             return mediaLibraryScanningService.getScanStatus(subsonic.getParams())

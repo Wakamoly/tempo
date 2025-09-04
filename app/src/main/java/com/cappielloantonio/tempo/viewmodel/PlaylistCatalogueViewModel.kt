@@ -16,13 +16,13 @@ class PlaylistCatalogueViewModel(
 
     var type: String? = null
 
-    private val playlistList = MutableLiveData<MutableList<Playlist?>?>(null)
+    private val playlistList = MutableLiveData<MutableList<Playlist>>(null)
 
     init {
         playlistRepository = PlaylistRepository()
     }
 
-    fun getPlaylistList(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
+    fun getPlaylistList(owner: LifecycleOwner): LiveData<MutableList<Playlist>> {
         if (playlistList.getValue() == null) {
             playlistRepository.getPlaylists(false, -1).observe(
                 owner,

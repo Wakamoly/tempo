@@ -15,14 +15,14 @@ class PodcastViewModel(
 ) : AndroidViewModel(application) {
     private val podcastRepository: PodcastRepository
 
-    private val newestPodcastEpisodes = MutableLiveData<MutableList<PodcastEpisode?>?>(null)
-    private val podcastChannels = MutableLiveData<MutableList<PodcastChannel?>?>(null)
+    private val newestPodcastEpisodes = MutableLiveData<MutableList<PodcastEpisode>>(null)
+    private val podcastChannels = MutableLiveData<MutableList<PodcastChannel>>(null)
 
     init {
         podcastRepository = PodcastRepository()
     }
 
-    fun getNewestPodcastEpisodes(owner: LifecycleOwner): LiveData<MutableList<PodcastEpisode?>?> {
+    fun getNewestPodcastEpisodes(owner: LifecycleOwner): LiveData<MutableList<PodcastEpisode>> {
         if (newestPodcastEpisodes.getValue() == null) {
             podcastRepository.getNewestPodcastEpisodes(20).observe(
                 owner,
@@ -37,7 +37,7 @@ class PodcastViewModel(
         return newestPodcastEpisodes
     }
 
-    fun getPodcastChannels(owner: LifecycleOwner): LiveData<MutableList<PodcastChannel?>?> {
+    fun getPodcastChannels(owner: LifecycleOwner): LiveData<MutableList<PodcastChannel>> {
         if (podcastChannels.getValue() == null) {
             podcastRepository.getPodcastChannels(false, null).observe(
                 owner,

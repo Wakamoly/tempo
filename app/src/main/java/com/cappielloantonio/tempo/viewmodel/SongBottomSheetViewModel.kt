@@ -37,7 +37,7 @@ class SongBottomSheetViewModel(
 
     private var song: Child? = null
 
-    private val instantMix = MutableLiveData<MutableList<Child?>?>(null)
+    private val instantMix = MutableLiveData<MutableList<Child>>(null)
 
     init {
         songRepository = SongRepository()
@@ -130,7 +130,7 @@ class SongBottomSheetViewModel(
     fun getInstantMix(
         owner: LifecycleOwner,
         media: Child,
-    ): LiveData<MutableList<Child?>?> {
+    ): LiveData<MutableList<Child>> {
         instantMix.value = mutableListOf<Child?>()
 
         songRepository

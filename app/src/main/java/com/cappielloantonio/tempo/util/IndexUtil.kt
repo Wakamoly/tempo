@@ -5,7 +5,7 @@ import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.subsonic.models.Artist
 import com.cappielloantonio.tempo.subsonic.models.Indexes
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 object IndexUtil {
     fun getArtist(indexes: Indexes): MutableList<Artist?> {
         if (indexes.indices == null) return mutableListOf<Artist?>()

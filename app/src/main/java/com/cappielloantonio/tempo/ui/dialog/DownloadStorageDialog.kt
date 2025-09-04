@@ -15,7 +15,7 @@ import com.cappielloantonio.tempo.util.Preferences.getDownloadStoragePreference
 import com.cappielloantonio.tempo.util.Preferences.setDownloadStoragePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class DownloadStorageDialog(
     private val dialogClickCallback: DialogClickCallback,
 ) : DialogFragment() {

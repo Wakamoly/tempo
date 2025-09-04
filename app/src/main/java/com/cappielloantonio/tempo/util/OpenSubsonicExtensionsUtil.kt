@@ -14,10 +14,10 @@ object OpenSubsonicExtensionsUtil {
             if (isOpenSubsonic() && getOpenSubsonicExtensions() != null) {
                 extensions =
                     Gson()
-                        .fromJson<MutableList<OpenSubsonicExtension?>?>(
+                        .fromJson<MutableList<OpenSubsonicExtension>>(
                             getOpenSubsonicExtensions(),
                             object :
-                                TypeToken<MutableList<OpenSubsonicExtension?>?>() {
+                                TypeToken<MutableList<OpenSubsonicExtension>>() {
                             }.type,
                         )
             }

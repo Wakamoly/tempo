@@ -9,10 +9,10 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class SharingRepository {
-    val shares: MutableLiveData<MutableList<Share?>?>
+    val shares: MutableLiveData<MutableList<Share>>
         get() {
             val shares =
-                MutableLiveData<MutableList<Share?>?>(ArrayList<Share?>())
+                MutableLiveData<MutableList<Share>>(ArrayList<Share?>())
 
             getSubsonicClientInstance(false)
                 .getSharingClient()

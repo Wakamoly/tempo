@@ -12,7 +12,7 @@ import com.cappielloantonio.tempo.databinding.DialogDownloadDirectoryBinding
 import com.cappielloantonio.tempo.interfaces.DialogClickCallback
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class DownloadDirectoryDialog(
     private val dialogClickCallback: DialogClickCallback,
 ) : DialogFragment() {

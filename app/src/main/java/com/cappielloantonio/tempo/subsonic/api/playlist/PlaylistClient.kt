@@ -7,43 +7,39 @@ import com.cappielloantonio.tempo.subsonic.base.ApiResponse
 import retrofit2.Call
 
 class PlaylistClient(private val subsonic: Subsonic) {
-    private val playlistService: PlaylistService
+    private val playlistService: PlaylistService =
+        RetrofitClient(subsonic).retrofit.create(PlaylistService::class.java)
 
-    init {
-        this.playlistService =
-            RetrofitClient(subsonic).retrofit.create<PlaylistService>(PlaylistService::class.java)
-    }
-
-    val playlists: Call<ApiResponse?>?
+    val playlists: Call<ApiResponse>
         get() {
             Log.d(TAG, "getPlaylists()")
-            return playlistService.getPlaylists(subsonic.getParams())
+            return playlistService.getPlaylists(subsonic.params)
         }
 
-    fun getPlaylist(id: String?): Call<ApiResponse?>? {
+    fun getPlaylist(id: String?): Call<ApiResponse> {
         Log.d(TAG, "getPlaylist()")
-        return playlistService.getPlaylist(subsonic.getParams(), id)
+        return playlistService.getPlaylist(subsonic.params, id)
     }
 
     fun createPlaylist(
         playlistId: String?,
         name: String?,
-        songsId: ArrayList<String?>?
-    ): Call<ApiResponse?>? {
+        songsId: ArrayList<String>?,
+    ): Call<ApiResponse> {
         Log.d(TAG, "createPlaylist()")
-        return playlistService.createPlaylist(subsonic.getParams(), playlistId, name, songsId)
+        return playlistService.createPlaylist(subsonic.params, playlistId, name, songsId)
     }
 
     fun updatePlaylist(
         playlistId: String?,
         name: String?,
         isPublic: Boolean,
-        songIdToAdd: ArrayList<String?>?,
-        songIndexToRemove: ArrayList<Int?>?
-    ): Call<ApiResponse?>? {
+        songIdToAdd: ArrayList<String>?,
+        songIndexToRemove: ArrayList<Int>?,
+    ): Call<ApiResponse> {
         Log.d(TAG, "updatePlaylist()")
         return playlistService.updatePlaylist(
-            subsonic.getParams(),
+            subsonic.params,
             playlistId,
             name,
             isPublic,
@@ -52,9 +48,9 @@ class PlaylistClient(private val subsonic: Subsonic) {
         )
     }
 
-    fun deletePlaylist(id: String?): Call<ApiResponse?>? {
+    fun deletePlaylist(id: String?): Call<ApiResponse> {
         Log.d(TAG, "deletePlaylist()")
-        return playlistService.deletePlaylist(subsonic.getParams(), id)
+        return playlistService.deletePlaylist(subsonic.params, id)
     }
 
     companion object {

@@ -33,7 +33,7 @@ class AlbumListPageViewModel(
         downloadRepository = DownloadRepository()
     }
 
-    fun getAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         when (title) {
             Constants.ALBUM_RECENTLY_PLAYED ->
                 albumRepository

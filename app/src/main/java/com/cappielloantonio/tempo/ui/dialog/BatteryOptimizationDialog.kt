@@ -13,7 +13,7 @@ import com.cappielloantonio.tempo.databinding.DialogBatteryOptimizationBinding
 import com.cappielloantonio.tempo.util.Preferences.dontAskForOptimization
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class BatteryOptimizationDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogBatteryOptimizationBinding.inflate(getLayoutInflater())

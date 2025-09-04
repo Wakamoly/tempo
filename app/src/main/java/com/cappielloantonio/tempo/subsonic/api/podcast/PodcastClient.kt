@@ -14,37 +14,37 @@ class PodcastClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<PodcastService>(PodcastService::class.java)
     }
 
-    fun getPodcasts(includeEpisodes: Boolean, channelId: String?): Call<ApiResponse?>? {
+    fun getPodcasts(includeEpisodes: Boolean, channelId: String?): Call<ApiResponse> {
         Log.d(TAG, "getPodcasts()")
         return podcastService.getPodcasts(subsonic.getParams(), includeEpisodes, channelId)
     }
 
-    fun getNewestPodcasts(count: Int): Call<ApiResponse?>? {
+    fun getNewestPodcasts(count: Int): Call<ApiResponse> {
         Log.d(TAG, "getNewestPodcasts()")
         return podcastService.getNewestPodcasts(subsonic.getParams(), count)
     }
 
-    fun refreshPodcasts(): Call<ApiResponse?>? {
+    fun refreshPodcasts(): Call<ApiResponse> {
         Log.d(TAG, "refreshPodcasts()")
         return podcastService.refreshPodcasts(subsonic.getParams())
     }
 
-    fun createPodcastChannel(url: String?): Call<ApiResponse?>? {
+    fun createPodcastChannel(url: String?): Call<ApiResponse> {
         Log.d(TAG, "createPodcastChannel()")
         return podcastService.createPodcastChannel(subsonic.getParams(), url)
     }
 
-    fun deletePodcastChannel(channelId: String?): Call<ApiResponse?>? {
+    fun deletePodcastChannel(channelId: String?): Call<ApiResponse> {
         Log.d(TAG, "deletePodcastChannel()")
         return podcastService.deletePodcastChannel(subsonic.getParams(), channelId)
     }
 
-    fun deletePodcastEpisode(episodeId: String?): Call<ApiResponse?>? {
+    fun deletePodcastEpisode(episodeId: String?): Call<ApiResponse> {
         Log.d(TAG, "deletePodcastEpisode()")
         return podcastService.deletePodcastEpisode(subsonic.getParams(), episodeId)
     }
 
-    fun downloadPodcastEpisode(episodeId: String?): Call<ApiResponse?>? {
+    fun downloadPodcastEpisode(episodeId: String?): Call<ApiResponse> {
         Log.d(TAG, "downloadPodcastEpisode()")
         return podcastService.downloadPodcastEpisode(subsonic.getParams(), episodeId)
     }

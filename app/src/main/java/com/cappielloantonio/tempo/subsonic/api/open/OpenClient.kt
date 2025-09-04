@@ -14,7 +14,7 @@ class OpenClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<OpenService>(OpenService::class.java)
     }
 
-    fun getLyricsBySongId(id: String?): Call<ApiResponse?>? {
+    fun getLyricsBySongId(id: String?): Call<ApiResponse> {
         Log.d(TAG, "getLyricsBySongId()")
         return openService.getLyricsBySongId(subsonic.getParams(), id)
     }

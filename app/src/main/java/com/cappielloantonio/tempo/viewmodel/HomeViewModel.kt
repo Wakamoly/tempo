@@ -44,25 +44,25 @@ class HomeViewModel(
 
     private val albumsSyncViewModel: StarredAlbumsSyncViewModel
 
-    private val dicoverSongSample = MutableLiveData<MutableList<Child?>?>(null)
-    private val newReleasedAlbum = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val starredTracksSample = MutableLiveData<MutableList<Child?>?>(null)
-    private val starredArtistsSample = MutableLiveData<MutableList<ArtistID3?>?>(null)
-    private val bestOfArtists = MutableLiveData<MutableList<ArtistID3?>?>(null)
-    private val starredTracks = MutableLiveData<MutableList<Child?>?>(null)
-    private val starredAlbums = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val starredArtists = MutableLiveData<MutableList<ArtistID3?>?>(null)
-    private val mostPlayedAlbumSample = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val recentlyPlayedAlbumSample = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val years = MutableLiveData<MutableList<Int?>?>(null)
-    private val recentlyAddedAlbumSample = MutableLiveData<MutableList<AlbumID3?>?>(null)
+    private val dicoverSongSample = MutableLiveData<MutableList<Child>>(null)
+    private val newReleasedAlbum = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val starredTracksSample = MutableLiveData<MutableList<Child>>(null)
+    private val starredArtistsSample = MutableLiveData<MutableList<ArtistID3>>(null)
+    private val bestOfArtists = MutableLiveData<MutableList<ArtistID3>>(null)
+    private val starredTracks = MutableLiveData<MutableList<Child>>(null)
+    private val starredAlbums = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val starredArtists = MutableLiveData<MutableList<ArtistID3>>(null)
+    private val mostPlayedAlbumSample = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val recentlyPlayedAlbumSample = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val years = MutableLiveData<MutableList<Int>>(null)
+    private val recentlyAddedAlbumSample = MutableLiveData<MutableList<AlbumID3>>(null)
 
-    private val thisGridTopSong = MutableLiveData<MutableList<Chronology?>?>(null)
-    private val mediaInstantMix = MutableLiveData<MutableList<Child?>?>(null)
-    private val artistInstantMix = MutableLiveData<MutableList<Child?>?>(null)
-    private val artistBestOf = MutableLiveData<MutableList<Child?>?>(null)
-    private val pinnedPlaylists = MutableLiveData<MutableList<Playlist?>?>(null)
-    private val shares = MutableLiveData<MutableList<Share?>?>(null)
+    private val thisGridTopSong = MutableLiveData<MutableList<Chronology>>(null)
+    private val mediaInstantMix = MutableLiveData<MutableList<Child>>(null)
+    private val artistInstantMix = MutableLiveData<MutableList<Child>>(null)
+    private val artistBestOf = MutableLiveData<MutableList<Child>>(null)
+    private val pinnedPlaylists = MutableLiveData<MutableList<Playlist>>(null)
+    private val shares = MutableLiveData<MutableList<Share>>(null)
 
     var homeSectorList: MutableList<HomeSector?>? = null
         private set
@@ -83,7 +83,7 @@ class HomeViewModel(
         setOfflineFavorite()
     }
 
-    fun getDiscoverSongSample(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+    fun getDiscoverSongSample(owner: LifecycleOwner): LiveData<MutableList<Child>> {
         if (dicoverSongSample.getValue() == null) {
             songRepository.getRandomSample(10, null, null).observe(
                 owner,
@@ -94,10 +94,10 @@ class HomeViewModel(
         return dicoverSongSample
     }
 
-    val randomShuffleSample: LiveData<MutableList<Child?>?>?
+    val randomShuffleSample: LiveData<MutableList<Child>>?
         get() = songRepository.getRandomSample(1000, null, null)
 
-    fun getChronologySample(owner: LifecycleOwner): LiveData<MutableList<Chronology?>?> {
+    fun getChronologySample(owner: LifecycleOwner): LiveData<MutableList<Chronology>> {
         val cal = Calendar.getInstance()
         val server = getServerId()
 
@@ -114,7 +114,7 @@ class HomeViewModel(
         return thisGridTopSong
     }
 
-    fun getRecentlyReleasedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getRecentlyReleasedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (newReleasedAlbum.getValue() == null) {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
 
@@ -136,7 +136,7 @@ class HomeViewModel(
         return newReleasedAlbum
     }
 
-    fun getStarredTracksSample(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+    fun getStarredTracksSample(owner: LifecycleOwner): LiveData<MutableList<Child>> {
         if (starredTracksSample.getValue() == null) {
             songRepository.getStarredSongs(true, 10).observe(
                 owner,
@@ -147,7 +147,7 @@ class HomeViewModel(
         return starredTracksSample
     }
 
-    fun getStarredArtistsSample(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?> {
+    fun getStarredArtistsSample(owner: LifecycleOwner): LiveData<MutableList<ArtistID3>> {
         if (starredArtistsSample.getValue() == null) {
             artistRepository.getStarredArtists(true, 10).observe(
                 owner,
@@ -158,7 +158,7 @@ class HomeViewModel(
         return starredArtistsSample
     }
 
-    fun getBestOfArtists(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?> {
+    fun getBestOfArtists(owner: LifecycleOwner): LiveData<MutableList<ArtistID3>> {
         if (bestOfArtists.getValue() == null) {
             artistRepository.getStarredArtists(true, 20).observe(
                 owner,
@@ -169,7 +169,7 @@ class HomeViewModel(
         return bestOfArtists
     }
 
-    fun getStarredTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+    fun getStarredTracks(owner: LifecycleOwner): LiveData<MutableList<Child>> {
         if (starredTracks.getValue() == null) {
             songRepository.getStarredSongs(true, 20).observe(
                 owner,
@@ -180,7 +180,7 @@ class HomeViewModel(
         return starredTracks
     }
 
-    fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (starredAlbums.getValue() == null) {
             albumRepository.getStarredAlbums(true, 20).observe(
                 owner,
@@ -191,10 +191,10 @@ class HomeViewModel(
         return starredAlbums
     }
 
-    val allStarredAlbumSongs: LiveData<MutableList<Child?>?>?
+    val allStarredAlbumSongs: LiveData<MutableList<Child>>?
         get() = albumsSyncViewModel.getAllStarredAlbumSongs()
 
-    fun getStarredArtists(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?> {
+    fun getStarredArtists(owner: LifecycleOwner): LiveData<MutableList<ArtistID3>> {
         if (starredArtists.getValue() == null) {
             artistRepository.getStarredArtists(true, 20).observe(
                 owner,
@@ -205,7 +205,7 @@ class HomeViewModel(
         return starredArtists
     }
 
-    fun getYearList(owner: LifecycleOwner): LiveData<MutableList<Int?>?> {
+    fun getYearList(owner: LifecycleOwner): LiveData<MutableList<Int>> {
         if (years.getValue() == null) {
             albumRepository
                 .getDecades()
@@ -215,7 +215,7 @@ class HomeViewModel(
         return years
     }
 
-    fun getMostPlayedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getMostPlayedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (mostPlayedAlbumSample.getValue() == null) {
             albumRepository.getAlbums("frequent", 20, null, null).observe(
                 owner,
@@ -226,7 +226,7 @@ class HomeViewModel(
         return mostPlayedAlbumSample
     }
 
-    fun getMostRecentlyAddedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getMostRecentlyAddedAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (recentlyAddedAlbumSample.getValue() == null) {
             albumRepository.getAlbums("newest", 20, null, null).observe(
                 owner,
@@ -241,7 +241,7 @@ class HomeViewModel(
         return recentlyAddedAlbumSample
     }
 
-    fun getRecentlyPlayedAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getRecentlyPlayedAlbumList(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (recentlyPlayedAlbumSample.getValue() == null) {
             albumRepository.getAlbums("recent", 20, null, null).observe(
                 owner,
@@ -259,7 +259,7 @@ class HomeViewModel(
     fun getMediaInstantMix(
         owner: LifecycleOwner,
         media: Child,
-    ): LiveData<MutableList<Child?>?> {
+    ): LiveData<MutableList<Child>> {
         mediaInstantMix.value = mutableListOf<Child?>()
 
         songRepository.getInstantMix(media.id, 20).observe(
@@ -273,7 +273,7 @@ class HomeViewModel(
     fun getArtistInstantMix(
         owner: LifecycleOwner,
         artist: ArtistID3,
-    ): LiveData<MutableList<Child?>?> {
+    ): LiveData<MutableList<Child>> {
         artistInstantMix.value = mutableListOf<Child?>()
 
         artistRepository.getTopSongs(artist.name, 10).observe(
@@ -287,7 +287,7 @@ class HomeViewModel(
     fun getArtistBestOf(
         owner: LifecycleOwner,
         artist: ArtistID3,
-    ): LiveData<MutableList<Child?>?> {
+    ): LiveData<MutableList<Child>> {
         artistBestOf.value = mutableListOf<Child?>()
 
         artistRepository.getTopSongs(artist.name, 10).observe(
@@ -298,7 +298,7 @@ class HomeViewModel(
         return artistBestOf
     }
 
-    fun getPinnedPlaylists(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
+    fun getPinnedPlaylists(owner: LifecycleOwner): LiveData<MutableList<Playlist>> {
         pinnedPlaylists.value = mutableListOf<Playlist?>()
 
         playlistRepository
@@ -331,7 +331,7 @@ class HomeViewModel(
         return pinnedPlaylists
     }
 
-    fun getShares(owner: LifecycleOwner): LiveData<MutableList<Share?>?> {
+    fun getShares(owner: LifecycleOwner): LiveData<MutableList<Share>> {
         if (shares.getValue() == null) {
             sharingRepository
                 .getShares()
@@ -341,7 +341,7 @@ class HomeViewModel(
         return shares
     }
 
-    val allStarredTracks: LiveData<MutableList<Child?>?>?
+    val allStarredTracks: LiveData<MutableList<Child>>?
         get() = songRepository.getStarredSongs(false, -1)
 
     fun changeChronologyPeriod(
@@ -455,9 +455,9 @@ class HomeViewModel(
     private fun setHomeSectorList() {
         if (getHomeSectorList() != null && getHomeSectorList() != "null") {
             this.homeSectorList =
-                Gson().fromJson<MutableList<HomeSector?>?>(
+                Gson().fromJson<MutableList<HomeSector>>(
                     getHomeSectorList(),
-                    object : TypeToken<MutableList<HomeSector?>?>() {
+                    object : TypeToken<MutableList<HomeSector>>() {
                     }.type,
                 )
         }

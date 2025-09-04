@@ -18,8 +18,8 @@ class DownloadViewModel(
 ) : AndroidViewModel(application) {
     private val downloadRepository: DownloadRepository
 
-    private val downloadedTrackSample = MutableLiveData<MutableList<Child?>?>(null)
-    private val viewStack = MutableLiveData<ArrayList<DownloadStack?>?>(null)
+    private val downloadedTrackSample = MutableLiveData<MutableList<Child>>(null)
+    private val viewStack = MutableLiveData<ArrayList<DownloadStack>>(null)
 
     init {
         downloadRepository = DownloadRepository()
@@ -27,7 +27,7 @@ class DownloadViewModel(
         initViewStack(DownloadStack(getDefaultDownloadViewType(), null))
     }
 
-    fun getDownloadedTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+    fun getDownloadedTracks(owner: LifecycleOwner): LiveData<MutableList<Child>> {
         downloadRepository
             .getLiveDownload()
             .observe(
@@ -46,7 +46,7 @@ class DownloadViewModel(
         return downloadedTrackSample
     }
 
-    fun getViewStack(): LiveData<ArrayList<DownloadStack?>?> = viewStack
+    fun getViewStack(): LiveData<ArrayList<DownloadStack>> = viewStack
 
     fun initViewStack(level: DownloadStack?) {
         val stack = ArrayList<DownloadStack?>()

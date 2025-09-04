@@ -9,10 +9,10 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class RadioRepository {
-    val internetRadioStations: MutableLiveData<MutableList<InternetRadioStation?>?>
+    val internetRadioStations: MutableLiveData<MutableList<InternetRadioStation>>
         get() {
             val radioStation =
-                MutableLiveData<MutableList<InternetRadioStation?>?>(ArrayList<InternetRadioStation?>())
+                MutableLiveData<MutableList<InternetRadioStation>>(ArrayList<InternetRadioStation?>())
 
             getSubsonicClientInstance(false)
                 .getInternetRadioClient()

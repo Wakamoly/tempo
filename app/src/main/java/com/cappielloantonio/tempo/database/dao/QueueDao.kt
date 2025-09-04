@@ -10,7 +10,7 @@ import com.cappielloantonio.tempo.model.Queue
 @Dao
 interface QueueDao {
     @get:Query("SELECT * FROM queue")
-    val all: LiveData<MutableList<Queue?>?>?
+    val all: LiveData<MutableList<Queue>>?
 
     @get:Query("SELECT * FROM queue")
     val allSimple: MutableList<Queue?>?

@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.cappielloantonio.tempo.ui.fragment.PlayerControllerFragment
 import com.cappielloantonio.tempo.ui.fragment.PlayerQueueFragment
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PlayerControllerVerticalPager(
     fragment: Fragment,
 ) : FragmentStateAdapter(fragment) {

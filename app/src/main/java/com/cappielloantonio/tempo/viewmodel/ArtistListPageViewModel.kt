@@ -24,15 +24,15 @@ class ArtistListPageViewModel(
 
     var title: String? = null
 
-    private var artistList: MutableLiveData<MutableList<ArtistID3?>?>? = null
+    private var artistList: MutableLiveData<MutableList<ArtistID3>>? = null
 
     init {
         artistRepository = ArtistRepository()
         downloadRepository = DownloadRepository()
     }
 
-    fun getArtistList(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?>? {
-        artistList = MutableLiveData<MutableList<ArtistID3?>?>(java.util.ArrayList<ArtistID3?>())
+    fun getArtistList(owner: LifecycleOwner): LiveData<MutableList<ArtistID3>>? {
+        artistList = MutableLiveData<MutableList<ArtistID3>>(java.util.ArrayList<ArtistID3?>())
 
         when (title) {
             Constants.ARTIST_STARRED -> artistList = artistRepository.getStarredArtists(false, -1)

@@ -17,7 +17,7 @@ class LoginViewModel(
         serverRepository = ServerRepository()
     }
 
-    val serverList: LiveData<MutableList<Server?>?>?
+    val serverList: LiveData<MutableList<Server>>?
         get() = serverRepository.getLiveServer()
 
     fun addServer(server: Server?) {

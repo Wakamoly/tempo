@@ -14,6 +14,8 @@ import com.cappielloantonio.tempo.model.Chronology
 import com.cappielloantonio.tempo.repository.ChronologyRepository
 import com.cappielloantonio.tempo.repository.QueueRepository
 import com.cappielloantonio.tempo.repository.SongRepository
+import com.cappielloantonio.tempo.service.MediaManager.enqueue
+import com.cappielloantonio.tempo.service.MediaManager.enqueueDatabase
 import com.cappielloantonio.tempo.subsonic.models.Child
 import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
 import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
@@ -30,116 +32,106 @@ object MediaManager {
     private const val TAG = "MediaManager"
 
     fun reset(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
-                            mediaBrowserListenableFuture.get()!!.pause()
-                        }
-
-                        mediaBrowserListenableFuture.get()!!.stop()
-                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
-                        clearDatabase()
+        mediaBrowserListenableFuture?.addListener({
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
+                        mediaBrowserListenableFuture.get()!!.pause()
                     }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+
+                    mediaBrowserListenableFuture.get()!!.stop()
+                    mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                    clearDatabase()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun hide(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
-                            mediaBrowserListenableFuture.get()!!.pause()
-                        }
+        mediaBrowserListenableFuture?.addListener({
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    if (mediaBrowserListenableFuture.get()!!.isPlaying()) {
+                        mediaBrowserListenableFuture.get()!!.pause()
                     }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
-    fun check(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        if (mediaBrowserListenableFuture.get()!!.mediaItemCount < 1) {
-                            val media: MutableList<Child?>? = queueRepository.getMedia()
-                            if (media != null && media.size >= 1) {
-                                init(mediaBrowserListenableFuture, media)
-                            }
+    fun check(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>) {
+        mediaBrowserListenableFuture.addListener({
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    if (mediaBrowserListenableFuture.get()!!.mediaItemCount < 1) {
+                        val media = queueRepository.media
+                        if (media.size >= 1) {
+                            init(mediaBrowserListenableFuture, media)
                         }
                     }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun init(
-        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
-        media: MutableList<Child?>
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>,
+        media: MutableList<Child>,
     ) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
-                        mediaBrowserListenableFuture.get()!!
-                            .setMediaItems(MappingUtil.mapMediaItems(media))
-                        mediaBrowserListenableFuture.get()!!.seekTo(
-                            queueRepository.getLastPlayedMediaIndex(),
-                            queueRepository.getLastPlayedMediaTimestamp()
-                        )
-                        mediaBrowserListenableFuture.get()!!.prepare()
-                    }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+        mediaBrowserListenableFuture.addListener({
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                    mediaBrowserListenableFuture.get()!!
+                        .setMediaItems(MappingUtil.mapMediaItems(media))
+                    mediaBrowserListenableFuture.get()!!.seekTo(
+                        queueRepository.lastPlayedMediaIndex,
+                        queueRepository.lastPlayedMediaTimestamp
+                    )
+                    mediaBrowserListenableFuture.get()!!.prepare()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun startQueue(
-        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
-        media: MutableList<Child?>,
-        startIndex: Int
+        mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>,
+        media: MutableList<Child>,
+        startIndex: Int,
     ) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
-                        mediaBrowserListenableFuture.get()!!
-                            .setMediaItems(MappingUtil.mapMediaItems(media))
-                        mediaBrowserListenableFuture.get()!!.prepare()
-                        mediaBrowserListenableFuture.get()!!.seekTo(startIndex, 0)
-                        mediaBrowserListenableFuture.get()!!.play()
-                        enqueueDatabase(media, true, 0)
-                    }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+        mediaBrowserListenableFuture.addListener({
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                    mediaBrowserListenableFuture.get()!!
+                        .setMediaItems(MappingUtil.mapMediaItems(media))
+                    mediaBrowserListenableFuture.get()!!.prepare()
+                    mediaBrowserListenableFuture.get()!!.seekTo(startIndex, 0)
+                    mediaBrowserListenableFuture.get()!!.play()
+                    enqueueDatabase(media, true, 0)
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun startQueue(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?, media: Child?) {
@@ -165,7 +157,7 @@ object MediaManager {
 
     fun startRadio(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
-        internetRadioStation: InternetRadioStation
+        internetRadioStation: InternetRadioStation,
     ) {
         mediaBrowserListenableFuture?.addListener(Runnable {
             try {
@@ -208,7 +200,7 @@ object MediaManager {
     fun enqueue(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: MutableList<Child?>,
-        playImmediatelyAfter: Boolean
+        playImmediatelyAfter: Boolean,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -248,7 +240,7 @@ object MediaManager {
     fun enqueue(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: Child?,
-        playImmediatelyAfter: Boolean
+        playImmediatelyAfter: Boolean,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -289,7 +281,7 @@ object MediaManager {
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: MutableList<Child?>,
         startIndex: Int,
-        endIndex: Int
+        endIndex: Int,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -315,7 +307,7 @@ object MediaManager {
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: MutableList<Child?>?,
         from: Int,
-        to: Int
+        to: Int,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -336,7 +328,7 @@ object MediaManager {
     fun remove(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: MutableList<Child?>,
-        toRemove: Int
+        toRemove: Int,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -365,7 +357,7 @@ object MediaManager {
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         media: MutableList<Child?>,
         fromItem: Int,
-        toItem: Int
+        toItem: Int,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -385,7 +377,7 @@ object MediaManager {
 
     fun getCurrentIndex(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
-        callback: MediaIndexCallback
+        callback: MediaIndexCallback,
     ) {
         if (mediaBrowserListenableFuture != null) {
             mediaBrowserListenableFuture.addListener(Runnable {
@@ -418,27 +410,25 @@ object MediaManager {
         }
     }
 
-    @OptIn(markerClass = UnstableApi::class)
+    @OptIn(markerClass = [UnstableApi::class])
     fun continuousPlay(mediaItem: MediaItem?) {
         if (mediaItem != null && isContinuousPlayEnabled() && isInstantMixUsable()) {
             setLastInstantMix()
 
-            val instantMix: LiveData<MutableList<Child?>?> =
+            val instantMix: LiveData<MutableList<Child>> =
                 songRepository.getInstantMix(mediaItem.mediaId, 10)
-            instantMix.observeForever(object : Observer<MutableList<Child?>?> {
-                override fun onChanged(media: MutableList<Child?>?) {
-                    if (media != null) {
-                        val mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?> =
-                            MediaBrowser.Builder(
+            instantMix.observeForever(object : Observer<MutableList<Child>> {
+                override fun onChanged(media: MutableList<Child>) {
+                    val mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?> =
+                        MediaBrowser.Builder(
+                            getContext(),
+                            SessionToken(
                                 getContext(),
-                                SessionToken(
-                                    getContext(),
-                                    ComponentName(getContext(), MediaService::class.java)
-                                )
-                            ).buildAsync()
+                                ComponentName(getContext(), MediaService::class.java)
+                            )
+                        ).buildAsync()
 
-                        enqueue(mediaBrowserListenableFuture, media, true)
-                    }
+                    enqueue(mediaBrowserListenableFuture, media, true)
 
                     instantMix.removeObserver(this)
                 }
@@ -446,6 +436,7 @@ object MediaManager {
         }
     }
 
+    @OptIn(UnstableApi::class)
     fun saveChronology(mediaItem: MediaItem?) {
         if (mediaItem != null) {
             chronologyRepository.insert(Chronology(mediaItem))
@@ -459,28 +450,29 @@ object MediaManager {
         get() = SongRepository()
 
     private val chronologyRepository: ChronologyRepository
+        @OptIn(UnstableApi::class)
         get() = ChronologyRepository()
 
-    private fun enqueueDatabase(media: MutableList<Child?>?, reset: Boolean, afterIndex: Int) {
+    private fun enqueueDatabase(media: MutableList<Child>, reset: Boolean, afterIndex: Int) {
         queueRepository.insertAll(media, reset, afterIndex)
     }
 
-    private fun enqueueDatabase(media: Child?, reset: Boolean, afterIndex: Int) {
+    private fun enqueueDatabase(media: Child, reset: Boolean, afterIndex: Int) {
         queueRepository.insert(media, reset, afterIndex)
     }
 
-    private fun swapDatabase(media: MutableList<Child?>?) {
+    private fun swapDatabase(media: MutableList<Child>) {
         queueRepository.insertAll(media, true, 0)
     }
 
-    private fun removeDatabase(media: MutableList<Child?>, toRemove: Int) {
+    private fun removeDatabase(media: MutableList<Child>, toRemove: Int) {
         if (toRemove != -1) {
             media.removeAt(toRemove)
             queueRepository.insertAll(media, true, 0)
         }
     }
 
-    private fun removeRangeDatabase(media: MutableList<Child?>, fromItem: Int, toItem: Int) {
+    private fun removeRangeDatabase(media: MutableList<Child>, fromItem: Int, toItem: Int) {
         val toRemove = media.subList(fromItem, toItem)
 
         media.removeAll(toRemove)

@@ -14,23 +14,23 @@ class SharingClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<SharingService>(SharingService::class.java)
     }
 
-    val shares: Call<ApiResponse?>?
+    val shares: Call<ApiResponse>
         get() {
             Log.d(TAG, "getShares()")
             return sharingService.getShares(subsonic.getParams())
         }
 
-    fun createShare(id: String?, description: String?, expires: Long?): Call<ApiResponse?>? {
+    fun createShare(id: String?, description: String?, expires: Long?): Call<ApiResponse> {
         Log.d(TAG, "createShare()")
         return sharingService.createShare(subsonic.getParams(), id, description, expires)
     }
 
-    fun updateShare(id: String?, description: String?, expires: Long?): Call<ApiResponse?>? {
+    fun updateShare(id: String?, description: String?, expires: Long?): Call<ApiResponse> {
         Log.d(TAG, "updateShare()")
         return sharingService.updateShare(subsonic.getParams(), id, description, expires)
     }
 
-    fun deleteShare(id: String?): Call<ApiResponse?>? {
+    fun deleteShare(id: String?): Call<ApiResponse> {
         Log.d(TAG, "deleteShare()")
         return sharingService.deleteShare(subsonic.getParams(), id)
     }

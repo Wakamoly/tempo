@@ -22,10 +22,10 @@ class HomeRearrangementViewModel(
 
             if (getHomeSectorList() != null && getHomeSectorList() != "null") {
                 sectors =
-                    Gson().fromJson<MutableList<HomeSector?>?>(
+                    Gson().fromJson<MutableList<HomeSector>>(
                         getHomeSectorList(),
                         object :
-                            TypeToken<MutableList<HomeSector?>?>() {
+                            TypeToken<MutableList<HomeSector>>() {
                         }.type,
                     )
             } else {

@@ -9,7 +9,7 @@ import com.cappielloantonio.tempo.model.ReplayGain
 import com.cappielloantonio.tempo.util.Preferences.getReplayGainMode
 import kotlin.math.pow
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 object ReplayGainUtil {
     private val tags =
         arrayOf<String?>(

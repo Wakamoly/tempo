@@ -14,13 +14,13 @@ class StarredSyncViewModel(
 ) : AndroidViewModel(application) {
     private val songRepository: SongRepository
 
-    private val starredTracks = MutableLiveData<MutableList<Child?>?>(null)
+    private val starredTracks = MutableLiveData<MutableList<Child>>(null)
 
     init {
         songRepository = SongRepository()
     }
 
-    fun getStarredTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
+    fun getStarredTracks(owner: LifecycleOwner): LiveData<MutableList<Child>> {
         songRepository.getStarredSongs(false, -1).observe(
             owner,
             Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) },

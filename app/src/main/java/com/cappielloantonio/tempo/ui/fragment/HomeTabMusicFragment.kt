@@ -73,7 +73,8 @@ class HomeTabMusicFragment :
     Fragment(),
     ClickCallback {
     private var bind: FragmentHomeTabMusicBinding? = null
-    private var activity: MainActivity? = null
+    private val mainActivity: MainActivity
+        get() = activity as MainActivity
     private var homeViewModel: HomeViewModel? = null
 
     private var discoverSongAdapter: DiscoverSongAdapter? = null
@@ -92,19 +93,17 @@ class HomeTabMusicFragment :
     private var playlistHorizontalAdapter: PlaylistHorizontalAdapter? = null
     private var shareHorizontalAdapter: ShareHorizontalAdapter? = null
 
-    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View? {
-        activity = activity as MainActivity?
-
         bind = FragmentHomeTabMusicBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
         homeViewModel =
-            ViewModelProvider(requireActivity()).get<HomeViewModel?>(HomeViewModel::class.java)
+            ViewModelProvider(requireActivity()).get<HomeViewModel>(HomeViewModel::class.java)
 
         init()
 
@@ -168,22 +167,20 @@ class HomeTabMusicFragment :
             },
         )
 
-        bind!!.discoveryTextViewClickable.setOnClickListener(
-            View.OnClickListener { v: View? ->
-                homeViewModel!!
-                    .getRandomShuffleSample()
-                    .observe(
-                        getViewLifecycleOwner(),
-                        Observer { songs: MutableList<Child?>? ->
-                            MusicUtil.ratingFilter(songs)
-                            if (!songs!!.isEmpty()) {
-                                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-                                activity!!.setBottomSheetInPeek(true)
-                            }
-                        },
-                    )
-            },
-        )
+        bind!!.discoveryTextViewClickable.setOnClickListener { v: View? ->
+            homeViewModel!!
+                .randomShuffleSample
+                ?.observe(
+                    getViewLifecycleOwner(),
+                    Observer { songs: MutableList<Child> ->
+                        MusicUtil.ratingFilter(songs)
+                        if (!songs.isEmpty()) {
+                            MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                            mainActivity.setBottomSheetInPeek(true)
+                        }
+                    },
+                )
+        }
 
         bind!!.similarTracksTextViewRefreshable.setOnLongClickListener(
             OnLongClickListener { v: View? ->
@@ -210,7 +207,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.MEDIA_STARRED, Constants.MEDIA_STARRED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_songListPageFragment,
                     bundle,
                 )
@@ -221,7 +218,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.ALBUM_STARRED, Constants.ALBUM_STARRED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_albumListPageFragment,
                     bundle,
                 )
@@ -232,7 +229,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.ARTIST_STARRED, Constants.ARTIST_STARRED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_artistListPageFragment,
                     bundle,
                 )
@@ -243,7 +240,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.ALBUM_RECENTLY_ADDED, Constants.ALBUM_RECENTLY_ADDED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_albumListPageFragment,
                     bundle,
                 )
@@ -254,7 +251,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_RECENTLY_PLAYED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_albumListPageFragment,
                     bundle,
                 )
@@ -265,7 +262,7 @@ class HomeTabMusicFragment :
             View.OnClickListener { v: View? ->
                 val bundle = Bundle()
                 bundle.putString(Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_MOST_PLAYED)
-                activity!!.navController.navigate(
+                mainActivity!!.navController.navigate(
                     R.id.action_homeFragment_to_albumListPageFragment,
                     bundle,
                 )
@@ -336,7 +333,7 @@ class HomeTabMusicFragment :
             homeViewModel!!
                 .getAllStarredTracks()
                 .observeForever(
-                    object : Observer<MutableList<Child?>?> {
+                    object : Observer<MutableList<Child>> {
                         override fun onChanged(songs: MutableList<Child>?) {
                             if (songs != null) {
                                 val manager = DownloadUtil.getDownloadTracker(requireContext())
@@ -376,7 +373,7 @@ class HomeTabMusicFragment :
                     homeViewModel!!
                         .getAllStarredTracks()
                         .observeForever(
-                            object : Observer<MutableList<Child?>?> {
+                            object : Observer<MutableList<Child>> {
                                 override fun onChanged(songs: MutableList<Child>?) {
                                     if (songs != null) {
                                         val manager = DownloadUtil.getDownloadTracker(requireContext())
@@ -406,7 +403,7 @@ class HomeTabMusicFragment :
             homeViewModel!!
                 .getStarredAlbums(getViewLifecycleOwner())
                 .observeForever(
-                    object : Observer<MutableList<AlbumID3?>?> {
+                    object : Observer<MutableList<AlbumID3>> {
                         override fun onChanged(albums: MutableList<AlbumID3>?) {
                             if (albums != null) {
                                 DownloadUtil.getDownloadTracker(requireContext())
@@ -450,7 +447,7 @@ class HomeTabMusicFragment :
                 homeViewModel!!
                     .getAllStarredAlbumSongs()
                     .observeForever(
-                        object : Observer<MutableList<Child?>?> {
+                        object : Observer<MutableList<Child>> {
                             override fun onChanged(allSongs: MutableList<Child>?) {
                                 if (allSongs != null) {
                                     val manager = DownloadUtil.getDownloadTracker(requireContext())
@@ -1236,7 +1233,7 @@ class HomeTabMusicFragment :
                     Constants.TRACK_OBJECT,
                 ),
             )
-            activity!!.setBottomSheetInPeek(true)
+            mainActivity!!.setBottomSheetInPeek(true)
 
             if (mediaBrowserListenableFuture != null) {
                 homeViewModel!!
@@ -1263,7 +1260,7 @@ class HomeTabMusicFragment :
                 media,
                 bundle.getInt(Constants.ITEM_POSITION),
             )
-            activity!!.setBottomSheetInPeek(true)
+            mainActivity!!.setBottomSheetInPeek(true)
         } else {
             MediaManager.startQueue(
                 mediaBrowserListenableFuture,
@@ -1272,7 +1269,7 @@ class HomeTabMusicFragment :
                 ),
                 bundle.getInt(Constants.ITEM_POSITION),
             )
-            activity!!.setBottomSheetInPeek(true)
+            mainActivity!!.setBottomSheetInPeek(true)
         }
     }
 
@@ -1295,7 +1292,7 @@ class HomeTabMusicFragment :
                     requireView(),
                     R.string.artist_adapter_radio_station_starting,
                     Snackbar.LENGTH_LONG,
-                ).setAnchorView(activity!!._binding.playerBottomSheet)
+                ).setAnchorView(mainActivity!!._binding.playerBottomSheet)
                 .show()
 
             if (mediaBrowserListenableFuture != null) {
@@ -1311,7 +1308,7 @@ class HomeTabMusicFragment :
                             MusicUtil.ratingFilter(songs)
                             if (!songs!!.isEmpty()) {
                                 MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-                                activity!!.setBottomSheetInPeek(true)
+                                mainActivity!!.setBottomSheetInPeek(true)
                             }
                         },
                     )
@@ -1330,7 +1327,7 @@ class HomeTabMusicFragment :
                             MusicUtil.ratingFilter(songs)
                             if (!songs!!.isEmpty()) {
                                 MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-                                activity!!.setBottomSheetInPeek(true)
+                                mainActivity!!.setBottomSheetInPeek(true)
                             }
                         },
                     )
@@ -1373,7 +1370,7 @@ class HomeTabMusicFragment :
             )
 
         dialog.setArguments(bundle)
-        dialog.show(activity!!.supportFragmentManager, null)
+        dialog.show(mainActivity!!.supportFragmentManager, null)
     }
 
     override fun onShareLongClick(bundle: Bundle?) {

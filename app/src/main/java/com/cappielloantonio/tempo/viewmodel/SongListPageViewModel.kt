@@ -27,7 +27,7 @@ class SongListPageViewModel(
     var artist: ArtistID3? = null
     var album: AlbumID3? = null
 
-    private var songList: MutableLiveData<MutableList<Child?>?>? = null
+    private var songList: MutableLiveData<MutableList<Child>>? = null
 
     var filters: ArrayList<String?> = ArrayList<String?>()
     var filterNames: ArrayList<String?> = ArrayList<String?>()
@@ -41,8 +41,8 @@ class SongListPageViewModel(
         artistRepository = ArtistRepository()
     }
 
-    fun getSongList(): LiveData<MutableList<Child?>?> {
-        songList = MutableLiveData<MutableList<Child?>?>(ArrayList<Child?>())
+    fun getSongList(): LiveData<MutableList<Child>> {
+        songList = MutableLiveData<MutableList<Child>>(ArrayList<Child?>())
 
         when (title) {
             Constants.MEDIA_BY_GENRE -> songList = songRepository.getSongsByGenre(genre!!.genre, 0)

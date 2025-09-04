@@ -26,7 +26,7 @@ class AlbumPageViewModel(
         artistRepository = ArtistRepository()
     }
 
-    val albumSongLiveList: LiveData<MutableList<Child?>?>?
+    val albumSongLiveList: LiveData<MutableList<Child>>?
         get() = albumRepository.getAlbumTracks(albumId)
 
     fun setAlbum(

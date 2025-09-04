@@ -7,8 +7,8 @@ import retrofit2.http.QueryMap
 
 interface MediaLibraryScanningService {
     @GET("startScan")
-    fun startScan(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun startScan(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 
     @GET("getScanStatus")
-    fun getScanStatus(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getScanStatus(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 }

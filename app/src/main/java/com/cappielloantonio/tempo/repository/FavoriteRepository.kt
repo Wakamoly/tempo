@@ -1,5 +1,6 @@
 package com.cappielloantonio.tempo.repository
 
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.FavoriteDao
@@ -10,8 +11,9 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+@UnstableApi
 class FavoriteRepository {
-    private val favoriteDao: FavoriteDao = AppDatabase.Companion.getInstance().favoriteDao()
+    private val favoriteDao: FavoriteDao = AppDatabase.Companion.instance.favoriteDao()
 
     fun star(
         id: String?,
@@ -20,7 +22,7 @@ class FavoriteRepository {
         starCallback: StarCallback,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .star(id, albumId, artistId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -52,7 +54,7 @@ class FavoriteRepository {
         starCallback: StarCallback,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .unstar(id, albumId, artistId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -99,11 +101,11 @@ class FavoriteRepository {
     private class GetAllThreadSafe(
         private val favoriteDao: FavoriteDao,
     ) : Runnable {
-        var favorites: MutableList<Favorite?>? = ArrayList<Favorite?>()
+        var favorites: MutableList<Favorite?>? = ArrayList()
             private set
 
         override fun run() {
-            favorites = favoriteDao.getAll()
+            favorites = favoriteDao.all
         }
     }
 

@@ -31,7 +31,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlin.math.max
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PlayerLyricsFragment : Fragment() {
     private var bind: InnerFragmentPlayerLyricsBinding? = null
     private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null

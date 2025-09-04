@@ -1,15 +1,17 @@
 package com.cappielloantonio.tempo.repository
 
 import androidx.lifecycle.LiveData
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.ServerDao
 import com.cappielloantonio.tempo.model.Server
 
+@UnstableApi
 class ServerRepository {
-    private val serverDao: ServerDao = AppDatabase.Companion.getInstance().serverDao()
+    private val serverDao: ServerDao = AppDatabase.Companion.instance.serverDao()
 
-    val liveServer: LiveData<MutableList<Server?>?>?
-        get() = serverDao.getAll()
+    val liveServer: LiveData<MutableList<Server>>?
+        get() = serverDao.all
 
     fun insert(server: Server?) {
         val insert = InsertThreadSafe(serverDao, server)

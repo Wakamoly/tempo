@@ -14,7 +14,7 @@ import com.cappielloantonio.tempo.util.Preferences.getStreamingCacheStoragePrefe
 import com.cappielloantonio.tempo.util.Preferences.setStreamingCacheStoragePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class StreamingCacheStorageDialog(
     private val dialogClickCallback: DialogClickCallback,
 ) : DialogFragment() {

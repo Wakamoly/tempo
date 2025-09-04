@@ -11,29 +11,30 @@ import retrofit2.Callback
 import retrofit2.Response
 
 class DirectoryRepository {
-    val musicFolders: MutableLiveData<MutableList<MusicFolder?>?>
+    val musicFolders: MutableLiveData<MutableList<MusicFolder>>
         get() {
             val liveMusicFolders =
-                MutableLiveData<MutableList<MusicFolder?>?>()
+                MutableLiveData<MutableList<MusicFolder>>()
 
             getSubsonicClientInstance(false)
-                .getBrowsingClient()
-                .getMusicFolders()
+                .browsingClient
+                .musicFolders
                 .enqueue(
                     object : Callback<ApiResponse?> {
                         override fun onResponse(
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            if (response.isSuccessful && response.body() != null &&
-                                response.body()!!.subsonicResponse.musicFolders != null
-                            ) {
-                                liveMusicFolders.setValue(
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.musicFolders!!
-                                        .musicFolders,
-                                )
+                            if (response.isSuccessful) {
+                                response
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.musicFolders
+                                    ?.musicFolders
+                                    ?.toMutableList()
+                                    ?.let {
+                                        liveMusicFolders.value = it
+                                    }
                             }
                         }
 
@@ -55,7 +56,7 @@ class DirectoryRepository {
         val liveIndexes = MutableLiveData<Indexes?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getIndexes(musicFolderId, ifModifiedSince)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -83,7 +84,7 @@ class DirectoryRepository {
         val liveMusicDirectory = MutableLiveData<Directory?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getMusicDirectory(id)
             .enqueue(
                 object : Callback<ApiResponse?> {

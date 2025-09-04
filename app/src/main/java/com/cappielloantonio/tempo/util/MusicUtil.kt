@@ -7,7 +7,9 @@ import android.net.NetworkCapabilities
 import android.net.Uri
 import android.text.Html
 import android.util.Log
+import androidx.annotation.OptIn
 import androidx.core.net.toUri
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.App.Companion.getContext
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.R
@@ -95,6 +97,7 @@ object MusicUtil {
         return uri.toString().toUri()
     }
 
+    @OptIn(UnstableApi::class)
     fun getDownloadUri(id: String): Uri {
         val uri = StringBuilder()
 
@@ -396,9 +399,9 @@ object MusicUtil {
         get() = getAudioTranscodeFormatTranscodedDownload()
 
     fun limitPlayableMedia(
-        toLimit: MutableList<Child?>,
+        toLimit: MutableList<Child>,
         position: Int,
-    ): MutableList<Child?> {
+    ): MutableList<Child> {
         if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
             val from =
                 if (position < Constants.PRE_PLAYABLE_MEDIA) 0 else position - Constants.PRE_PLAYABLE_MEDIA
@@ -411,7 +414,7 @@ object MusicUtil {
     }
 
     fun getPlayableMediaPosition(
-        toLimit: MutableList<Child?>,
+        toLimit: MutableList<Child>,
         position: Int,
     ): Int {
         if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
@@ -426,8 +429,8 @@ object MusicUtil {
             getContext()
                 .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
 
-    fun ratingFilter(toFilter: MutableList<Child?>?) {
-        if (toFilter == null || toFilter.isEmpty()) return
+    fun ratingFilter(toFilter: MutableList<Child>) {
+        if (toFilter.isEmpty()) return
 
         val filtered =
             toFilter

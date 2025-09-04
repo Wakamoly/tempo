@@ -14,13 +14,13 @@ class PodcastChannelCatalogueViewModel(
 ) : AndroidViewModel(application) {
     private val podcastRepository: PodcastRepository
 
-    private val podcastChannels = MutableLiveData<MutableList<PodcastChannel?>?>(null)
+    private val podcastChannels = MutableLiveData<MutableList<PodcastChannel>>(null)
 
     init {
         podcastRepository = PodcastRepository()
     }
 
-    fun getPodcastChannels(owner: LifecycleOwner): LiveData<MutableList<PodcastChannel?>?> {
+    fun getPodcastChannels(owner: LifecycleOwner): LiveData<MutableList<PodcastChannel>> {
         if (podcastChannels.getValue() == null) {
             podcastRepository.getPodcastChannels(false, null).observe(
                 owner,

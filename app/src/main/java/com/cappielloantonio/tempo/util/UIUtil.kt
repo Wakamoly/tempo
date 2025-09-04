@@ -76,7 +76,7 @@ object UIUtil {
         val localeList = getLocalesFromResources(context)
 
         val localeArrayList: MutableList<MutableMap.MutableEntry<kotlin.String?, kotlin.String?>> =
-            ArrayList<MutableMap.MutableEntry<kotlin.String?, kotlin.String?>>()
+            ArrayList()
 
         val systemDefaultLabel = getContext().getString(R.string.settings_system_language)
         val systemDefaultValue = "default"
@@ -93,7 +93,8 @@ object UIUtil {
             }
         }
 
-        localeArrayList.sort(Map.Entry.comparingByKey<kotlin.String?, kotlin.String?>(String.CASE_INSENSITIVE_ORDER))
+        localeArrayList
+            .sortWith(Map.Entry.comparingByKey<kotlin.String?, kotlin.String?>(String.CASE_INSENSITIVE_ORDER))
 
         val orderedMap = LinkedHashMap<kotlin.String?, kotlin.String?>()
         orderedMap.put(systemDefaultLabel, systemDefaultValue)

@@ -15,6 +15,6 @@ class GenreCatalogueViewModel(
         genreRepository = GenreRepository()
     }
 
-    val genreList: LiveData<MutableList<Genre?>?>?
+    val genreList: LiveData<MutableList<Genre>>?
         get() = genreRepository.getGenres(false, -1)
 }

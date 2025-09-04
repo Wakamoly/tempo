@@ -357,8 +357,8 @@ class ArtistRepository {
     fun getTopSongs(
         artistName: String?,
         count: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val topSongs = MutableLiveData<MutableList<Child?>?>(ArrayList<Child?>())
+    ): MutableLiveData<MutableList<Child>> {
+        val topSongs = MutableLiveData<MutableList<Child>>(ArrayList())
 
         getSubsonicClientInstance(false)
             .browsingClient

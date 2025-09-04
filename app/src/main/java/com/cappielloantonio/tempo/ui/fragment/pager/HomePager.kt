@@ -5,7 +5,7 @@ import androidx.fragment.app.Fragment
 import androidx.media3.common.util.UnstableApi
 import androidx.viewpager2.adapter.FragmentStateAdapter
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class HomePager(
     fragment: Fragment,
 ) : FragmentStateAdapter(fragment) {

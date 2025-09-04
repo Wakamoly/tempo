@@ -14,17 +14,17 @@ class MediaRetrievalClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<MediaRetrievalService>(MediaRetrievalService::class.java)
     }
 
-    fun stream(id: String?, maxBitRate: Int?, format: String?): Call<ApiResponse?>? {
+    fun stream(id: String?, maxBitRate: Int?, format: String?): Call<ApiResponse> {
         Log.d(TAG, "stream()")
         return mediaRetrievalService.stream(subsonic.getParams(), id, maxBitRate, format)
     }
 
-    fun download(id: String?): Call<ApiResponse?>? {
+    fun download(id: String?): Call<ApiResponse> {
         Log.d(TAG, "download()")
         return mediaRetrievalService.download(subsonic.getParams(), id)
     }
 
-    fun getLyrics(artist: String?, title: String?): Call<ApiResponse?>? {
+    fun getLyrics(artist: String?, title: String?): Call<ApiResponse> {
         Log.d(TAG, "getLyrics()")
         return mediaRetrievalService.getLyrics(subsonic.getParams(), artist, title)
     }

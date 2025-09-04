@@ -14,18 +14,18 @@ class SystemClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<SystemService>(SystemService::class.java)
     }
 
-    fun ping(): Call<ApiResponse?>? {
+    fun ping(): Call<ApiResponse> {
         Log.d(TAG, "ping()")
         return systemService.ping(subsonic.getParams())
     }
 
-    val license: Call<ApiResponse?>?
+    val license: Call<ApiResponse>
         get() {
             Log.d(TAG, "getLicense()")
             return systemService.getLicense(subsonic.getParams())
         }
 
-    val openSubsonicExtensions: Call<ApiResponse?>?
+    val openSubsonicExtensions: Call<ApiResponse>
         get() {
             Log.d(TAG, "getOpenSubsonicExtensions()")
             return systemService.getOpenSubsonicExtensions(subsonic.getParams())

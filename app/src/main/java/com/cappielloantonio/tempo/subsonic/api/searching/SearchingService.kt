@@ -9,19 +9,19 @@ import retrofit2.http.QueryMap
 interface SearchingService {
     @GET("search2")
     fun search2(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>?,
         @Query("query") query: String?,
         @Query("songCount") songCount: Int,
         @Query("albumCount") albumCount: Int,
-        @Query("artistCount") artistCount: Int
-    ): Call<ApiResponse?>?
+        @Query("artistCount") artistCount: Int,
+    ): Call<ApiResponse>
 
     @GET("search3")
     fun search3(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>?,
         @Query("query") query: String?,
         @Query("songCount") songCount: Int,
         @Query("albumCount") albumCount: Int,
-        @Query("artistCount") artistCount: Int
-    ): Call<ApiResponse?>?
+        @Query("artistCount") artistCount: Int,
+    ): Call<ApiResponse>
 }

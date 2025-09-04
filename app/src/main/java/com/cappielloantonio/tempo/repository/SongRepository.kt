@@ -14,8 +14,8 @@ class SongRepository {
     fun getStarredSongs(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val starredSongs = MutableLiveData<MutableList<Child?>?>(mutableListOf<Child?>())
+    ): MutableLiveData<MutableList<Child>> {
+        val starredSongs = MutableLiveData<MutableList<Child>>(mutableListOf<Child?>())
 
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
@@ -58,11 +58,11 @@ class SongRepository {
     fun getInstantMix(
         id: String?,
         count: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val instantMix = MutableLiveData<MutableList<Child?>?>()
+    ): MutableLiveData<MutableList<Child>> {
+        val instantMix = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getSimilarSongs2(id, count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -96,8 +96,8 @@ class SongRepository {
         number: Int,
         fromYear: Int?,
         toYear: Int?,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val randomSongsSample = MutableLiveData<MutableList<Child?>?>()
+    ): MutableLiveData<MutableList<Child>> {
+        val randomSongsSample = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
@@ -143,7 +143,7 @@ class SongRepository {
         submission: Boolean,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .scrobble(id, submission)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -167,7 +167,7 @@ class SongRepository {
         rating: Int,
     ) {
         getSubsonicClientInstance(false)
-            .getMediaAnnotationClient()
+            .mediaAnnotationClient
             .setRating(id, rating)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -189,8 +189,8 @@ class SongRepository {
     fun getSongsByGenre(
         id: String?,
         page: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val songsByGenre = MutableLiveData<MutableList<Child?>?>()
+    ): MutableLiveData<MutableList<Child>> {
+        val songsByGenre = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
@@ -222,8 +222,8 @@ class SongRepository {
         return songsByGenre
     }
 
-    fun getSongsByGenres(genresId: ArrayList<String?>): MutableLiveData<MutableList<Child?>?> {
-        val songsByGenre = MutableLiveData<MutableList<Child?>?>()
+    fun getSongsByGenres(genresId: ArrayList<String?>): MutableLiveData<MutableList<Child>> {
+        val songsByGenre = MutableLiveData<MutableList<Child>>()
 
         for (id in genresId) {
             getSubsonicClientInstance(false)
@@ -267,7 +267,7 @@ class SongRepository {
         val song = MutableLiveData<Child?>()
 
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getSong(id)
             .enqueue(
                 object : Callback<ApiResponse?> {

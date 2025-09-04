@@ -22,18 +22,18 @@ class ArtistPageViewModel(
         artistRepository = ArtistRepository()
     }
 
-    val albumList: LiveData<MutableList<AlbumID3?>?>?
+    val albumList: LiveData<MutableList<AlbumID3>>?
         get() = albumRepository.getArtistAlbums(artist!!.id)
 
     fun getArtistInfo(id: String?): LiveData<ArtistInfo2?>? = artistRepository.getArtistFullInfo(id)
 
-    val artistTopSongList: LiveData<MutableList<Child?>?>?
+    val artistTopSongList: LiveData<MutableList<Child>>?
         get() = artistRepository.getTopSongs(artist!!.name, 20)
 
-    val artistShuffleList: LiveData<MutableList<Child?>?>?
+    val artistShuffleList: LiveData<MutableList<Child>>?
         get() = artistRepository.getRandomSong(artist, 50)
 
-    val artistInstantMix: LiveData<MutableList<Child?>?>?
+    val artistInstantMix: LiveData<MutableList<Child>>?
         get() = artistRepository.getInstantMix(artist, 20)
 
     fun getArtist(): ArtistID3 = artist!!

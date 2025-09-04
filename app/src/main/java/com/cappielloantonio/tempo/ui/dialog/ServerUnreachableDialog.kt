@@ -15,7 +15,7 @@ import com.cappielloantonio.tempo.util.Preferences.setServerUnreachableDatetime
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Objects
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class ServerUnreachableDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogServerUnreachableBinding.inflate(getLayoutInflater())

@@ -27,12 +27,12 @@ class LibraryViewModel(
     private val genreRepository: GenreRepository
     private val playlistRepository: PlaylistRepository
 
-    private val musicFolders = MutableLiveData<MutableList<MusicFolder?>?>(null)
+    private val musicFolders = MutableLiveData<MutableList<MusicFolder>>(null)
     private val indexes = MutableLiveData<Indexes?>(null)
-    private val playlistSample = MutableLiveData<MutableList<Playlist?>?>(null)
-    private val sampleAlbum = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val sampleArtist = MutableLiveData<MutableList<ArtistID3?>?>(null)
-    private val sampleGenres = MutableLiveData<MutableList<Genre?>?>(null)
+    private val playlistSample = MutableLiveData<MutableList<Playlist>>(null)
+    private val sampleAlbum = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val sampleArtist = MutableLiveData<MutableList<ArtistID3>>(null)
+    private val sampleGenres = MutableLiveData<MutableList<Genre>>(null)
 
     init {
         directoryRepository = DirectoryRepository()
@@ -42,7 +42,7 @@ class LibraryViewModel(
         playlistRepository = PlaylistRepository()
     }
 
-    fun getMusicFolders(owner: LifecycleOwner): LiveData<MutableList<MusicFolder?>?> {
+    fun getMusicFolders(owner: LifecycleOwner): LiveData<MutableList<MusicFolder>> {
         if (musicFolders.getValue() == null) {
             directoryRepository.getMusicFolders().observe(
                 owner,
@@ -63,7 +63,7 @@ class LibraryViewModel(
         return indexes
     }
 
-    fun getAlbumSample(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getAlbumSample(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         if (sampleAlbum.getValue() == null) {
             albumRepository.getAlbums("random", 10, null, null).observe(
                 owner,
@@ -74,7 +74,7 @@ class LibraryViewModel(
         return sampleAlbum
     }
 
-    fun getArtistSample(owner: LifecycleOwner): LiveData<MutableList<ArtistID3?>?> {
+    fun getArtistSample(owner: LifecycleOwner): LiveData<MutableList<ArtistID3>> {
         if (sampleArtist.getValue() == null) {
             artistRepository.getArtists(true, 10).observe(
                 owner,
@@ -85,7 +85,7 @@ class LibraryViewModel(
         return sampleArtist
     }
 
-    fun getGenreSample(owner: LifecycleOwner): LiveData<MutableList<Genre?>?> {
+    fun getGenreSample(owner: LifecycleOwner): LiveData<MutableList<Genre>> {
         if (sampleGenres.getValue() == null) {
             genreRepository.getGenres(true, 15).observe(
                 owner,
@@ -96,7 +96,7 @@ class LibraryViewModel(
         return sampleGenres
     }
 
-    fun getPlaylistSample(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
+    fun getPlaylistSample(owner: LifecycleOwner): LiveData<MutableList<Playlist>> {
         if (playlistSample.getValue() == null) {
             playlistRepository.getPlaylists(true, 10).observe(
                 owner,

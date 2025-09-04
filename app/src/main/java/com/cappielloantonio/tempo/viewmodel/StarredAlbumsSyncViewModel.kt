@@ -17,14 +17,14 @@ class StarredAlbumsSyncViewModel(
 ) : AndroidViewModel(application) {
     private val albumRepository: AlbumRepository
 
-    private val starredAlbums = MutableLiveData<MutableList<AlbumID3?>?>(null)
-    private val starredAlbumSongs = MutableLiveData<MutableList<Child?>?>(null)
+    private val starredAlbums = MutableLiveData<MutableList<AlbumID3>>(null)
+    private val starredAlbumSongs = MutableLiveData<MutableList<Child>>(null)
 
     init {
         albumRepository = AlbumRepository()
     }
 
-    fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
+    fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3>> {
         albumRepository.getStarredAlbums(false, -1).observe(
             owner,
             Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) },
@@ -32,11 +32,11 @@ class StarredAlbumsSyncViewModel(
         return starredAlbums
     }
 
-    val allStarredAlbumSongs: LiveData<MutableList<Child?>?>
+    val allStarredAlbumSongs: LiveData<MutableList<Child>>
         get() {
             albumRepository.getStarredAlbums(false, -1).observeForever(
                 object :
-                    Observer<MutableList<AlbumID3?>?> {
+                    Observer<MutableList<AlbumID3>> {
                     override fun onChanged(albums: MutableList<AlbumID3>?) {
                         if (albums != null && !albums.isEmpty()) {
                             collectAllAlbumSongs(
@@ -56,7 +56,7 @@ class StarredAlbumsSyncViewModel(
             return starredAlbumSongs
         }
 
-    fun getStarredAlbumSongs(activity: Activity?): LiveData<MutableList<Child?>?> {
+    fun getStarredAlbumSongs(activity: Activity?): LiveData<MutableList<Child>> {
         albumRepository
             .getStarredAlbums(false, -1)
             .observe(
@@ -85,10 +85,10 @@ class StarredAlbumsSyncViewModel(
         val latch = CountDownLatch(albums.size)
 
         for (album in albums) {
-            val albumTracks: LiveData<MutableList<Child?>?> =
+            val albumTracks: LiveData<MutableList<Child>> =
                 albumRepository.getAlbumTracks(album.id)
             albumTracks.observeForever(
-                object : Observer<MutableList<Child?>?> {
+                object : Observer<MutableList<Child>> {
                     override fun onChanged(songs: MutableList<Child?>?) {
                         if (songs != null) {
                             allSongs.addAll(songs)

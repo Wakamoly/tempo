@@ -1,15 +1,20 @@
 package com.cappielloantonio.tempo.repository
 
+import android.util.Log
 import androidx.lifecycle.LiveData
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.DownloadDao
 import com.cappielloantonio.tempo.model.Download
 
-class DownloadRepository {
-    private val downloadDao: DownloadDao = AppDatabase.Companion.getInstance().downloadDao()
+private const val TAG = "DownloadRepository"
 
-    val liveDownload: LiveData<MutableList<Download?>?>?
-        get() = downloadDao.getAll()
+@UnstableApi
+class DownloadRepository {
+    private val downloadDao: DownloadDao = AppDatabase.Companion.instance.downloadDao()
+
+    val liveDownload: LiveData<MutableList<Download>>?
+        get() = downloadDao.all
 
     fun getDownload(id: String?): Download? {
         var download: Download? = null
@@ -22,7 +27,7 @@ class DownloadRepository {
             thread.join()
             download = getDownloadThreadSafe.download
         } catch (e: InterruptedException) {
-            e.printStackTrace()
+            Log.e(TAG, "getDownload: ", e)
         }
 
         return download

@@ -36,7 +36,7 @@ import com.cappielloantonio.tempo.viewmodel.AlbumCatalogueViewModel
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class AlbumCatalogueFragment :
     Fragment(),
     ClickCallback {

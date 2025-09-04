@@ -40,7 +40,7 @@ import com.cappielloantonio.tempo.util.UIUtil
 import com.cappielloantonio.tempo.viewmodel.SettingViewModel
 import java.util.Locale
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class SettingsFragment : PreferenceFragmentCompat() {
     private var activity: MainActivity? = null
     private var settingViewModel: SettingViewModel? = null

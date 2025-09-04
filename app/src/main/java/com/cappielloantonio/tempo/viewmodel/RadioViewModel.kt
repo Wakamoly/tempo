@@ -14,13 +14,13 @@ class RadioViewModel(
 ) : AndroidViewModel(application) {
     private val radioRepository: RadioRepository
 
-    private val internetRadioStations = MutableLiveData<MutableList<InternetRadioStation?>?>(null)
+    private val internetRadioStations = MutableLiveData<MutableList<InternetRadioStation>>(null)
 
     init {
         radioRepository = RadioRepository()
     }
 
-    fun getInternetRadioStations(owner: LifecycleOwner): LiveData<MutableList<InternetRadioStation?>?> {
+    fun getInternetRadioStations(owner: LifecycleOwner): LiveData<MutableList<InternetRadioStation>> {
         radioRepository.getInternetRadioStations().observe(
             owner,
             Observer { value: MutableList<InternetRadioStation?>? ->

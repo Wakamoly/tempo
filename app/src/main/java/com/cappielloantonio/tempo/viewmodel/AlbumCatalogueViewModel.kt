@@ -15,13 +15,13 @@ import retrofit2.Response
 class AlbumCatalogueViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
-    private val albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
+    private val albumList = MutableLiveData<MutableList<AlbumID3>>(ArrayList<AlbumID3?>())
     private val loading = MutableLiveData<Boolean?>(true)
 
     private var page = 0
     private var status = Status.STOPPED
 
-    fun getAlbumList(): LiveData<MutableList<AlbumID3?>?> = albumList
+    fun getAlbumList(): LiveData<MutableList<AlbumID3>> = albumList
 
     val loadingStatus: LiveData<Boolean?>
         get() = loading

@@ -49,7 +49,7 @@ class AlbumBottomSheetViewModel(
     val artist: LiveData<ArtistID3?>?
         get() = artistRepository.getArtist(album!!.artistId)
 
-    val albumTracks: MutableLiveData<MutableList<Child?>?>
+    val albumTracks: MutableLiveData<MutableList<Child>>
         get() = albumRepository.getAlbumTracks(album!!.id)
 
     fun setFavorite(context: Context?) {
@@ -113,7 +113,7 @@ class AlbumBottomSheetViewModel(
             val tracksLiveData = albumRepository.getAlbumTracks(album!!.id)
 
             tracksLiveData.observeForever(
-                object : Observer<MutableList<Child?>?> {
+                object : Observer<MutableList<Child>> {
                     override fun onChanged(songs: MutableList<Child?>?) {
                         if (songs != null && !songs.isEmpty()) {
                             DownloadUtil.getDownloadTracker(context).download(

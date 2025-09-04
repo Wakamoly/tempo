@@ -7,7 +7,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter
 import com.cappielloantonio.tempo.ui.fragment.PlayerCoverFragment
 import com.cappielloantonio.tempo.ui.fragment.PlayerLyricsFragment
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PlayerControllerHorizontalPager(
     fragment: Fragment,
 ) : FragmentStateAdapter(fragment) {

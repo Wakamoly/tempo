@@ -14,7 +14,7 @@ import retrofit2.Response
 
 class SearchingRepository {
     private val recentSearchDao: RecentSearchDao =
-        AppDatabase.Companion.getInstance().recentSearchDao()
+        AppDatabase.Companion.instance.recentSearchDao()
 
     fun search2(query: String?): MutableLiveData<SearchResult2?> {
         val result = MutableLiveData<SearchResult2?>()
@@ -72,8 +72,8 @@ class SearchingRepository {
         return result
     }
 
-    fun getSuggestions(query: String?): MutableLiveData<MutableList<String?>?> {
-        val suggestions = MutableLiveData<MutableList<String?>?>()
+    fun getSuggestions(query: String?): MutableLiveData<MutableList<String>> {
+        val suggestions = MutableLiveData<MutableList<String>>()
 
         getSubsonicClientInstance(false)
             .getSearchingClient()

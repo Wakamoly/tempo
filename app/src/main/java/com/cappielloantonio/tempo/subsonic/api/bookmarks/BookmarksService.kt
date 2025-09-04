@@ -8,13 +8,13 @@ import retrofit2.http.QueryMap
 
 interface BookmarksService {
     @GET("getPlayQueue")
-    fun getPlayQueue(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getPlayQueue(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 
     @GET("savePlayQueue")
     fun savePlayQueue(
-        @QueryMap params: MutableMap<String?, String?>?,
+        @QueryMap params: MutableMap<String, String>?,
         @Query("id") ids: MutableList<String?>?,
         @Query("current") current: String?,
-        @Query("position") position: Long
-    ): Call<ApiResponse?>?
+        @Query("position") position: Long,
+    ): Call<ApiResponse>
 }

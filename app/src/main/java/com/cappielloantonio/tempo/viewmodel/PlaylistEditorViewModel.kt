@@ -68,7 +68,7 @@ class PlaylistEditorViewModel(
 
     fun removeFromPlaylistSongLiveList(position: Int) {
         val songs = songLiveList.getValue()
-        Objects.requireNonNull<MutableList<Child?>?>(songs).removeAt(position)
+        Objects.requireNonNull<MutableList<Child>>(songs).removeAt(position)
         songLiveList.postValue(songs)
     }
 

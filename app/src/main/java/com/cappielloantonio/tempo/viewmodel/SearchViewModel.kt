@@ -38,7 +38,8 @@ class SearchViewModel(
         searchingRepository.delete(RecentSearch(search))
     }
 
-    fun getSearchSuggestion(query: String?): LiveData<MutableList<String?>?>? = searchingRepository.getSuggestions(query)
+    fun getSearchSuggestion(query: String?): LiveData<MutableList<String>>? =
+        searchingRepository.getSuggestions(query)
 
     val recentSearchSuggestion: MutableList<String?>
         get() {

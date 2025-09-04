@@ -18,7 +18,7 @@ class PodcastChannelPageViewModel(
         podcastRepository = PodcastRepository()
     }
 
-    val podcastChannelEpisodes: LiveData<MutableList<PodcastChannel?>?>?
+    val podcastChannelEpisodes: LiveData<MutableList<PodcastChannel>>?
         get() = podcastRepository.getPodcastChannels(true, podcastChannel!!.id)
 
     fun getPodcastChannel(): PodcastChannel = podcastChannel!!

@@ -31,7 +31,7 @@ import com.cappielloantonio.tempo.util.Preferences.isStarredSyncEnabled
 import java.util.Date
 import java.util.stream.Collectors
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PlayerBottomSheetViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
@@ -47,7 +47,7 @@ class PlayerBottomSheetViewModel(
     private val liveMedia = MutableLiveData<Child?>(null)
     private val liveAlbum = MutableLiveData<AlbumID3?>(null)
     private val liveArtist = MutableLiveData<ArtistID3?>(null)
-    private val instantMix = MutableLiveData<MutableList<Child?>?>(null)
+    private val instantMix = MutableLiveData<MutableList<Child>>(null)
     var syncLyricsState: Boolean = true
         private set
 
@@ -60,7 +60,7 @@ class PlayerBottomSheetViewModel(
         openRepository = OpenRepository()
     }
 
-    val queueSong: LiveData<MutableList<Queue?>?>?
+    val queueSong: LiveData<MutableList<Queue>>?
         get() = queueRepository.getLiveQueue()
 
     fun setFavorite(
@@ -228,7 +228,7 @@ class PlayerBottomSheetViewModel(
     fun getMediaInstantMix(
         owner: LifecycleOwner,
         media: Child,
-    ): LiveData<MutableList<Child?>?> {
+    ): LiveData<MutableList<Child>> {
         instantMix.value = mutableListOf<Child?>()
 
         songRepository

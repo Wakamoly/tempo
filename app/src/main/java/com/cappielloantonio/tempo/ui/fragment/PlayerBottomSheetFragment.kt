@@ -17,7 +17,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaBrowser
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
-import androidx.room.RoomDatabase.Builder.build
 import androidx.viewpager2.widget.ViewPager2
 import com.cappielloantonio.tempo.R
 import com.cappielloantonio.tempo.databinding.FragmentPlayerBottomSheetBinding
@@ -38,12 +37,10 @@ import com.cappielloantonio.tempo.viewmodel.PlayerBottomSheetViewModel
 import com.google.android.material.elevation.SurfaceColors
 import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import okhttp3.Request.Builder.build
-import okhttp3.Response.Builder.build
 import java.util.function.IntPredicate
 import java.util.stream.IntStream
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class PlayerBottomSheetFragment : Fragment() {
     private var bind: FragmentPlayerBottomSheetBinding? = null
 

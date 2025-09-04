@@ -14,13 +14,13 @@ import retrofit2.Response
 class ArtistCatalogueViewModel(
     application: Application,
 ) : AndroidViewModel(application) {
-    private val artistList = MutableLiveData<MutableList<ArtistID3?>?>(ArrayList<ArtistID3?>())
+    private val artistList = MutableLiveData<MutableList<ArtistID3>>(ArrayList<ArtistID3?>())
 
-    fun getArtistList(): LiveData<MutableList<ArtistID3?>?> = artistList
+    fun getArtistList(): LiveData<MutableList<ArtistID3>> = artistList
 
     fun loadArtists() {
         getSubsonicClientInstance(false)
-            .getBrowsingClient()
+            .browsingClient
             .getArtists()
             .enqueue(
                 object : Callback<ApiResponse?> {

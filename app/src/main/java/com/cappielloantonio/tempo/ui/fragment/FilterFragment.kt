@@ -22,7 +22,7 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import com.google.android.material.chip.Chip
 
-@OptIn(markerClass = UnstableApi::class)
+@OptIn(markerClass = [UnstableApi::class])
 class FilterFragment : Fragment() {
     private var activity: MainActivity? = null
     private var bind: FragmentFilterBinding? = null

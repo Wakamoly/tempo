@@ -7,11 +7,11 @@ import retrofit2.http.QueryMap
 
 interface SystemService {
     @GET("ping")
-    fun ping(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun ping(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 
     @GET("getLicense")
-    fun getLicense(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getLicense(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 
     @GET("getOpenSubsonicExtensions")
-    fun getOpenSubsonicExtensions(@QueryMap params: MutableMap<String?, String?>?): Call<ApiResponse?>?
+    fun getOpenSubsonicExtensions(@QueryMap params: MutableMap<String, String>?): Call<ApiResponse>
 }

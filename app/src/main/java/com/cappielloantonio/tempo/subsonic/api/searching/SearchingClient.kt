@@ -18,8 +18,8 @@ class SearchingClient(private val subsonic: Subsonic) {
         query: String?,
         songCount: Int,
         albumCount: Int,
-        artistCount: Int
-    ): Call<ApiResponse?>? {
+        artistCount: Int,
+    ): Call<ApiResponse> {
         Log.d(TAG, "search2()")
         return searchingService.search2(
             subsonic.getParams(),
@@ -34,8 +34,8 @@ class SearchingClient(private val subsonic: Subsonic) {
         query: String?,
         songCount: Int,
         albumCount: Int,
-        artistCount: Int
-    ): Call<ApiResponse?>? {
+        artistCount: Int,
+    ): Call<ApiResponse> {
         Log.d(TAG, "search3()")
         return searchingService.search3(
             subsonic.getParams(),

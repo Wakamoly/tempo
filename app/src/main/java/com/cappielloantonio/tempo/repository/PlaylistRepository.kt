@@ -20,13 +20,13 @@ import kotlin.math.min
 
 class PlaylistRepository {
     @UnstableApi
-    private val playlistDao: PlaylistDao = AppDatabase.Companion.getInstance().playlistDao()
+    private val playlistDao: PlaylistDao = AppDatabase.Companion.instance.playlistDao()
 
     fun getPlaylists(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<Playlist?>?> {
-        val listLivePlaylists = MutableLiveData<MutableList<Playlist?>?>(ArrayList<Playlist?>())
+    ): MutableLiveData<MutableList<Playlist>> {
+        val listLivePlaylists = MutableLiveData<MutableList<Playlist>>(ArrayList<Playlist?>())
 
         getSubsonicClientInstance(false)
             .getPlaylistClient()
@@ -73,8 +73,8 @@ class PlaylistRepository {
         return listLivePlaylists
     }
 
-    fun getPlaylistSongs(id: String?): MutableLiveData<MutableList<Child?>?> {
-        val listLivePlaylistSongs = MutableLiveData<MutableList<Child?>?>()
+    fun getPlaylistSongs(id: String?): MutableLiveData<MutableList<Child>> {
+        val listLivePlaylistSongs = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
             .getPlaylistClient()
@@ -242,8 +242,8 @@ class PlaylistRepository {
     }
 
     @get:UnstableApi
-    val pinnedPlaylists: LiveData<MutableList<Playlist?>?>?
-        get() = playlistDao.getAll()
+    val pinnedPlaylists: LiveData<MutableList<Playlist>>?
+        get() = playlistDao.all
 
     @UnstableApi
     fun insert(playlist: Playlist?) {

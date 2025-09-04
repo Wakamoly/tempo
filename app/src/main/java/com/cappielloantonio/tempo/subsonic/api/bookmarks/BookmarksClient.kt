@@ -14,7 +14,7 @@ class BookmarksClient(private val subsonic: Subsonic) {
             RetrofitClient(subsonic).retrofit.create<BookmarksService>(BookmarksService::class.java)
     }
 
-    val playQueue: Call<ApiResponse?>?
+    val playQueue: Call<ApiResponse>
         get() {
             Log.d(TAG, "getPlayQueue()")
             return bookmarksService.getPlayQueue(subsonic.getParams())
@@ -23,8 +23,8 @@ class BookmarksClient(private val subsonic: Subsonic) {
     fun savePlayQueue(
         ids: MutableList<String?>?,
         current: String?,
-        position: Long
-    ): Call<ApiResponse?>? {
+        position: Long,
+    ): Call<ApiResponse> {
         Log.d(TAG, "savePlayQueue()")
         return bookmarksService.savePlayQueue(subsonic.getParams(), ids, current, position)
     }
