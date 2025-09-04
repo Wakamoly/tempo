@@ -39,7 +39,6 @@ import kotlin.collections.ArrayList
 import kotlin.collections.MutableList
 import kotlin.collections.mutableListOf
 
-
 class AutomotiveRepository {
     private val sessionMediaItemDao: SessionMediaItemDao =
         AppDatabase.Companion.getInstance().sessionMediaItemDao()
@@ -48,71 +47,90 @@ class AutomotiveRepository {
     fun getAlbums(
         prefix: String?,
         type: String?,
-        size: Int
+        size: Int,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
             .getAlbumList2(type, size, 0, null, null)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null && response.body()!!.subsonicResponse.albumList2!!.albums != null) {
-                        val albums: MutableList<AlbumID3>? =
-                            response.body()!!.subsonicResponse.albumList2!!.albums
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.albumList2!!
+                                .albums != null
+                        ) {
+                            val albums: MutableList<AlbumID3>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.albumList2!!
+                                    .albums
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (album in albums!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    album.coverArtId,
-                                    getImageSize()
+                            for (album in albums!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            album.coverArtId,
+                                            getImageSize(),
+                                        ),
+                                    )
+
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(album.name)
+                                        .setAlbumTitle(album.name)
+                                        .setArtist(album.artist)
+                                        .setGenre(album.genre)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
+
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + album.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
+
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(album.name)
-                                .setAlbumTitle(album.name)
-                                .setArtist(album.artist)
-                                .setGenre(album.genre)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + album.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
-
-                            mediaItems.add(mediaItem)
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -125,44 +143,55 @@ class AutomotiveRepository {
             getSubsonicClientInstance(false)
                 .getAlbumSongListClient()
                 .getStarred2()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null && response.body()!!.subsonicResponse.starred2!!.songs != null) {
-                            val songs: MutableList<Child>? =
-                                response.body()!!.subsonicResponse.starred2!!.songs
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null &&
+                                response
+                                    .body()!!
+                                    .subsonicResponse.starred2!!
+                                    .songs != null
+                            ) {
+                                val songs: MutableList<Child>? =
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.starred2!!
+                                        .songs
 
-                            setChildrenMetadata(songs!!)
+                                setChildrenMetadata(songs!!)
 
-                            val mediaItems =
-                                MappingUtil.mapMediaItems(songs)
+                                val mediaItems =
+                                    MappingUtil.mapMediaItems(songs)
 
-                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                                LibraryResult.ofItemList(
-                                    ImmutableList.copyOf<MediaItem?>(
-                                        mediaItems
-                                    ), null
+                                val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                    LibraryResult.ofItemList(
+                                        ImmutableList.copyOf<MediaItem?>(
+                                            mediaItems,
+                                        ),
+                                        null,
+                                    )
+
+                                listenableFuture.set(libraryResult)
+                            } else {
+                                listenableFuture.set(
+                                    LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                        LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                    ),
                                 )
-
-                            listenableFuture.set(libraryResult)
-                        } else {
-                            listenableFuture.set(
-                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                    LibraryResult.RESULT_ERROR_BAD_VALUE
-                                )
-                            )
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                        listenableFuture.setException(t)
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                            listenableFuture.setException(t)
+                        }
+                    },
+                )
 
             return listenableFuture
         }
@@ -173,75 +202,93 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
             .getRandomSongs(100, null, null)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.randomSongs != null && response.body()!!.subsonicResponse.randomSongs!!.songs != null) {
-                        val songs: MutableList<Child>? =
-                            response.body()!!.subsonicResponse.randomSongs!!.songs
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.randomSongs != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.randomSongs!!
+                                .songs != null
+                        ) {
+                            val songs: MutableList<Child>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.randomSongs!!
+                                    .songs
 
-                        setChildrenMetadata(songs!!)
+                            setChildrenMetadata(songs!!)
 
-                        val mediaItems = MappingUtil.mapMediaItems(songs)
+                            val mediaItems = MappingUtil.mapMediaItems(songs)
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
 
     fun getRecentlyPlayedSongs(
         server: String?,
-        count: Int
+        count: Int,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
-        chronologyDao.getLastPlayed(server, count)
-            .observeForever(object : Observer<MutableList<Chronology?>?> {
-                override fun onChanged(chronology: MutableList<Chronology?>?) {
-                    if (chronology != null && !chronology.isEmpty()) {
-                        val songs: MutableList<Child> = ArrayList<Child>(chronology)
+        chronologyDao
+            .getLastPlayed(server, count)
+            .observeForever(
+                object : Observer<MutableList<Chronology?>?> {
+                    override fun onChanged(chronology: MutableList<Chronology?>?) {
+                        if (chronology != null && !chronology.isEmpty()) {
+                            val songs: MutableList<Child> = ArrayList<Child>(chronology)
 
-                        setChildrenMetadata(songs)
+                            setChildrenMetadata(songs)
 
-                        val mediaItems = MappingUtil.mapMediaItems(songs)
+                            val mediaItems = MappingUtil.mapMediaItems(songs)
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
+                        }
 
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
+                        chronologyDao.getLastPlayed(server, count).removeObserver(this)
                     }
-
-                    chronologyDao.getLastPlayed(server, count).removeObserver(this)
-                }
-            })
+                },
+            )
 
         return listenableFuture
     }
@@ -252,62 +299,81 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
             .getStarred2()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null && response.body()!!.subsonicResponse.starred2!!.albums != null) {
-                        val albums: MutableList<AlbumID3>? =
-                            response.body()!!.subsonicResponse.starred2!!.albums
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.starred2!!
+                                .albums != null
+                        ) {
+                            val albums: MutableList<AlbumID3>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.starred2!!
+                                    .albums
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (album in albums!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    album.coverArtId,
-                                    getImageSize()
+                            for (album in albums!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            album.coverArtId,
+                                            getImageSize(),
+                                        ),
+                                    )
+
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(album.name)
+                                        .setArtist(album.artist)
+                                        .setGenre(album.genre)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
+
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + album.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
+
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(album.name)
-                                .setArtist(album.artist)
-                                .setGenre(album.genre)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + album.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
-
-                            mediaItems.add(mediaItem)
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -318,63 +384,82 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
             .getStarred2()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null && response.body()!!.subsonicResponse.starred2!!.artists != null) {
-                        val artists: MutableList<ArtistID3>? =
-                            response.body()!!.subsonicResponse.starred2!!.artists
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.starred2!!
+                                .artists != null
+                        ) {
+                            val artists: MutableList<ArtistID3>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.starred2!!
+                                    .artists
 
-                        Collections.shuffle(artists)
+                            Collections.shuffle(artists)
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (artist in artists!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    artist.coverArtId,
-                                    getImageSize()
+                            for (artist in artists!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            artist.coverArtId,
+                                            getImageSize(),
+                                        ),
+                                    )
+
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(artist.name)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
+
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + artist.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
+
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(artist.name)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + artist.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
-
-                            mediaItems.add(mediaItem)
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -385,219 +470,287 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getMusicFolders()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.musicFolders != null && response.body()!!.subsonicResponse.musicFolders!!.musicFolders != null) {
-                        val musicFolders: MutableList<MusicFolder>? =
-                            response.body()!!.subsonicResponse.musicFolders!!.musicFolders
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.musicFolders != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.musicFolders!!
+                                .musicFolders != null
+                        ) {
+                            val musicFolders: MutableList<MusicFolder>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.musicFolders!!
+                                    .musicFolders
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (musicFolder in musicFolders!!) {
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(musicFolder.name)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
-                                .build()
+                            for (musicFolder in musicFolders!!) {
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(musicFolder.name)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
+                                        .build()
 
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + musicFolder.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + musicFolder.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
 
-                            mediaItems.add(mediaItem)
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
+                            )
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
 
     fun getIndexes(
         prefix: String?,
-        id: String?
+        id: String?,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getIndexes(id, null)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        if (response.body()!!.subsonicResponse.indexes!!.indices != null) {
-                            val indices: MutableList<Index>? =
-                                response.body()!!.subsonicResponse.indexes!!.indices
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.indexes!!
+                                    .indices != null
+                            ) {
+                                val indices: MutableList<Index>? =
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.indexes!!
+                                        .indices
 
-                            for (index in indices!!) {
-                                if (index.artists != null) {
-                                    for (artist in index.artists) {
-                                        val mediaMetadata = MediaMetadata.Builder()
-                                            .setTitle(artist.name)
-                                            .setIsBrowsable(true)
-                                            .setIsPlayable(false)
-                                            .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
-                                            .build()
+                                for (index in indices!!) {
+                                    if (index.artists != null) {
+                                        for (artist in index.artists) {
+                                            val mediaMetadata =
+                                                MediaMetadata
+                                                    .Builder()
+                                                    .setTitle(artist.name)
+                                                    .setIsBrowsable(true)
+                                                    .setIsPlayable(false)
+                                                    .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
+                                                    .build()
 
-                                        val mediaItem = MediaItem.Builder()
-                                            .setMediaId(prefix + artist.id)
-                                            .setMediaMetadata(mediaMetadata)
-                                            .setUri("")
-                                            .build()
+                                            val mediaItem =
+                                                MediaItem
+                                                    .Builder()
+                                                    .setMediaId(prefix + artist.id)
+                                                    .setMediaMetadata(mediaMetadata)
+                                                    .setUri("")
+                                                    .build()
 
-                                        mediaItems.add(mediaItem)
+                                            mediaItems.add(mediaItem)
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        if (response.body()!!.subsonicResponse.indexes!!.children != null) {
-                            val children: MutableList<Child>? =
-                                response.body()!!.subsonicResponse.indexes!!.children
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.indexes!!
+                                    .children != null
+                            ) {
+                                val children: MutableList<Child>? =
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.indexes!!
+                                        .children
 
-                            for (song in children!!) {
-                                val artworkUri = Uri.parse(
-                                    CustomGlideRequest.createUrl(
-                                        song.coverArtId,
-                                        getImageSize()
-                                    )
-                                )
+                                for (song in children!!) {
+                                    val artworkUri =
+                                        Uri.parse(
+                                            CustomGlideRequest.createUrl(
+                                                song.coverArtId,
+                                                getImageSize(),
+                                            ),
+                                        )
 
-                                val mediaMetadata = MediaMetadata.Builder()
-                                    .setTitle(song.title)
-                                    .setAlbumTitle(song.album)
-                                    .setArtist(song.artist)
-                                    .setIsBrowsable(false)
-                                    .setIsPlayable(true)
-                                    .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-                                    .setArtworkUri(artworkUri)
-                                    .build()
+                                    val mediaMetadata =
+                                        MediaMetadata
+                                            .Builder()
+                                            .setTitle(song.title)
+                                            .setAlbumTitle(song.album)
+                                            .setArtist(song.artist)
+                                            .setIsBrowsable(false)
+                                            .setIsPlayable(true)
+                                            .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
+                                            .setArtworkUri(artworkUri)
+                                            .build()
 
-                                val mediaItem = MediaItem.Builder()
-                                    .setMediaId(prefix + song.id)
-                                    .setMediaMetadata(mediaMetadata)
-                                    .setUri(MusicUtil.getStreamUri(song.id))
-                                    .build()
+                                    val mediaItem =
+                                        MediaItem
+                                            .Builder()
+                                            .setMediaId(prefix + song.id)
+                                            .setMediaMetadata(mediaMetadata)
+                                            .setUri(MusicUtil.getStreamUri(song.id))
+                                            .build()
 
-                                mediaItems.add(mediaItem)
+                                    mediaItems.add(mediaItem)
+                                }
+
+                                setChildrenMetadata(children)
                             }
 
-                            setChildrenMetadata(children)
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
 
     fun getDirectories(
         prefix: String?,
-        id: String?
+        id: String?,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getMusicDirectory(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null && response.body()!!.subsonicResponse.directory!!.children != null) {
-                        val directory = response.body()!!.subsonicResponse.directory
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.directory!!
+                                .children != null
+                        ) {
+                            val directory = response.body()!!.subsonicResponse.directory
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (child in directory!!.children!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    child.coverArtId,
-                                    getImageSize()
-                                )
-                            )
-
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(child.title)
-                                .setIsBrowsable(child.isDir)
-                                .setIsPlayable(!child.isDir)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(if (child.isDir) prefix + child.id else child.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri(
-                                    if (!child.isDir) MusicUtil.getStreamUri(child.id) else Uri.parse(
-                                        ""
+                            for (child in directory!!.children!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            child.coverArtId,
+                                            getImageSize(),
+                                        ),
                                     )
-                                )
-                                .build()
 
-                            mediaItems.add(mediaItem)
-                        }
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(child.title)
+                                        .setIsBrowsable(child.isDir)
+                                        .setIsPlayable(!child.isDir)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
 
-                        setChildrenMetadata(
-                            directory.children!!.stream()
-                                .filter { child: Child? -> !child!!.isDir }.collect(
-                                    Collectors.toList()
-                                )
-                        )
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(if (child.isDir) prefix + child.id else child.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri(
+                                            if (!child.isDir) {
+                                                MusicUtil.getStreamUri(child.id)
+                                            } else {
+                                                Uri.parse(
+                                                    "",
+                                                )
+                                            },
+                                        ).build()
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
+                                mediaItems.add(mediaItem)
+                            }
+
+                            setChildrenMetadata(
+                                directory.children!!
+                                    .stream()
+                                    .filter { child: Child? -> !child!!.isDir }
+                                    .collect(
+                                        Collectors.toList(),
+                                    ),
                             )
 
-                        listenableFuture.set(libraryResult)
-                    }
-                }
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                            listenableFuture.set(libraryResult)
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -608,53 +761,71 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .getPlaylists()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null && response.body()!!.subsonicResponse.playlists!!.playlists != null) {
-                        val playlists: MutableList<Playlist>? =
-                            response.body()!!.subsonicResponse.playlists!!.playlists
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.playlists!!
+                                .playlists != null
+                        ) {
+                            val playlists: MutableList<Playlist>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.playlists!!
+                                    .playlists
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (playlist in playlists!!) {
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(playlist.name)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
-                                .build()
+                            for (playlist in playlists!!) {
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(playlist.name)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                                        .build()
 
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + playlist.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + playlist.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
 
-                            mediaItems.add(mediaItem)
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
+                            )
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -665,63 +836,82 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .getNewestPodcasts(count)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null && response.body()!!.subsonicResponse.newestPodcasts!!.episodes != null) {
-                        val episodes: MutableList<PodcastEpisode>? =
-                            response.body()!!.subsonicResponse.newestPodcasts!!.episodes
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.newestPodcasts!!
+                                .episodes != null
+                        ) {
+                            val episodes: MutableList<PodcastEpisode>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.newestPodcasts!!
+                                    .episodes
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (episode in episodes!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    episode.coverArtId,
-                                    getImageSize()
+                            for (episode in episodes!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            episode.coverArtId,
+                                            getImageSize(),
+                                        ),
+                                    )
+
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(episode.title)
+                                        .setIsBrowsable(false)
+                                        .setIsPlayable(true)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_PODCAST_EPISODE)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
+
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(episode.id!!)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri(MusicUtil.getStreamUri(episode.streamId))
+                                        .build()
+
+                                mediaItems.add(mediaItem)
+                            }
+
+                            setPodcastEpisodesMetadata(episodes)
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(episode.title)
-                                .setIsBrowsable(false)
-                                .setIsPlayable(true)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_PODCAST_EPISODE)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(episode.id!!)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri(MusicUtil.getStreamUri(episode.streamId))
-                                .build()
-
-                            mediaItems.add(mediaItem)
                         }
-
-                        setPodcastEpisodesMetadata(episodes)
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -734,63 +924,77 @@ class AutomotiveRepository {
             getSubsonicClientInstance(false)
                 .getInternetRadioClient()
                 .getInternetRadioStations()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.internetRadioStations != null && response.body()!!.subsonicResponse.internetRadioStations!!.internetRadioStations != null) {
-                            val radioStations: MutableList<InternetRadioStation>? =
-                                response.body()!!.subsonicResponse.internetRadioStations!!.internetRadioStations
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null &&
+                                response.body()!!.subsonicResponse.internetRadioStations != null &&
+                                response
+                                    .body()!!
+                                    .subsonicResponse.internetRadioStations!!
+                                    .internetRadioStations != null
+                            ) {
+                                val radioStations: MutableList<InternetRadioStation>? =
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.internetRadioStations!!
+                                        .internetRadioStations
 
-                            val mediaItems: MutableList<MediaItem?> =
-                                ArrayList<MediaItem?>()
+                                val mediaItems: MutableList<MediaItem?> =
+                                    ArrayList<MediaItem?>()
 
-                            for (radioStation in radioStations!!) {
-                                val mediaMetadata =
-                                    MediaMetadata.Builder()
-                                        .setTitle(radioStation.name)
-                                        .setIsBrowsable(false)
-                                        .setIsPlayable(true)
-                                        .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
-                                        .build()
+                                for (radioStation in radioStations!!) {
+                                    val mediaMetadata =
+                                        MediaMetadata
+                                            .Builder()
+                                            .setTitle(radioStation.name)
+                                            .setIsBrowsable(false)
+                                            .setIsPlayable(true)
+                                            .setMediaType(MediaMetadata.MEDIA_TYPE_RADIO_STATION)
+                                            .build()
 
-                                val mediaItem =
-                                    MediaItem.Builder()
-                                        .setMediaId(radioStation.id!!)
-                                        .setMediaMetadata(mediaMetadata)
-                                        .setUri(radioStation.streamUrl)
-                                        .build()
+                                    val mediaItem =
+                                        MediaItem
+                                            .Builder()
+                                            .setMediaId(radioStation.id!!)
+                                            .setMediaMetadata(mediaMetadata)
+                                            .setUri(radioStation.streamUrl)
+                                            .build()
 
-                                mediaItems.add(mediaItem)
+                                    mediaItems.add(mediaItem)
+                                }
+
+                                setInternetRadioStationsMetadata(radioStations)
+
+                                val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                    LibraryResult.ofItemList(
+                                        ImmutableList.copyOf<MediaItem?>(
+                                            mediaItems,
+                                        ),
+                                        null,
+                                    )
+
+                                listenableFuture.set(libraryResult)
+                            } else {
+                                listenableFuture.set(
+                                    LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                        LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                    ),
+                                )
                             }
-
-                            setInternetRadioStationsMetadata(radioStations)
-
-                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                                LibraryResult.ofItemList(
-                                    ImmutableList.copyOf<MediaItem?>(
-                                        mediaItems
-                                    ), null
-                                )
-
-                            listenableFuture.set(libraryResult)
-                        } else {
-                            listenableFuture.set(
-                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                    LibraryResult.RESULT_ERROR_BAD_VALUE
-                                )
-                            )
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                        listenableFuture.setException(t)
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                            listenableFuture.setException(t)
+                        }
+                    },
+                )
 
             return listenableFuture
         }
@@ -801,103 +1005,136 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getAlbum(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.album != null && response.body()!!.subsonicResponse.album!!.songs != null) {
-                        val tracks: MutableList<Child>? =
-                            response.body()!!.subsonicResponse.album!!.songs
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.album != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.album!!
+                                .songs != null
+                        ) {
+                            val tracks: MutableList<Child>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.album!!
+                                    .songs
 
-                        setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks!!)
 
-                        val mediaItems = MappingUtil.mapMediaItems(tracks)
+                            val mediaItems = MappingUtil.mapMediaItems(tracks)
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
+
+                            listenableFuture.set(libraryResult)
+                        } else {
+                            listenableFuture.set(
+                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
+                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                ),
                             )
-
-                        listenableFuture.set(libraryResult)
-                    } else {
-                        listenableFuture.set(
-                            LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                LibraryResult.RESULT_ERROR_BAD_VALUE
-                            )
-                        )
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
 
     fun getArtistAlbum(
         prefix: String?,
-        id: String?
+        id: String?,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getArtist(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null && response.body()!!.subsonicResponse.artist!!.albums != null) {
-                        val albums: MutableList<AlbumID3>? =
-                            response.body()!!.subsonicResponse.artist!!.albums
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.artist!!
+                                .albums != null
+                        ) {
+                            val albums: MutableList<AlbumID3>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.artist!!
+                                    .albums
 
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        for (album in albums!!) {
-                            val artworkUri = Uri.parse(
-                                CustomGlideRequest.createUrl(
-                                    album.coverArtId,
-                                    getImageSize()
+                            for (album in albums!!) {
+                                val artworkUri =
+                                    Uri.parse(
+                                        CustomGlideRequest.createUrl(
+                                            album.coverArtId,
+                                            getImageSize(),
+                                        ),
+                                    )
+
+                                val mediaMetadata =
+                                    MediaMetadata
+                                        .Builder()
+                                        .setTitle(album.name)
+                                        .setAlbumTitle(album.name)
+                                        .setArtist(album.artist)
+                                        .setGenre(album.genre)
+                                        .setIsBrowsable(true)
+                                        .setIsPlayable(false)
+                                        .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
+                                        .setArtworkUri(artworkUri)
+                                        .build()
+
+                                val mediaItem =
+                                    MediaItem
+                                        .Builder()
+                                        .setMediaId(prefix + album.id)
+                                        .setMediaMetadata(mediaMetadata)
+                                        .setUri("")
+                                        .build()
+
+                                mediaItems.add(mediaItem)
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
-                            )
 
-                            val mediaMetadata = MediaMetadata.Builder()
-                                .setTitle(album.name)
-                                .setAlbumTitle(album.name)
-                                .setArtist(album.artist)
-                                .setGenre(album.genre)
-                                .setIsBrowsable(true)
-                                .setIsPlayable(false)
-                                .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
-                                .setArtworkUri(artworkUri)
-                                .build()
-
-                            val mediaItem = MediaItem.Builder()
-                                .setMediaId(prefix + album.id)
-                                .setMediaMetadata(mediaMetadata)
-                                .setUri("")
-                                .build()
-
-                            mediaItems.add(mediaItem)
+                            listenableFuture.set(libraryResult)
                         }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -908,71 +1145,99 @@ class AutomotiveRepository {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .getPlaylist(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null && response.body()!!.subsonicResponse.playlist!!.entries != null) {
-                        val tracks: MutableList<Child>? =
-                            response.body()!!.subsonicResponse.playlist!!.entries
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.playlist!!
+                                .entries != null
+                        ) {
+                            val tracks: MutableList<Child>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.playlist!!
+                                    .entries
 
-                        setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks!!)
 
-                        val mediaItems = MappingUtil.mapMediaItems(tracks)
+                            val mediaItems = MappingUtil.mapMediaItems(tracks)
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
 
-                        listenableFuture.set(libraryResult)
+                            listenableFuture.set(libraryResult)
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
 
     fun getMadeForYou(
         id: String?,
-        count: Int
+        count: Int,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getSimilarSongs2(id, count)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.similarSongs2 != null && response.body()!!.subsonicResponse.similarSongs2!!.songs != null) {
-                        val tracks: MutableList<Child>? =
-                            response.body()!!.subsonicResponse.similarSongs2!!.songs
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.similarSongs2 != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.similarSongs2!!
+                                .songs != null
+                        ) {
+                            val tracks: MutableList<Child>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.similarSongs2!!
+                                    .songs
 
-                        setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks!!)
 
-                        val mediaItems = MappingUtil.mapMediaItems(tracks)
+                            val mediaItems = MappingUtil.mapMediaItems(tracks)
 
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
+                                )
 
-                        listenableFuture.set(libraryResult)
+                            listenableFuture.set(libraryResult)
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -980,98 +1245,135 @@ class AutomotiveRepository {
     fun search(
         query: String?,
         albumPrefix: String?,
-        artistPrefix: String?
+        artistPrefix: String?,
     ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
         val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
 
         getSubsonicClientInstance(false)
             .getSearchingClient()
             .search3(query, 20, 20, 20)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
-                        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
+                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
-                        if (response.body()!!.subsonicResponse.searchResult3!!.artists != null) {
-                            for (artist in response.body()!!.subsonicResponse.searchResult3!!.artists!!) {
-                                val artworkUri = Uri.parse(
-                                    CustomGlideRequest.createUrl(
-                                        artist.coverArtId,
-                                        getImageSize()
-                                    )
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .artists != null
+                            ) {
+                                for (artist in response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .artists!!) {
+                                    val artworkUri =
+                                        Uri.parse(
+                                            CustomGlideRequest.createUrl(
+                                                artist.coverArtId,
+                                                getImageSize(),
+                                            ),
+                                        )
+
+                                    val mediaMetadata =
+                                        MediaMetadata
+                                            .Builder()
+                                            .setTitle(artist.name)
+                                            .setIsBrowsable(true)
+                                            .setIsPlayable(false)
+                                            .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                                            .setArtworkUri(artworkUri)
+                                            .build()
+
+                                    val mediaItem =
+                                        MediaItem
+                                            .Builder()
+                                            .setMediaId(artistPrefix + artist.id)
+                                            .setMediaMetadata(mediaMetadata)
+                                            .setUri("")
+                                            .build()
+
+                                    mediaItems.add(mediaItem)
+                                }
+                            }
+
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .albums != null
+                            ) {
+                                for (album in response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .albums!!) {
+                                    val artworkUri =
+                                        Uri.parse(
+                                            CustomGlideRequest.createUrl(
+                                                album.coverArtId,
+                                                getImageSize(),
+                                            ),
+                                        )
+
+                                    val mediaMetadata =
+                                        MediaMetadata
+                                            .Builder()
+                                            .setTitle(album.name)
+                                            .setAlbumTitle(album.name)
+                                            .setArtist(album.artist)
+                                            .setGenre(album.genre)
+                                            .setIsBrowsable(true)
+                                            .setIsPlayable(false)
+                                            .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
+                                            .setArtworkUri(artworkUri)
+                                            .build()
+
+                                    val mediaItem =
+                                        MediaItem
+                                            .Builder()
+                                            .setMediaId(albumPrefix + album.id)
+                                            .setMediaMetadata(mediaMetadata)
+                                            .setUri("")
+                                            .build()
+
+                                    mediaItems.add(mediaItem)
+                                }
+                            }
+
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .songs != null
+                            ) {
+                                val tracks: MutableList<Child>? =
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.searchResult3!!
+                                        .songs
+                                setChildrenMetadata(tracks!!)
+                                mediaItems.addAll(MappingUtil.mapMediaItems(tracks))
+                            }
+
+                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                                LibraryResult.ofItemList(
+                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    null,
                                 )
 
-                                val mediaMetadata = MediaMetadata.Builder()
-                                    .setTitle(artist.name)
-                                    .setIsBrowsable(true)
-                                    .setIsPlayable(false)
-                                    .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
-                                    .setArtworkUri(artworkUri)
-                                    .build()
-
-                                val mediaItem = MediaItem.Builder()
-                                    .setMediaId(artistPrefix + artist.id)
-                                    .setMediaMetadata(mediaMetadata)
-                                    .setUri("")
-                                    .build()
-
-                                mediaItems.add(mediaItem)
-                            }
+                            listenableFuture.set(libraryResult)
                         }
-
-                        if (response.body()!!.subsonicResponse.searchResult3!!.albums != null) {
-                            for (album in response.body()!!.subsonicResponse.searchResult3!!.albums!!) {
-                                val artworkUri = Uri.parse(
-                                    CustomGlideRequest.createUrl(
-                                        album.coverArtId,
-                                        getImageSize()
-                                    )
-                                )
-
-                                val mediaMetadata = MediaMetadata.Builder()
-                                    .setTitle(album.name)
-                                    .setAlbumTitle(album.name)
-                                    .setArtist(album.artist)
-                                    .setGenre(album.genre)
-                                    .setIsBrowsable(true)
-                                    .setIsPlayable(false)
-                                    .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
-                                    .setArtworkUri(artworkUri)
-                                    .build()
-
-                                val mediaItem = MediaItem.Builder()
-                                    .setMediaId(albumPrefix + album.id)
-                                    .setMediaMetadata(mediaMetadata)
-                                    .setUri("")
-                                    .build()
-
-                                mediaItems.add(mediaItem)
-                            }
-                        }
-
-                        if (response.body()!!.subsonicResponse.searchResult3!!.songs != null) {
-                            val tracks: MutableList<Child>? =
-                                response.body()!!.subsonicResponse.searchResult3!!.songs
-                            setChildrenMetadata(tracks!!)
-                            mediaItems.addAll(MappingUtil.mapMediaItems(tracks))
-                        }
-
-                        val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
-                            LibraryResult.ofItemList(
-                                ImmutableList.copyOf<MediaItem?>(mediaItems), null
-                            )
-
-                        listenableFuture.set(libraryResult)
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    listenableFuture.setException(t)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        listenableFuture.setException(t)
+                    }
+                },
+            )
 
         return listenableFuture
     }
@@ -1166,7 +1468,7 @@ class AutomotiveRepository {
 
     private class GetMediaItemThreadSafe(
         private val sessionMediaItemDao: SessionMediaItemDao,
-        private val id: String?
+        private val id: String?,
     ) : Runnable {
         var sessionMediaItem: SessionMediaItem? = null
             private set
@@ -1179,31 +1481,34 @@ class AutomotiveRepository {
     @OptIn(markerClass = UnstableApi::class)
     private class GetMediaItemsThreadSafe(
         private val sessionMediaItemDao: SessionMediaItemDao,
-        private val timestamp: Long
+        private val timestamp: Long,
     ) : Runnable {
         val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
 
         override fun run() {
             val sessionMediaItems = sessionMediaItemDao.get(timestamp)
-            sessionMediaItems.forEach(Consumer { sessionMediaItem: SessionMediaItem? ->
-                mediaItems.add(
-                    sessionMediaItem!!.getMediaItem()
-                )
-            })
+            sessionMediaItems.forEach(
+                Consumer { sessionMediaItem: SessionMediaItem? ->
+                    mediaItems.add(
+                        sessionMediaItem!!.getMediaItem(),
+                    )
+                },
+            )
         }
     }
 
     private class InsertAllThreadSafe(
         private val sessionMediaItemDao: SessionMediaItemDao,
-        private val sessionMediaItems: MutableList<SessionMediaItem?>?
+        private val sessionMediaItems: MutableList<SessionMediaItem?>?,
     ) : Runnable {
         override fun run() {
             sessionMediaItemDao.insertAll(sessionMediaItems)
         }
     }
 
-    private class DeleteAllThreadSafe(private val sessionMediaItemDao: SessionMediaItemDao) :
-        Runnable {
+    private class DeleteAllThreadSafe(
+        private val sessionMediaItemDao: SessionMediaItemDao,
+    ) : Runnable {
         override fun run() {
             sessionMediaItemDao.deleteAll()
         }

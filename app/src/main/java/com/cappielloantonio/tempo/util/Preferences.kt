@@ -1,12 +1,11 @@
 package com.cappielloantonio.tempo.util
 
+import androidx.core.content.edit
 import androidx.media3.common.Player
 import com.cappielloantonio.tempo.App
 import com.cappielloantonio.tempo.model.HomeSector
 import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension
 import com.google.gson.Gson
-import androidx.core.content.edit
-
 
 object Preferences {
     const val THEME = "theme"
@@ -70,11 +69,8 @@ object Preferences {
     private const val CONTINUOUS_PLAY = "continuous_play"
     private const val LAST_INSTANT_MIX = "last_instant_mix"
 
-
     @JvmStatic
-    fun getServer(): String? {
-        return App.getInstance().preferences.getString(SERVER, null)
-    }
+    fun getServer(): String? = App.getInstance().preferences.getString(SERVER, null)
 
     @JvmStatic
     fun setServer(server: String?) {
@@ -82,9 +78,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getUser(): String? {
-        return App.getInstance().preferences.getString(USER, null)
-    }
+    fun getUser(): String? = App.getInstance().preferences.getString(USER, null)
 
     @JvmStatic
     fun setUser(user: String?) {
@@ -92,9 +86,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getPassword(): String? {
-        return App.getInstance().preferences.getString(PASSWORD, null)
-    }
+    fun getPassword(): String? = App.getInstance().preferences.getString(PASSWORD, null)
 
     @JvmStatic
     fun setPassword(password: String?) {
@@ -102,9 +94,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getToken(): String? {
-        return App.getInstance().preferences.getString(TOKEN, null)
-    }
+    fun getToken(): String? = App.getInstance().preferences.getString(TOKEN, null)
 
     @JvmStatic
     fun setToken(token: String?) {
@@ -112,9 +102,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getSalt(): String? {
-        return App.getInstance().preferences.getString(SALT, null)
-    }
+    fun getSalt(): String? = App.getInstance().preferences.getString(SALT, null)
 
     @JvmStatic
     fun setSalt(salt: String?) {
@@ -122,9 +110,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isLowSecurity(): Boolean {
-        return App.getInstance().preferences.getBoolean(LOW_SECURITY, false)
-    }
+    fun isLowSecurity(): Boolean = App.getInstance().preferences.getBoolean(LOW_SECURITY, false)
 
     @JvmStatic
     fun setLowSecurity(isLowSecurity: Boolean) {
@@ -132,9 +118,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getServerId(): String? {
-        return App.getInstance().preferences.getString(SERVER_ID, null)
-    }
+    fun getServerId(): String? = App.getInstance().preferences.getString(SERVER_ID, null)
 
     @JvmStatic
     fun setServerId(serverId: String?) {
@@ -142,9 +126,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isOpenSubsonic(): Boolean {
-        return App.getInstance().preferences.getBoolean(OPEN_SUBSONIC, false)
-    }
+    fun isOpenSubsonic(): Boolean = App.getInstance().preferences.getBoolean(OPEN_SUBSONIC, false)
 
     @JvmStatic
     fun setOpenSubsonic(isOpenSubsonic: Boolean) {
@@ -152,9 +134,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getOpenSubsonicExtensions(): String? {
-        return App.getInstance().preferences.getString(OPEN_SUBSONIC_EXTENSIONS, null)
-    }
+    fun getOpenSubsonicExtensions(): String? = App.getInstance().preferences.getString(OPEN_SUBSONIC_EXTENSIONS, null)
 
     @JvmStatic
     fun setOpenSubsonicExtensions(extension: List<OpenSubsonicExtension>) {
@@ -164,9 +144,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getLocalAddress(): String? {
-        return App.getInstance().preferences.getString(LOCAL_ADDRESS, null)
-    }
+    fun getLocalAddress(): String? = App.getInstance().preferences.getString(LOCAL_ADDRESS, null)
 
     @JvmStatic
     fun setLocalAddress(address: String?) {
@@ -174,16 +152,16 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getInUseServerAddress(): String? {
-        return App.getInstance().preferences.getString(IN_USE_SERVER_ADDRESS, null)
+    fun getInUseServerAddress(): String? =
+        App
+            .getInstance()
+            .preferences
+            .getString(IN_USE_SERVER_ADDRESS, null)
             ?.takeIf { it.isNotBlank() }
             ?: getServer()
-    }
 
     @JvmStatic
-    fun isInUseServerAddressLocal(): Boolean {
-        return getInUseServerAddress() == getLocalAddress()
-    }
+    fun isInUseServerAddressLocal(): Boolean = getInUseServerAddress() == getLocalAddress()
 
     @JvmStatic
     fun switchInUseServerAddress() {
@@ -192,26 +170,24 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isServerSwitchable(): Boolean {
-        return App.getInstance().preferences.getLong(
-                NEXT_SERVER_SWITCH, 0
+    fun isServerSwitchable(): Boolean =
+        App.getInstance().preferences.getLong(
+            NEXT_SERVER_SWITCH,
+            0,
         ) + 15000 < System.currentTimeMillis() && !getServer().isNullOrEmpty() && !getLocalAddress().isNullOrEmpty()
-    }
 
     @JvmStatic
     fun setServerSwitchableTimer() {
         App.getInstance().preferences.edit {
             putLong(
                 NEXT_SERVER_SWITCH,
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
             )
         }
     }
 
     @JvmStatic
-    fun askForOptimization(): Boolean {
-        return App.getInstance().preferences.getBoolean(BATTERY_OPTIMIZATION, true)
-    }
+    fun askForOptimization(): Boolean = App.getInstance().preferences.getBoolean(BATTERY_OPTIMIZATION, true)
 
     @JvmStatic
     fun dontAskForOptimization() {
@@ -219,9 +195,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getPlaybackSpeed(): Float {
-        return App.getInstance().preferences.getFloat(PLAYBACK_SPEED, 1f)
-    }
+    fun getPlaybackSpeed(): Float = App.getInstance().preferences.getFloat(PLAYBACK_SPEED, 1f)
 
     @JvmStatic
     fun setPlaybackSpeed(playbackSpeed: Float) {
@@ -229,9 +203,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isSkipSilenceMode(): Boolean {
-        return App.getInstance().preferences.getBoolean(SKIP_SILENCE, false)
-    }
+    fun isSkipSilenceMode(): Boolean = App.getInstance().preferences.getBoolean(SKIP_SILENCE, false)
 
     @JvmStatic
     fun setSkipSilenceMode(isSkipSilenceMode: Boolean) {
@@ -239,9 +211,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isShuffleModeEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(SHUFFLE_MODE, false)
-    }
+    fun isShuffleModeEnabled(): Boolean = App.getInstance().preferences.getBoolean(SHUFFLE_MODE, false)
 
     @JvmStatic
     fun setShuffleModeEnabled(shuffleModeEnabled: Boolean) {
@@ -249,9 +219,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getRepeatMode(): Int {
-        return App.getInstance().preferences.getInt(REPEAT_MODE, Player.REPEAT_MODE_OFF)
-    }
+    fun getRepeatMode(): Int = App.getInstance().preferences.getInt(REPEAT_MODE, Player.REPEAT_MODE_OFF)
 
     @JvmStatic
     fun setRepeatMode(repeatMode: Int) {
@@ -259,49 +227,46 @@ object Preferences {
     }
 
     @JvmStatic
-    fun getImageCacheSize(): Int {
-        return App.getInstance().preferences.getString(IMAGE_CACHE_SIZE, "500")!!.toInt()
-    }
+    fun getImageCacheSize(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(IMAGE_CACHE_SIZE, "500")!!
+            .toInt()
 
     @JvmStatic
-    fun getImageSize(): Int {
-        return App.getInstance().preferences.getString(IMAGE_SIZE, "-1")!!.toInt()
-    }
+    fun getImageSize(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(IMAGE_SIZE, "-1")!!
+            .toInt()
 
     @JvmStatic
-    fun getStreamingCacheSize(): Long {
-        return App.getInstance().preferences.getString(STREAMING_CACHE_SIZE, "256")!!.toLong()
-    }
+    fun getStreamingCacheSize(): Long =
+        App
+            .getInstance()
+            .preferences
+            .getString(STREAMING_CACHE_SIZE, "256")!!
+            .toLong()
 
     @JvmStatic
-    fun getMaxBitrateWifi(): String {
-        return App.getInstance().preferences.getString(MAX_BITRATE_WIFI, "0")!!
-    }
+    fun getMaxBitrateWifi(): String = App.getInstance().preferences.getString(MAX_BITRATE_WIFI, "0")!!
 
     @JvmStatic
-    fun getMaxBitrateMobile(): String {
-        return App.getInstance().preferences.getString(MAX_BITRATE_MOBILE, "0")!!
-    }
+    fun getMaxBitrateMobile(): String = App.getInstance().preferences.getString(MAX_BITRATE_MOBILE, "0")!!
 
     @JvmStatic
-    fun getAudioTranscodeFormatWifi(): String {
-        return App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_WIFI, "raw")!!
-    }
+    fun getAudioTranscodeFormatWifi(): String = App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_WIFI, "raw")!!
 
     @JvmStatic
-    fun getAudioTranscodeFormatMobile(): String {
-        return App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_MOBILE, "raw")!!
-    }
+    fun getAudioTranscodeFormatMobile(): String = App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_MOBILE, "raw")!!
 
     @JvmStatic
-    fun isWifiOnly(): Boolean {
-        return App.getInstance().preferences.getBoolean(WIFI_ONLY, false)
-    }
+    fun isWifiOnly(): Boolean = App.getInstance().preferences.getBoolean(WIFI_ONLY, false)
 
     @JvmStatic
-    fun isDataSavingMode(): Boolean {
-        return App.getInstance().preferences.getBoolean(DATA_SAVING_MODE, false)
-    }
+    fun isDataSavingMode(): Boolean = App.getInstance().preferences.getBoolean(DATA_SAVING_MODE, false)
 
     @JvmStatic
     fun setDataSavingMode(isDataSavingModeEnabled: Boolean) {
@@ -311,74 +276,72 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isStarredAlbumsSyncEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(SYNC_STARRED_ALBUMS_FOR_OFFLINE_USE, false)
-    }
+    fun isStarredAlbumsSyncEnabled(): Boolean = App.getInstance().preferences.getBoolean(SYNC_STARRED_ALBUMS_FOR_OFFLINE_USE, false)
 
     @JvmStatic
     fun setStarredAlbumsSyncEnabled(isStarredSyncEnabled: Boolean) {
         App.getInstance().preferences.edit {
             putBoolean(
-                SYNC_STARRED_ALBUMS_FOR_OFFLINE_USE, isStarredSyncEnabled
+                SYNC_STARRED_ALBUMS_FOR_OFFLINE_USE,
+                isStarredSyncEnabled,
             )
         }
     }
 
     @JvmStatic
-    fun isStarredSyncEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(SYNC_STARRED_TRACKS_FOR_OFFLINE_USE, false)
-    }
+    fun isStarredSyncEnabled(): Boolean = App.getInstance().preferences.getBoolean(SYNC_STARRED_TRACKS_FOR_OFFLINE_USE, false)
 
     @JvmStatic
     fun setStarredSyncEnabled(isStarredSyncEnabled: Boolean) {
         App.getInstance().preferences.edit {
             putBoolean(
-                SYNC_STARRED_TRACKS_FOR_OFFLINE_USE, isStarredSyncEnabled
+                SYNC_STARRED_TRACKS_FOR_OFFLINE_USE,
+                isStarredSyncEnabled,
             )
         }
     }
 
     @JvmStatic
-    fun showServerUnreachableDialog(): Boolean {
-        return App.getInstance().preferences.getLong(
-                SERVER_UNREACHABLE, 0
+    fun showServerUnreachableDialog(): Boolean =
+        App.getInstance().preferences.getLong(
+            SERVER_UNREACHABLE,
+            0,
         ) + 86400000 < System.currentTimeMillis()
-    }
 
     @JvmStatic
     fun setServerUnreachableDatetime() {
         App.getInstance().preferences.edit {
             putLong(
                 SERVER_UNREACHABLE,
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
             )
         }
     }
 
     @JvmStatic
-    fun isSyncronizationEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(QUEUE_SYNCING, false)
-    }
+    fun isSyncronizationEnabled(): Boolean = App.getInstance().preferences.getBoolean(QUEUE_SYNCING, false)
 
     @JvmStatic
-    fun getSyncCountdownTimer(): Int {
-        return App.getInstance().preferences.getString(QUEUE_SYNCING_COUNTDOWN, "5")!!.toInt()
-    }
+    fun getSyncCountdownTimer(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(QUEUE_SYNCING_COUNTDOWN, "5")!!
+            .toInt()
 
     @JvmStatic
-    fun isCornerRoundingEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(ROUNDED_CORNER, false)
-    }
+    fun isCornerRoundingEnabled(): Boolean = App.getInstance().preferences.getBoolean(ROUNDED_CORNER, false)
 
     @JvmStatic
-    fun getRoundedCornerSize(): Int {
-        return App.getInstance().preferences.getString(ROUNDED_CORNER_SIZE, "12")!!.toInt()
-    }
+    fun getRoundedCornerSize(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(ROUNDED_CORNER_SIZE, "12")!!
+            .toInt()
 
     @JvmStatic
-    fun isPodcastSectionVisible(): Boolean {
-        return App.getInstance().preferences.getBoolean(PODCAST_SECTION_VISIBILITY, true)
-    }
+    fun isPodcastSectionVisible(): Boolean = App.getInstance().preferences.getBoolean(PODCAST_SECTION_VISIBILITY, true)
 
     @JvmStatic
     fun setPodcastSectionHidden() {
@@ -386,9 +349,7 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isRadioSectionVisible(): Boolean {
-        return App.getInstance().preferences.getBoolean(RADIO_SECTION_VISIBILITY, true)
-    }
+    fun isRadioSectionVisible(): Boolean = App.getInstance().preferences.getBoolean(RADIO_SECTION_VISIBILITY, true)
 
     @JvmStatic
     fun setRadioSectionHidden() {
@@ -396,127 +357,106 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isMusicDirectorySectionVisible(): Boolean {
-        return App.getInstance().preferences.getBoolean(MUSIC_DIRECTORY_SECTION_VISIBILITY, true)
-    }
+    fun isMusicDirectorySectionVisible(): Boolean = App.getInstance().preferences.getBoolean(MUSIC_DIRECTORY_SECTION_VISIBILITY, true)
 
     @JvmStatic
-    fun getReplayGainMode(): String? {
-        return App.getInstance().preferences.getString(REPLAY_GAIN_MODE, "disabled")
-    }
+    fun getReplayGainMode(): String? = App.getInstance().preferences.getString(REPLAY_GAIN_MODE, "disabled")
 
     @JvmStatic
-    fun isServerPrioritized(): Boolean {
-        return App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_PRIORITY, false)
-    }
+    fun isServerPrioritized(): Boolean = App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_PRIORITY, false)
 
     @JvmStatic
-    fun getStreamingCacheStoragePreference(): Int {
-        return App.getInstance().preferences.getString(STREAMING_CACHE_STORAGE, "0")!!.toInt()
-    }
+    fun getStreamingCacheStoragePreference(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(STREAMING_CACHE_STORAGE, "0")!!
+            .toInt()
 
     @JvmStatic
-    fun setStreamingCacheStoragePreference(streamingCachePreference: Int) {
-        return App.getInstance().preferences.edit {
+    fun setStreamingCacheStoragePreference(streamingCachePreference: Int) =
+        App.getInstance().preferences.edit {
             putString(
                 STREAMING_CACHE_STORAGE,
-                streamingCachePreference.toString()
+                streamingCachePreference.toString(),
             )
         }
-    }
 
     @JvmStatic
-    fun getDownloadStoragePreference(): Int {
-        return App.getInstance().preferences.getString(DOWNLOAD_STORAGE, "0")!!.toInt()
-    }
+    fun getDownloadStoragePreference(): Int =
+        App
+            .getInstance()
+            .preferences
+            .getString(DOWNLOAD_STORAGE, "0")!!
+            .toInt()
 
     @JvmStatic
-    fun setDownloadStoragePreference(storagePreference: Int) {
-        return App.getInstance().preferences.edit {
+    fun setDownloadStoragePreference(storagePreference: Int) =
+        App.getInstance().preferences.edit {
             putString(
                 DOWNLOAD_STORAGE,
-                storagePreference.toString()
+                storagePreference.toString(),
             )
         }
-    }
 
     @JvmStatic
-    fun getDefaultDownloadViewType(): String {
-        return App.getInstance().preferences.getString(
-                DEFAULT_DOWNLOAD_VIEW_TYPE,
-                Constants.DOWNLOAD_TYPE_TRACK
+    fun getDefaultDownloadViewType(): String =
+        App.getInstance().preferences.getString(
+            DEFAULT_DOWNLOAD_VIEW_TYPE,
+            Constants.DOWNLOAD_TYPE_TRACK,
         )!!
-    }
 
     @JvmStatic
-    fun setDefaultDownloadViewType(viewType: String) {
-        return App.getInstance().preferences.edit {
+    fun setDefaultDownloadViewType(viewType: String) =
+        App.getInstance().preferences.edit {
             putString(
                 DEFAULT_DOWNLOAD_VIEW_TYPE,
-                viewType
+                viewType,
             )
         }
-    }
 
     @JvmStatic
-    fun preferTranscodedDownload(): Boolean {
-        return App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_DOWNLOAD, false)
-    }
+    fun preferTranscodedDownload(): Boolean = App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_DOWNLOAD, false)
 
     @JvmStatic
-    fun isServerPrioritizedInTranscodedDownload(): Boolean {
-        return App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_DOWNLOAD_PRIORITY, false)
-    }
+    fun isServerPrioritizedInTranscodedDownload(): Boolean =
+        App.getInstance().preferences.getBoolean(AUDIO_TRANSCODE_DOWNLOAD_PRIORITY, false)
 
     @JvmStatic
-    fun getBitrateTranscodedDownload(): String {
-        return App.getInstance().preferences.getString(MAX_BITRATE_DOWNLOAD, "0")!!
-    }
+    fun getBitrateTranscodedDownload(): String = App.getInstance().preferences.getString(MAX_BITRATE_DOWNLOAD, "0")!!
 
     @JvmStatic
-    fun getAudioTranscodeFormatTranscodedDownload(): String {
-        return App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_DOWNLOAD, "raw")!!
-    }
+    fun getAudioTranscodeFormatTranscodedDownload(): String =
+        App.getInstance().preferences.getString(AUDIO_TRANSCODE_FORMAT_DOWNLOAD, "raw")!!
 
     @JvmStatic
-    fun isSharingEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(SHARE, false)
-    }
+    fun isSharingEnabled(): Boolean = App.getInstance().preferences.getBoolean(SHARE, false)
 
     @JvmStatic
-    fun isScrobblingEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(SCROBBLING, true)
-    }
+    fun isScrobblingEnabled(): Boolean = App.getInstance().preferences.getBoolean(SCROBBLING, true)
 
     @JvmStatic
-    fun askForEstimateContentLength(): Boolean {
-        return App.getInstance().preferences.getBoolean(ESTIMATE_CONTENT_LENGTH, false)
-    }
+    fun askForEstimateContentLength(): Boolean = App.getInstance().preferences.getBoolean(ESTIMATE_CONTENT_LENGTH, false)
 
     @JvmStatic
-    fun getBufferingStrategy(): Double {
-        return App.getInstance().preferences.getString(BUFFERING_STRATEGY, "1")!!.toDouble()
-    }
+    fun getBufferingStrategy(): Double =
+        App
+            .getInstance()
+            .preferences
+            .getString(BUFFERING_STRATEGY, "1")!!
+            .toDouble()
 
     @JvmStatic
-    fun getMinStarRatingAccepted(): Int {
-        return App.getInstance().preferences.getInt(MIN_STAR_RATING, 0)
-    }
+    fun getMinStarRatingAccepted(): Int = App.getInstance().preferences.getInt(MIN_STAR_RATING, 0)
 
     @JvmStatic
-    fun isDisplayAlwaysOn(): Boolean {
-        return App.getInstance().preferences.getBoolean(ALWAYS_ON_DISPLAY, false)
-    }
+    fun isDisplayAlwaysOn(): Boolean = App.getInstance().preferences.getBoolean(ALWAYS_ON_DISPLAY, false)
 
     @JvmStatic
-    fun showAudioQuality(): Boolean {
-        return App.getInstance().preferences.getBoolean(AUDIO_QUALITY_PER_ITEM, false)
-    }
+    fun showAudioQuality(): Boolean = App.getInstance().preferences.getBoolean(AUDIO_QUALITY_PER_ITEM, false)
 
     @JvmStatic
-    fun getHomeSectorList(): String? {
-        return App.getInstance().preferences.getString(HOME_SECTOR_LIST, null)
-    }
+    fun getHomeSectorList(): String? = App.getInstance().preferences.getString(HOME_SECTOR_LIST, null)
 
     @JvmStatic
     fun setHomeSectorList(extension: List<HomeSector>?) {
@@ -524,36 +464,30 @@ object Preferences {
     }
 
     @JvmStatic
-    fun showItemStarRating(): Boolean {
-        return App.getInstance().preferences.getBoolean(SONG_RATING_PER_ITEM, false)
-    }
+    fun showItemStarRating(): Boolean = App.getInstance().preferences.getBoolean(SONG_RATING_PER_ITEM, false)
 
     @JvmStatic
-    fun showItemRating(): Boolean {
-        return App.getInstance().preferences.getBoolean(RATING_PER_ITEM, false)
-    }
+    fun showItemRating(): Boolean = App.getInstance().preferences.getBoolean(RATING_PER_ITEM, false)
 
     @JvmStatic
-    fun showTempoUpdateDialog(): Boolean {
-        return App.getInstance().preferences.getLong(
-                NEXT_UPDATE_CHECK, 0
+    fun showTempoUpdateDialog(): Boolean =
+        App.getInstance().preferences.getLong(
+            NEXT_UPDATE_CHECK,
+            0,
         ) + 86400000 < System.currentTimeMillis()
-    }
 
     @JvmStatic
     fun setTempoUpdateReminder() {
         App.getInstance().preferences.edit {
             putLong(
                 NEXT_UPDATE_CHECK,
-                System.currentTimeMillis()
+                System.currentTimeMillis(),
             )
         }
     }
 
     @JvmStatic
-    fun isContinuousPlayEnabled(): Boolean {
-        return App.getInstance().preferences.getBoolean(CONTINUOUS_PLAY, true)
-    }
+    fun isContinuousPlayEnabled(): Boolean = App.getInstance().preferences.getBoolean(CONTINUOUS_PLAY, true)
 
     @JvmStatic
     fun setLastInstantMix() {
@@ -561,9 +495,9 @@ object Preferences {
     }
 
     @JvmStatic
-    fun isInstantMixUsable(): Boolean {
-        return App.getInstance().preferences.getLong(
-                LAST_INSTANT_MIX, 0
+    fun isInstantMixUsable(): Boolean =
+        App.getInstance().preferences.getLong(
+            LAST_INSTANT_MIX,
+            0,
         ) + 5000 < System.currentTimeMillis()
-    }
 }

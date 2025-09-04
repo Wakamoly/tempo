@@ -18,31 +18,63 @@ class SystemRepository {
         getSubsonicClientInstance(false)
             .getSystemClient()
             .ping()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.body() != null) {
-                        if (response.body()!!.subsonicResponse.status == ResponseStatus.FAILED) {
-                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.code.toString() + " - " + response.body()!!.subsonicResponse.error!!.message))
-                        } else if (response.body()!!.subsonicResponse.status == ResponseStatus.OK) {
-                            val password = response.raw().request().url.queryParameter("p")
-                            val token = response.raw().request().url.queryParameter("t")
-                            val salt = response.raw().request().url.queryParameter("s")
-                            callback.onSuccess(password, token, salt)
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.body() != null) {
+                            if (response.body()!!.subsonicResponse.status == ResponseStatus.FAILED) {
+                                callback.onError(
+                                    Exception(
+                                        response
+                                            .body()!!
+                                            .subsonicResponse.error!!
+                                            .code
+                                            .toString() + " - " +
+                                            response
+                                                .body()!!
+                                                .subsonicResponse.error!!
+                                                .message,
+                                    ),
+                                )
+                            } else if (response.body()!!.subsonicResponse.status == ResponseStatus.OK) {
+                                val password =
+                                    response
+                                        .raw()
+                                        .request()
+                                        .url
+                                        .queryParameter("p")
+                                val token =
+                                    response
+                                        .raw()
+                                        .request()
+                                        .url
+                                        .queryParameter("t")
+                                val salt =
+                                    response
+                                        .raw()
+                                        .request()
+                                        .url
+                                        .queryParameter("s")
+                                callback.onSuccess(password, token, salt)
+                            } else {
+                                callback.onError(Exception("Empty response"))
+                            }
                         } else {
-                            callback.onError(Exception("Empty response"))
+                            callback.onError(Exception(response.code().toString()))
                         }
-                    } else {
-                        callback.onError(Exception(response.code().toString()))
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    callback.onError(Exception(t.message))
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        callback.onError(Exception(t.message))
+                    }
+                },
+            )
     }
 
     fun ping(): MutableLiveData<SubsonicResponse?> {
@@ -51,22 +83,27 @@ class SystemRepository {
         getSubsonicClientInstance(false)
             .getSystemClient()
             .ping()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        pingResult.postValue(response.body()!!.subsonicResponse)
-                    } else {
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            pingResult.postValue(response.body()!!.subsonicResponse)
+                        } else {
+                            pingResult.postValue(null)
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
                         pingResult.postValue(null)
                     }
-                }
-
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    pingResult.postValue(null)
-                }
-            })
+                },
+            )
 
         return pingResult
     }
@@ -79,23 +116,25 @@ class SystemRepository {
             getSubsonicClientInstance(false)
                 .getSystemClient()
                 .getOpenSubsonicExtensions()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null) {
-                            extensionsResult.postValue(response.body()!!.subsonicResponse.openSubsonicExtensions)
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null) {
+                                extensionsResult.postValue(response.body()!!.subsonicResponse.openSubsonicExtensions)
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                        extensionsResult.postValue(null)
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                            extensionsResult.postValue(null)
+                        }
+                    },
+                )
 
             return extensionsResult
         }
@@ -106,20 +145,25 @@ class SystemRepository {
         githubClientInstance
             .getReleaseClient()
             .getLatestRelease()
-            .enqueue(object : Callback<LatestRelease?> {
-                override fun onResponse(
-                    call: Call<LatestRelease?>,
-                    response: Response<LatestRelease?>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        latestRelease.postValue(response.body())
+            .enqueue(
+                object : Callback<LatestRelease?> {
+                    override fun onResponse(
+                        call: Call<LatestRelease?>,
+                        response: Response<LatestRelease?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            latestRelease.postValue(response.body())
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<LatestRelease?>, t: Throwable) {
-                    latestRelease.postValue(null)
-                }
-            })
+                    override fun onFailure(
+                        call: Call<LatestRelease?>,
+                        t: Throwable,
+                    ) {
+                        latestRelease.postValue(null)
+                    }
+                },
+            )
 
         return latestRelease
     }

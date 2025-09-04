@@ -37,7 +37,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @OptIn(markerClass = UnstableApi::class)
-class GenreCatalogueFragment : Fragment(), ClickCallback {
+class GenreCatalogueFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentGenreCatalogueBinding? = null
     private var activity: MainActivity? = null
     private var genreCatalogueViewModel: GenreCatalogueViewModel? = null
@@ -52,15 +54,16 @@ class GenreCatalogueFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
         bind = FragmentGenreCatalogueBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
-        genreCatalogueViewModel = ViewModelProvider(requireActivity()).get<GenreCatalogueViewModel>(
-            GenreCatalogueViewModel::class.java
-        )
+        genreCatalogueViewModel =
+            ViewModelProvider(requireActivity()).get<GenreCatalogueViewModel>(
+                GenreCatalogueViewModel::class.java,
+            )
 
         init()
         initAppBar()
@@ -75,11 +78,13 @@ class GenreCatalogueFragment : Fragment(), ClickCallback {
     }
 
     private fun init() {
-        bind!!.filterGenresTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            activity!!.navController.navigate(
-                R.id.action_genreCatalogueFragment_to_filterFragment
-            )
-        })
+        bind!!.filterGenresTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                activity!!.navController.navigate(
+                    R.id.action_genreCatalogueFragment_to_filterFragment,
+                )
+            },
+        )
     }
 
     private fun initAppBar() {
@@ -90,21 +95,28 @@ class GenreCatalogueFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.genreInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.genre_catalogue_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.genreInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.genre_catalogue_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -119,39 +131,49 @@ class GenreCatalogueFragment : Fragment(), ClickCallback {
 
         genreCatalogueViewModel!!.getGenreList().observe(
             getViewLifecycleOwner(),
-            Observer { genres: MutableList<Genre?>? -> genreCatalogueAdapter!!.setItems(genres) })
+            Observer { genres: MutableList<Genre?>? -> genreCatalogueAdapter!!.setItems(genres) },
+        )
 
-        bind!!.genreCatalogueRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
+        bind!!.genreCatalogueRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
 
-        bind!!.genreListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_genre_popup_menu
-            )
-        })
+        bind!!.genreListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_genre_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                genreCatalogueAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    genreCatalogueAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -161,20 +183,25 @@ class GenreCatalogueFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_genre_sort_name) {
-                genreCatalogueAdapter!!.sort(Constants.GENRE_ORDER_BY_NAME)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_genre_sort_random) {
-                genreCatalogueAdapter!!.sort(Constants.GENRE_ORDER_BY_RANDOM)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_genre_sort_name) {
+                    genreCatalogueAdapter!!.sort(Constants.GENRE_ORDER_BY_NAME)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_genre_sort_random) {
+                    genreCatalogueAdapter!!.sort(Constants.GENRE_ORDER_BY_RANDOM)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }

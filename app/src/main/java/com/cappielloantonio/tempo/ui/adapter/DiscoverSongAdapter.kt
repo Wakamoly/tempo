@@ -15,35 +15,43 @@ import com.cappielloantonio.tempo.util.Constants
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class DiscoverSongAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<DiscoverSongAdapter.ViewHolder?>() {
+class DiscoverSongAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<DiscoverSongAdapter.ViewHolder?>() {
     private var songs: MutableList<Child>
 
     init {
         this.songs = mutableListOf<Child?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomeDiscoverSongBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomeDiscoverSongBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return DiscoverSongAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val song = songs.get(position)
 
         holder.item.titleDiscoverSongLabel.text = song.title
         holder.item.albumDiscoverSongLabel.text = song.album
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            song.coverArtId,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                song.coverArtId,
+                CustomGlideRequest.ResourceType.Song,
+            ).build()
             .into(holder.item.discoverSongCoverImageView)
     }
 
@@ -52,18 +60,17 @@ class DiscoverSongAdapter(private val click: ClickCallback) :
         startAnimation(holder)
     }
 
-    override fun getItemCount(): Int {
-        return songs.size
-    }
+    override fun getItemCount(): Int = songs.size
 
     fun setItems(songs: MutableList<Child>) {
         this.songs = songs
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemHomeDiscoverSongBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomeDiscoverSongBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
@@ -79,7 +86,8 @@ class DiscoverSongAdapter(private val click: ClickCallback) :
     }
 
     private fun startAnimation(holder: ViewHolder) {
-        holder.item.discoverSongCoverImageView.animate()
+        holder.item.discoverSongCoverImageView
+            .animate()
             .setDuration(20000)
             .setStartDelay(10)
             .setInterpolator(AccelerateDecelerateInterpolator())

@@ -6,32 +6,30 @@ import androidx.media3.common.util.UnstableApi
 import androidx.viewpager2.adapter.FragmentStateAdapter
 
 @OptIn(markerClass = UnstableApi::class)
-class HomePager(fragment: Fragment) : FragmentStateAdapter(fragment) {
+class HomePager(
+    fragment: Fragment,
+) : FragmentStateAdapter(fragment) {
     private val fragments: MutableList<Fragment> = ArrayList<Fragment>()
     private val titles: MutableList<String?> = ArrayList<String?>()
     private val icons: MutableList<Int?> = ArrayList<Int?>()
 
-    override fun createFragment(position: Int): Fragment {
-        return fragments.get(position)
-    }
+    override fun createFragment(position: Int): Fragment = fragments.get(position)
 
-    override fun getItemCount(): Int {
-        return fragments.size
-    }
+    override fun getItemCount(): Int = fragments.size
 
-    fun addFragment(fragment: Fragment?, title: String?, drawable: Int) {
+    fun addFragment(
+        fragment: Fragment?,
+        title: String?,
+        drawable: Int,
+    ) {
         fragments.add(fragment!!)
         titles.add(title)
         icons.add(drawable)
     }
 
-    fun getPageTitle(position: Int): String? {
-        return titles.get(position)
-    }
+    fun getPageTitle(position: Int): String? = titles.get(position)
 
-    fun getPageIcon(position: Int): Int? {
-        return icons.get(position)
-    }
+    fun getPageIcon(position: Int): Int? = icons.get(position)
 
     companion object {
         private const val TAG = "HomePager"

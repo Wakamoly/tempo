@@ -57,13 +57,13 @@ open class BaseActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(
                     this,
-                    Manifest.permission.POST_NOTIFICATIONS
+                    Manifest.permission.POST_NOTIFICATIONS,
                 ) != PackageManager.PERMISSION_GRANTED
             ) {
                 ActivityCompat.requestPermissions(
                     this,
                     arrayOf<String>(Manifest.permission.POST_NOTIFICATIONS),
-                    101
+                    101,
                 )
             }
         }
@@ -87,19 +87,19 @@ open class BaseActivity : AppCompatActivity() {
     }
 
     private fun initializeBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            this,
-            SessionToken(this, ComponentName(this, MediaService::class.java))
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    this,
+                    SessionToken(this, ComponentName(this, MediaService::class.java)),
+                ).buildAsync()
     }
 
     private fun releaseBrowser() {
         MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    fun getMediaBrowserListenableFuture(): ListenableFuture<MediaBrowser?> {
-        return mediaBrowserListenableFuture!!
-    }
+    fun getMediaBrowserListenableFuture(): ListenableFuture<MediaBrowser?> = mediaBrowserListenableFuture!!
 
     private fun initializeDownloader() {
         try {

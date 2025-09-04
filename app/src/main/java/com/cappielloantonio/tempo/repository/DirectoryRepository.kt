@@ -19,45 +19,62 @@ class DirectoryRepository {
             getSubsonicClientInstance(false)
                 .getBrowsingClient()
                 .getMusicFolders()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.musicFolders != null) {
-                            liveMusicFolders.setValue(response.body()!!.subsonicResponse.musicFolders!!.musicFolders)
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null &&
+                                response.body()!!.subsonicResponse.musicFolders != null
+                            ) {
+                                liveMusicFolders.setValue(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.musicFolders!!
+                                        .musicFolders,
+                                )
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                        }
+                    },
+                )
 
             return liveMusicFolders
         }
 
-    fun getIndexes(musicFolderId: String?, ifModifiedSince: Long?): MutableLiveData<Indexes?> {
+    fun getIndexes(
+        musicFolderId: String?,
+        ifModifiedSince: Long?,
+    ): MutableLiveData<Indexes?> {
         val liveIndexes = MutableLiveData<Indexes?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getIndexes(musicFolderId, ifModifiedSince)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
-                        liveIndexes.value = response.body()!!.subsonicResponse.indexes
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
+                            liveIndexes.value = response.body()!!.subsonicResponse.indexes
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return liveIndexes
     }
@@ -68,20 +85,25 @@ class DirectoryRepository {
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getMusicDirectory(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null) {
-                        liveMusicDirectory.value = response.body()!!.subsonicResponse.directory
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null) {
+                            liveMusicDirectory.value = response.body()!!.subsonicResponse.directory
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    t.printStackTrace()
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        t.printStackTrace()
+                    }
+                },
+            )
 
         return liveMusicDirectory
     }

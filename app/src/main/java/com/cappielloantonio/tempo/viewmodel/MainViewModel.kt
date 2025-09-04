@@ -9,7 +9,9 @@ import com.cappielloantonio.tempo.repository.SystemRepository
 import com.cappielloantonio.tempo.subsonic.models.OpenSubsonicExtension
 import com.cappielloantonio.tempo.subsonic.models.SubsonicResponse
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+class MainViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val systemRepository: SystemRepository
 
     init {
@@ -22,16 +24,12 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             return queueRepository.count() != 0
         }
 
-    fun ping(): LiveData<SubsonicResponse?>? {
-        return systemRepository.ping()
-    }
+    fun ping(): LiveData<SubsonicResponse?>? = systemRepository.ping()
 
     val openSubsonicExtensions: LiveData<MutableList<OpenSubsonicExtension?>?>?
         get() = systemRepository.getOpenSubsonicExtensions()
 
-    fun checkTempoUpdate(): LiveData<LatestRelease?>? {
-        return systemRepository.checkTempoUpdate()
-    }
+    fun checkTempoUpdate(): LiveData<LatestRelease?>? = systemRepository.checkTempoUpdate()
 
     companion object {
         private const val TAG = "SearchViewModel"

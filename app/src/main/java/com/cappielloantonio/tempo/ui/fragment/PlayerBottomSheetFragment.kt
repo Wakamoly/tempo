@@ -56,14 +56,14 @@ class PlayerBottomSheetFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         bind = FragmentPlayerBottomSheetBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
 
         playerBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
-                PlayerBottomSheetViewModel::class.java
+                PlayerBottomSheetViewModel::class.java,
             )
 
         customizeBottomSheetBackground()
@@ -92,30 +92,36 @@ class PlayerBottomSheetFragment : Fragment() {
     }
 
     private fun customizeBottomSheetBackground() {
-        bind!!.playerHeaderLayout.getRoot()
+        bind!!
+            .playerHeaderLayout
+            .getRoot()
             .setBackgroundColor(SurfaceColors.getColorForElevation(requireContext(), 8f))
     }
 
     private fun customizeBottomSheetAction() {
-        bind!!.playerHeaderLayout.getRoot()
+        bind!!
+            .playerHeaderLayout
+            .getRoot()
             .setOnClickListener(View.OnClickListener { view: View? -> (requireActivity() as MainActivity).expandBottomSheet() })
     }
 
     private fun initViewPager() {
         bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setOrientation(ViewPager2.ORIENTATION_VERTICAL)
         bind!!.playerBodyLayout.playerBodyBottomSheetViewPager.setAdapter(
-            PlayerControllerVerticalPager(this)
+            PlayerControllerVerticalPager(this),
         )
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -123,18 +129,21 @@ class PlayerBottomSheetFragment : Fragment() {
     }
 
     private fun bindMediaController() {
-        mediaBrowserListenableFuture!!.addListener(Runnable {
-            try {
-                val mediaBrowser = mediaBrowserListenableFuture!!.get()
+        mediaBrowserListenableFuture!!.addListener(
+            Runnable {
+                try {
+                    val mediaBrowser = mediaBrowserListenableFuture!!.get()
 
-                mediaBrowser.setShuffleModeEnabled(isShuffleModeEnabled())
-                mediaBrowser.setRepeatMode(getRepeatMode())
+                    mediaBrowser.setShuffleModeEnabled(isShuffleModeEnabled())
+                    mediaBrowser.setRepeatMode(getRepeatMode())
 
-                setMediaControllerListener(mediaBrowser)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, MoreExecutors.directExecutor())
+                    setMediaControllerListener(mediaBrowser)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     private fun setMediaControllerListener(mediaBrowser: MediaBrowser) {
@@ -146,29 +155,34 @@ class PlayerBottomSheetFragment : Fragment() {
         setHeaderMediaController()
         setHeaderNextButtonState(mediaBrowser.hasNextMediaItem())
 
-        mediaBrowser.addListener(object : Player.Listener {
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                setMediaControllerUI(mediaBrowser)
-                setMetadata(mediaMetadata)
-                setContentDuration(mediaBrowser.getContentDuration())
-            }
+        mediaBrowser.addListener(
+            object : Player.Listener {
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    setMediaControllerUI(mediaBrowser)
+                    setMetadata(mediaMetadata)
+                    setContentDuration(mediaBrowser.getContentDuration())
+                }
 
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-                setPlayingState(isPlaying)
-            }
+                override fun onIsPlayingChanged(isPlaying: Boolean) {
+                    setPlayingState(isPlaying)
+                }
 
-            override fun onEvents(player: Player, events: Player.Events) {
-                setHeaderNextButtonState(mediaBrowser.hasNextMediaItem())
-            }
+                override fun onEvents(
+                    player: Player,
+                    events: Player.Events,
+                ) {
+                    setHeaderNextButtonState(mediaBrowser.hasNextMediaItem())
+                }
 
-            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-                setShuffleModeEnabled(shuffleModeEnabled)
-            }
+                override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                    setShuffleModeEnabled(shuffleModeEnabled)
+                }
 
-            override fun onRepeatModeChanged(repeatMode: Int) {
-                setRepeatMode(repeatMode)
-            }
-        })
+                override fun onRepeatModeChanged(repeatMode: Int) {
+                    setRepeatMode(repeatMode)
+                }
+            },
+        )
     }
 
     private fun setMetadata(mediaMetadata: MediaMetadata) {
@@ -176,70 +190,87 @@ class PlayerBottomSheetFragment : Fragment() {
             playerBottomSheetViewModel!!.setLiveMedia(
                 getViewLifecycleOwner(),
                 mediaMetadata.extras!!.getString("type"),
-                mediaMetadata.extras!!.getString("id")
+                mediaMetadata.extras!!.getString("id"),
             )
             playerBottomSheetViewModel!!.setLiveAlbum(
                 getViewLifecycleOwner(),
                 mediaMetadata.extras!!.getString("type"),
-                mediaMetadata.extras!!.getString("albumId")
+                mediaMetadata.extras!!.getString("albumId"),
             )
             playerBottomSheetViewModel!!.setLiveArtist(
                 getViewLifecycleOwner(),
                 mediaMetadata.extras!!.getString("type"),
-                mediaMetadata.extras!!.getString("artistId")
+                mediaMetadata.extras!!.getString("artistId"),
             )
             playerBottomSheetViewModel!!.setLiveDescription(
                 mediaMetadata.extras!!.getString(
                     "description",
-                    null
+                    null,
+                ),
+            )
+
+            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.text =
+                mediaMetadata.extras!!.getString(
+                    "title",
                 )
-            )
+            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.text =
+                if (mediaMetadata.artist != null) {
+                    mediaMetadata.artist
+                } else {
+                    if (mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO) {
+                        mediaMetadata.extras!!.getString(
+                            "uri",
+                            getString(R.string.label_placeholder),
+                        )
+                    } else {
+                        ""
+                    }
+                }
 
-            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.text = mediaMetadata.extras!!.getString(
-                "title"
-            )
-            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.text = if (mediaMetadata.artist != null)
-                mediaMetadata.artist
-            else
-                if (mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO)
-                    mediaMetadata.extras!!.getString(
-                        "uri",
-                        getString(R.string.label_placeholder)
-                    )
-                else
-                    ""
-
-            CustomGlideRequest.Builder.Companion.from(
-                requireContext(),
-                mediaMetadata.extras!!.getString("coverArtId"),
-                CustomGlideRequest.ResourceType.Song
-            )
-                .build()
+            CustomGlideRequest.Builder.Companion
+                .from(
+                    requireContext(),
+                    mediaMetadata.extras!!.getString("coverArtId"),
+                    CustomGlideRequest.ResourceType.Song,
+                ).build()
                 .into(bind!!.playerHeaderLayout.playerHeaderMediaCoverImage)
 
-            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.visibility = if (mediaMetadata.extras!!.getString(
-                    "title"
-                ) != null && mediaMetadata.extras!!.getString("title") != ""
-            ) View.VISIBLE else View.GONE
-            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.visibility = if ((mediaMetadata.extras!!.getString("artist") != null && mediaMetadata.extras!!.getString(
-                    "artist"
-                ) != "")
-                || (mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO && mediaMetadata.extras!!.getString(
-                    "uri"
-                ) != null)
-            )
-                View.VISIBLE
-            else
-                View.GONE
+            bind!!.playerHeaderLayout.playerHeaderMediaTitleLabel.visibility =
+                if (mediaMetadata.extras!!.getString(
+                        "title",
+                    ) != null && mediaMetadata.extras!!.getString("title") != ""
+                ) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
+            bind!!.playerHeaderLayout.playerHeaderMediaArtistLabel.visibility =
+                if ((
+                        mediaMetadata.extras!!.getString("artist") != null && mediaMetadata.extras!!.getString(
+                            "artist",
+                        ) != ""
+                    ) ||
+                    (
+                        mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO && mediaMetadata.extras!!.getString(
+                            "uri",
+                        ) != null
+                    )
+                ) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
         }
     }
 
     private fun setMediaControllerUI(mediaBrowser: MediaBrowser) {
         if (mediaBrowser.getMediaMetadata().extras != null) {
-            when (mediaBrowser.getMediaMetadata().extras!!.getString(
-                "type",
-                Constants.MEDIA_TYPE_MUSIC
-            )) {
+            when (
+                mediaBrowser.getMediaMetadata().extras!!.getString(
+                    "type",
+                    Constants.MEDIA_TYPE_MUSIC,
+                )
+            ) {
                 Constants.MEDIA_TYPE_PODCAST -> {
                     bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setVisibility(View.VISIBLE)
                     bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setVisibility(View.VISIBLE)
@@ -266,10 +297,12 @@ class PlayerBottomSheetFragment : Fragment() {
     }
 
     private fun setProgress(mediaBrowser: MediaBrowser) {
-        if (bind != null) bind!!.playerHeaderLayout.playerHeaderSeekBar.setProgress(
-            (mediaBrowser.getCurrentPosition() / 1000).toInt(),
-            true
-        )
+        if (bind != null) {
+            bind!!.playerHeaderLayout.playerHeaderSeekBar.setProgress(
+                (mediaBrowser.getCurrentPosition() / 1000).toInt(),
+                true,
+            )
+        }
     }
 
     private fun setPlayingState(isPlaying: Boolean) {
@@ -278,18 +311,26 @@ class PlayerBottomSheetFragment : Fragment() {
     }
 
     private fun setHeaderMediaController() {
-        bind!!.playerHeaderLayout.playerHeaderButton.setOnClickListener(View.OnClickListener { view: View? ->
-            bind!!.getRoot().findViewById<View?>(R.id.exo_play_pause).performClick()
-        })
-        bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
-            bind!!.getRoot().findViewById<View?>(R.id.exo_next).performClick()
-        })
-        bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
-            bind!!.getRoot().findViewById<View?>(R.id.exo_rew).performClick()
-        })
-        bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setOnClickListener(View.OnClickListener { view: View? ->
-            bind!!.getRoot().findViewById<View?>(R.id.exo_ffwd).performClick()
-        })
+        bind!!.playerHeaderLayout.playerHeaderButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                bind!!.getRoot().findViewById<View?>(R.id.exo_play_pause).performClick()
+            },
+        )
+        bind!!.playerHeaderLayout.playerHeaderNextMediaButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                bind!!.getRoot().findViewById<View?>(R.id.exo_next).performClick()
+            },
+        )
+        bind!!.playerHeaderLayout.playerHeaderRewindMediaButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                bind!!.getRoot().findViewById<View?>(R.id.exo_rew).performClick()
+            },
+        )
+        bind!!.playerHeaderLayout.playerHeaderFastForwardMediaButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                bind!!.getRoot().findViewById<View?>(R.id.exo_ffwd).performClick()
+            },
+        )
     }
 
     private fun setHeaderNextButtonState(isEnabled: Boolean) {
@@ -340,10 +381,11 @@ class PlayerBottomSheetFragment : Fragment() {
 
     private fun defineProgressBarHandler(mediaBrowser: MediaBrowser) {
         progressBarHandler = Handler()
-        progressBarRunnable = Runnable {
-            setProgress(mediaBrowser)
-            progressBarHandler!!.postDelayed(progressBarRunnable!!, 1000)
-        }
+        progressBarRunnable =
+            Runnable {
+                setProgress(mediaBrowser)
+                progressBarHandler!!.postDelayed(progressBarRunnable!!, 1000)
+            }
     }
 
     private fun runProgressBarHandler(isPlaying: Boolean) {
@@ -356,56 +398,69 @@ class PlayerBottomSheetFragment : Fragment() {
 
     private fun setHeaderBookmarksButton() {
         if (isSyncronizationEnabled()) {
-            playerBottomSheetViewModel!!.getPlayQueue()
-                .observeForever(object : Observer<PlayQueue?> {
-                    override fun onChanged(playQueue: PlayQueue?) {
-                        playerBottomSheetViewModel!!.getPlayQueue().removeObserver(this)
+            playerBottomSheetViewModel!!
+                .getPlayQueue()
+                .observeForever(
+                    object : Observer<PlayQueue?> {
+                        override fun onChanged(playQueue: PlayQueue?) {
+                            playerBottomSheetViewModel!!.getPlayQueue().removeObserver(this)
 
-                        if (bind == null) return
+                            if (bind == null) return
 
-                        if (playQueue != null && !playQueue.entries!!.isEmpty()) {
-                            val index = IntStream.range(0, playQueue.entries!!.size)
-                                .filter(IntPredicate { ix: Int -> playQueue.entries!!.get(ix).id == playQueue.current })
-                                .findFirst().orElse(-1)
+                            if (playQueue != null && !playQueue.entries!!.isEmpty()) {
+                                val index =
+                                    IntStream
+                                        .range(0, playQueue.entries!!.size)
+                                        .filter(IntPredicate { ix: Int -> playQueue.entries!!.get(ix).id == playQueue.current })
+                                        .findFirst()
+                                        .orElse(-1)
 
-                            if (index != -1) {
+                                if (index != -1) {
+                                    bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                                        View.VISIBLE,
+                                    )
+                                    bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(
+                                        View.OnClickListener { v: View? ->
+                                            MediaManager.startQueue(
+                                                mediaBrowserListenableFuture,
+                                                playQueue.entries,
+                                                index,
+                                            )
+                                            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                                                View.GONE,
+                                            )
+                                        },
+                                    )
+                                }
+                            } else {
                                 bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
-                                    View.VISIBLE
+                                    View.GONE,
                                 )
                                 bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(
-                                    View.OnClickListener { v: View? ->
-                                        MediaManager.startQueue(
-                                            mediaBrowserListenableFuture,
-                                            playQueue.entries,
-                                            index
-                                        )
-                                        bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
-                                            View.GONE
-                                        )
-                                    })
+                                    null,
+                                )
                             }
-                        } else {
-                            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
-                                View.GONE
-                            )
-                            bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnClickListener(
-                                null
-                            )
                         }
-                    }
-                })
+                    },
+                )
 
             bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setOnLongClickListener(
                 OnLongClickListener { v: View? ->
                     bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(View.GONE)
                     true
-                })
+                },
+            )
 
-            Handler().postDelayed(Runnable {
-                if (bind != null) bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
-                    View.GONE
-                )
-            }, getSyncCountdownTimer() * 1000L)
+            Handler().postDelayed(
+                Runnable {
+                    if (bind != null) {
+                        bind!!.playerHeaderLayout.playerHeaderBookmarkMediaButton.setVisibility(
+                            View.GONE,
+                        )
+                    }
+                },
+                getSyncCountdownTimer() * 1000L,
+            )
         }
     }
 }

@@ -48,14 +48,14 @@ class PlayerCoverFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         bind = InnerFragmentPlayerCoverBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
 
         playerBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
-                PlayerBottomSheetViewModel::class.java
+                PlayerBottomSheetViewModel::class.java,
             )
 
         initOverlay()
@@ -86,29 +86,36 @@ class PlayerCoverFragment : Fragment() {
 
         handler.removeCallbacksAndMessages(null)
 
-        val runnable = Runnable {
-            if (bind != null) bind!!.nowPlayingTapButton.visibility = View.GONE
-        }
+        val runnable =
+            Runnable {
+                if (bind != null) bind!!.nowPlayingTapButton.visibility = View.GONE
+            }
 
         handler.postDelayed(runnable, 10000)
     }
 
     private fun initOverlay() {
-        bind!!.nowPlayingSongCoverImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            toggleOverlayVisibility(
-                true
-            )
-        })
-        bind!!.nowPlayingSongCoverButtonGroup.setOnClickListener(View.OnClickListener { view: View? ->
-            toggleOverlayVisibility(
-                false
-            )
-        })
-        bind!!.nowPlayingTapButton.setOnClickListener(View.OnClickListener { view: View? ->
-            toggleOverlayVisibility(
-                true
-            )
-        })
+        bind!!.nowPlayingSongCoverImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                toggleOverlayVisibility(
+                    true,
+                )
+            },
+        )
+        bind!!.nowPlayingSongCoverButtonGroup.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                toggleOverlayVisibility(
+                    false,
+                )
+            },
+        )
+        bind!!.nowPlayingTapButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                toggleOverlayVisibility(
+                    true,
+                )
+            },
+        )
     }
 
     private fun toggleOverlayVisibility(isVisible: Boolean) {
@@ -127,69 +134,90 @@ class PlayerCoverFragment : Fragment() {
     }
 
     private fun initInnerButton() {
-        playerBottomSheetViewModel!!.getLiveMedia()
-            .observe(getViewLifecycleOwner(), Observer { song: Child? ->
-                if (song != null && bind != null) {
-                    bind!!.innerButtonTopLeft.setOnClickListener(View.OnClickListener { view: View? ->
-                        DownloadUtil.getDownloadTracker(requireContext()).download(
-                            MappingUtil.mapDownload(song),
-                            Download(song)
+        playerBottomSheetViewModel!!
+            .getLiveMedia()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { song: Child? ->
+                    if (song != null && bind != null) {
+                        bind!!.innerButtonTopLeft.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                DownloadUtil.getDownloadTracker(requireContext()).download(
+                                    MappingUtil.mapDownload(song),
+                                    Download(song),
+                                )
+                            },
                         )
-                    })
 
-                    bind!!.innerButtonTopRight.setOnClickListener(View.OnClickListener { view: View? ->
-                        val tracks = ArrayList<Child?>()
-                        tracks.add(song)
-                        val bundle = Bundle()
-                        bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, tracks)
+                        bind!!.innerButtonTopRight.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                val tracks = ArrayList<Child?>()
+                                tracks.add(song)
+                                val bundle = Bundle()
+                                bundle.putParcelableArrayList(Constants.TRACKS_OBJECT, tracks)
 
-                        val dialog = PlaylistChooserDialog()
-                        dialog.setArguments(bundle)
-                        dialog.show(requireActivity().supportFragmentManager, null)
+                                val dialog = PlaylistChooserDialog()
+                                dialog.setArguments(bundle)
+                                dialog.show(requireActivity().supportFragmentManager, null)
+                            },
+                        )
+
+                        bind!!.innerButtonBottomLeft.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                playerBottomSheetViewModel!!
+                                    .getMediaInstantMix(
+                                        getViewLifecycleOwner(),
+                                        song,
+                                    ).observe(
+                                        getViewLifecycleOwner(),
+                                        Observer { media: MutableList<Child?>? ->
+                                            MediaManager.enqueue(mediaBrowserListenableFuture, media, true)
+                                        },
+                                    )
+                            },
+                        )
+
+                        bind!!.innerButtonBottomRight.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                if (playerBottomSheetViewModel!!.savePlayQueue()) {
+                                    Snackbar
+                                        .make(
+                                            requireView(),
+                                            R.string.player_queue_save_queue_success,
+                                            Snackbar.LENGTH_LONG,
+                                        ).show()
+                                }
+                            },
+                        )
+
+                        bind!!.innerButtonBottomRightAlternative.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                if (activity != null) {
+                                    val playerBottomSheetFragment =
+                                        requireActivity()
+                                            .supportFragmentManager
+                                            .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
+                                    if (playerBottomSheetFragment != null) {
+                                        playerBottomSheetFragment.goToLyricsPage()
+                                    }
+                                }
+                            },
+                        )
                     }
-                    )
-
-                    bind!!.innerButtonBottomLeft.setOnClickListener(View.OnClickListener { view: View? ->
-                        playerBottomSheetViewModel!!.getMediaInstantMix(
-                            getViewLifecycleOwner(),
-                            song
-                        ).observe(getViewLifecycleOwner(), Observer { media: MutableList<Child?>? ->
-                            MediaManager.enqueue(mediaBrowserListenableFuture, media, true)
-                        })
-                    })
-
-                    bind!!.innerButtonBottomRight.setOnClickListener(View.OnClickListener { view: View? ->
-                        if (playerBottomSheetViewModel!!.savePlayQueue()) {
-                            Snackbar.make(
-                                requireView(),
-                                R.string.player_queue_save_queue_success,
-                                Snackbar.LENGTH_LONG
-                            ).show()
-                        }
-                    })
-
-                    bind!!.innerButtonBottomRightAlternative.setOnClickListener(View.OnClickListener { view: View? ->
-                        if (activity != null) {
-                            val playerBottomSheetFragment =
-                                requireActivity().supportFragmentManager
-                                    .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
-                            if (playerBottomSheetFragment != null) {
-                                playerBottomSheetFragment.goToLyricsPage()
-                            }
-                        }
-                    })
-                }
-            })
+                },
+            )
     }
 
     private fun initializeBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseBrowser() {
@@ -197,34 +225,39 @@ class PlayerCoverFragment : Fragment() {
     }
 
     private fun bindMediaController() {
-        mediaBrowserListenableFuture!!.addListener(Runnable {
-            try {
-                val mediaBrowser = mediaBrowserListenableFuture!!.get()
-                setMediaBrowserListener(mediaBrowser)
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-            }
-        }, MoreExecutors.directExecutor())
+        mediaBrowserListenableFuture!!.addListener(
+            Runnable {
+                try {
+                    val mediaBrowser = mediaBrowserListenableFuture!!.get()
+                    setMediaBrowserListener(mediaBrowser)
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     private fun setMediaBrowserListener(mediaBrowser: MediaBrowser) {
         setCover(mediaBrowser.getMediaMetadata())
 
-        mediaBrowser.addListener(object : Player.Listener {
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                setCover(mediaMetadata)
-                toggleOverlayVisibility(false)
-            }
-        })
+        mediaBrowser.addListener(
+            object : Player.Listener {
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    setCover(mediaMetadata)
+                    toggleOverlayVisibility(false)
+                }
+            },
+        )
     }
 
     private fun setCover(mediaMetadata: MediaMetadata) {
-        CustomGlideRequest.Builder.Companion.from(
-            requireContext(),
-            if (mediaMetadata.extras != null) mediaMetadata.extras!!.getString("coverArtId") else null,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                requireContext(),
+                if (mediaMetadata.extras != null) mediaMetadata.extras!!.getString("coverArtId") else null,
+                CustomGlideRequest.ResourceType.Song,
+            ).build()
             .into(bind!!.nowPlayingSongCoverImageView)
     }
 }

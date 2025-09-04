@@ -17,7 +17,9 @@ import com.cappielloantonio.tempo.viewmodel.RadioEditorViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Objects
 
-class RadioEditorDialog(private val radioCallback: RadioCallback) : DialogFragment() {
+class RadioEditorDialog(
+    private val radioCallback: RadioCallback,
+) : DialogFragment() {
     private var bind: DialogRadioEditorBinding? = null
     private var radioEditorViewModel: RadioEditorViewModel? = null
 
@@ -35,37 +37,34 @@ class RadioEditorDialog(private val radioCallback: RadioCallback) : DialogFragme
             .setView(bind!!.getRoot())
             .setTitle(R.string.radio_editor_dialog_title)
             .setPositiveButton(
-                R.string.radio_editor_dialog_positive_button
+                R.string.radio_editor_dialog_positive_button,
             ) { dialog: DialogInterface?, id: Int ->
                 if (validateInput()) {
                     if (radioEditorViewModel!!.getRadioToEdit() == null) {
                         radioEditorViewModel!!.createRadio(
                             radioName,
                             radioStreamURL,
-                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL
+                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL,
                         )
                     } else {
                         radioEditorViewModel!!.updateRadio(
                             radioName,
                             radioStreamURL,
-                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL
+                            if (radioHomepageURL!!.isEmpty()) null else radioHomepageURL,
                         )
                     }
                     dismissDialog()
                 }
-            }
-            .setNeutralButton(
-                R.string.radio_editor_dialog_neutral_button
+            }.setNeutralButton(
+                R.string.radio_editor_dialog_neutral_button,
             ) { dialog: DialogInterface?, id: Int ->
                 radioEditorViewModel!!.deleteRadio()
                 dismissDialog()
-            }
-            .setNegativeButton(
-                R.string.radio_editor_dialog_negative_button
+            }.setNegativeButton(
+                R.string.radio_editor_dialog_negative_button,
             ) { dialog: DialogInterface?, id: Int ->
                 dialog!!.cancel()
-            }
-            .create()
+            }.create()
     }
 
     override fun onStart() {
@@ -93,14 +92,20 @@ class RadioEditorDialog(private val radioCallback: RadioCallback) : DialogFragme
 
     private fun validateInput(): Boolean {
         radioName =
-            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationNameTextView.getText())
-                .toString().trim { it <= ' ' }
+            Objects
+                .requireNonNull<Editable?>(bind!!.internetRadioStationNameTextView.getText())
+                .toString()
+                .trim { it <= ' ' }
         radioStreamURL =
-            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationStreamUrlTextView.getText())
-                .toString().trim { it <= ' ' }
+            Objects
+                .requireNonNull<Editable?>(bind!!.internetRadioStationStreamUrlTextView.getText())
+                .toString()
+                .trim { it <= ' ' }
         radioHomepageURL =
-            Objects.requireNonNull<Editable?>(bind!!.internetRadioStationHomepageUrlTextView.getText())
-                .toString().trim { it <= ' ' }
+            Objects
+                .requireNonNull<Editable?>(bind!!.internetRadioStationHomepageUrlTextView.getText())
+                .toString()
+                .trim { it <= ' ' }
 
         if (TextUtils.isEmpty(radioName)) {
             bind!!.internetRadioStationNameTextView.error = getString(R.string.error_required)

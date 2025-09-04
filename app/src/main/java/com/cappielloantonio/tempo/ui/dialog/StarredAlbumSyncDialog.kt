@@ -22,7 +22,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.stream.Collectors
 
 @OptIn(markerClass = UnstableApi::class)
-class StarredAlbumSyncDialog(private val onCancel: Runnable?) : DialogFragment() {
+class StarredAlbumSyncDialog(
+    private val onCancel: Runnable?,
+) : DialogFragment() {
     private var starredAlbumsSyncViewModel: StarredAlbumsSyncViewModel? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -30,7 +32,7 @@ class StarredAlbumSyncDialog(private val onCancel: Runnable?) : DialogFragment()
 
         starredAlbumsSyncViewModel =
             ViewModelProvider(requireActivity()).get<StarredAlbumsSyncViewModel>(
-                StarredAlbumsSyncViewModel::class.java
+                StarredAlbumsSyncViewModel::class.java,
             )
 
         return MaterialAlertDialogBuilder(activity!!)
@@ -52,34 +54,46 @@ class StarredAlbumSyncDialog(private val onCancel: Runnable?) : DialogFragment()
 
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                starredAlbumsSyncViewModel!!.getStarredAlbumSongs(requireActivity())
-                    .observe(this, Observer { allSongs: MutableList<Child?>? ->
-                        if (allSongs != null && !allSongs.isEmpty()) {
-                            DownloadUtil.getDownloadTracker(context).download(
-                                MappingUtil.mapDownloads(allSongs),
-                                allSongs.stream()
-                                    .map<Download?> { child: Child? -> Download(child) }.collect(
-                                        Collectors.toList()
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    starredAlbumsSyncViewModel!!
+                        .getStarredAlbumSongs(requireActivity())
+                        .observe(
+                            this,
+                            Observer { allSongs: MutableList<Child?>? ->
+                                if (allSongs != null && !allSongs.isEmpty()) {
+                                    DownloadUtil.getDownloadTracker(context).download(
+                                        MappingUtil.mapDownloads(allSongs),
+                                        allSongs
+                                            .stream()
+                                            .map<Download?> { child: Child? -> Download(child) }
+                                            .collect(
+                                                Collectors.toList(),
+                                            ),
                                     )
-                            )
-                        }
-                        dialog.dismiss()
-                    })
-            })
+                                }
+                                dialog.dismiss()
+                            },
+                        )
+                },
+            )
 
             val neutralButton = dialog.getButton(Dialog.BUTTON_NEUTRAL)
-            neutralButton.setOnClickListener(View.OnClickListener { v: View? ->
-                setStarredAlbumsSyncEnabled(true)
-                dialog.dismiss()
-            })
+            neutralButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setStarredAlbumsSyncEnabled(true)
+                    dialog.dismiss()
+                },
+            )
 
             val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
-            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
-                setStarredAlbumsSyncEnabled(false)
-                if (onCancel != null) onCancel.run()
-                dialog.dismiss()
-            })
+            negativeButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setStarredAlbumsSyncEnabled(false)
+                    if (onCancel != null) onCancel.run()
+                    dialog.dismiss()
+                },
+            )
         }
     }
 }

@@ -30,15 +30,15 @@ class RatingDialog : DialogFragment() {
             .setTitle(R.string.rating_dialog_title)
             .setNegativeButton(
                 R.string.rating_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .setPositiveButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).setPositiveButton(
                 R.string.rating_dialog_positive_button,
                 DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int ->
                     ratingViewModel!!.rate(
-                        bind!!.ratingBar.rating.toInt()
+                        bind!!.ratingBar.rating.toInt(),
                     )
-                })
-            .create()
+                },
+            ).create()
     }
 
     override fun onStart() {
@@ -65,21 +65,28 @@ class RatingDialog : DialogFragment() {
 
     private fun setRating() {
         if (ratingViewModel!!.getSong() != null) {
-            ratingViewModel!!.getLiveSong().observe(this, Observer { song: Child? ->
-                bind!!.ratingBar.rating = (if (song!!.userRating != null) song.userRating else 0)!!.toFloat()
-            })
+            ratingViewModel!!.getLiveSong().observe(
+                this,
+                Observer { song: Child? ->
+                    bind!!.ratingBar.rating = (if (song!!.userRating != null) song.userRating else 0)!!.toFloat()
+                },
+            )
         } else if (ratingViewModel!!.getAlbum() != null) {
-            ratingViewModel!!.getLiveAlbum().observe(this, Observer { album: AlbumID3? ->
-                if (album != null) {
-                    bind!!.ratingBar.rating = (if (album.userRating != null) album.userRating else 0)!!.toFloat()
-                }
-            })
+            ratingViewModel!!.getLiveAlbum().observe(
+                this,
+                Observer { album: AlbumID3? ->
+                    if (album != null) {
+                        bind!!.ratingBar.rating = (if (album.userRating != null) album.userRating else 0)!!.toFloat()
+                    }
+                },
+            )
         } else if (ratingViewModel!!.getArtist() != null) {
             ratingViewModel!!.getLiveArtist().observe(
                 this,
                 Observer { artist: ArtistID3? ->
                     bind!!.ratingBar.rating = 0f
-                })
+                },
+            )
         }
     }
 

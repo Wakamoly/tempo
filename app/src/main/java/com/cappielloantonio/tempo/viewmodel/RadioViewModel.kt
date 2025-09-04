@@ -9,7 +9,9 @@ import androidx.lifecycle.Observer
 import com.cappielloantonio.tempo.repository.RadioRepository
 import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
 
-class RadioViewModel(application: Application) : AndroidViewModel(application) {
+class RadioViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val radioRepository: RadioRepository
 
     private val internetRadioStations = MutableLiveData<MutableList<InternetRadioStation?>?>(null)
@@ -23,9 +25,10 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             owner,
             Observer { value: MutableList<InternetRadioStation?>? ->
                 internetRadioStations.postValue(
-                    value
+                    value,
                 )
-            })
+            },
+        )
         return internetRadioStations
     }
 
@@ -34,8 +37,9 @@ class RadioViewModel(application: Application) : AndroidViewModel(application) {
             owner,
             Observer { value: MutableList<InternetRadioStation?>? ->
                 internetRadioStations.postValue(
-                    value
+                    value,
                 )
-            })
+            },
+        )
     }
 }

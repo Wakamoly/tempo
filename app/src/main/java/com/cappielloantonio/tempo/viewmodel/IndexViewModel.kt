@@ -7,7 +7,9 @@ import com.cappielloantonio.tempo.repository.DirectoryRepository
 import com.cappielloantonio.tempo.subsonic.models.Indexes
 import com.cappielloantonio.tempo.subsonic.models.MusicFolder
 
-class IndexViewModel(application: Application) : AndroidViewModel(application) {
+class IndexViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val directoryRepository: DirectoryRepository
 
     private var musicFolder: MusicFolder? = null
@@ -16,9 +18,7 @@ class IndexViewModel(application: Application) : AndroidViewModel(application) {
         directoryRepository = DirectoryRepository()
     }
 
-    fun getIndexes(musicFolderId: String?): MutableLiveData<Indexes?>? {
-        return directoryRepository.getIndexes(musicFolderId, null)
-    }
+    fun getIndexes(musicFolderId: String?): MutableLiveData<Indexes?>? = directoryRepository.getIndexes(musicFolderId, null)
 
     val musicFolderName: String?
         get() = if (musicFolder != null) musicFolder!!.name else ""

@@ -39,7 +39,7 @@ class ShareUpdateDialog : DialogFragment() {
 
         shareBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<ShareBottomSheetViewModel>(
-                ShareBottomSheetViewModel::class.java
+                ShareBottomSheetViewModel::class.java,
             )
 
         bind = DialogShareUpdateBinding.inflate(getLayoutInflater())
@@ -49,11 +49,11 @@ class ShareUpdateDialog : DialogFragment() {
             .setTitle(R.string.share_update_dialog_title)
             .setPositiveButton(
                 R.string.share_update_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNegativeButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            ).setNegativeButton(
                 R.string.share_update_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .create()
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).create()
     }
 
     override fun onStart() {
@@ -84,41 +84,54 @@ class ShareUpdateDialog : DialogFragment() {
         bind!!.shareExpirationTextView.setFocusable(false)
         bind!!.shareExpirationTextView.setOnLongClickListener(null)
 
-        bind!!.shareExpirationTextView.setOnClickListener(View.OnClickListener { view: View? ->
-            val constraints = CalendarConstraints.Builder()
-                .setValidator(DateValidatorPointForward.now())
-                .build()
-            datePicker = MaterialDatePicker.Builder.datePicker()
-                .setCalendarConstraints(constraints)
-                .setSelection(expiration)
-                .build()
+        bind!!.shareExpirationTextView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val constraints =
+                    CalendarConstraints
+                        .Builder()
+                        .setValidator(DateValidatorPointForward.now())
+                        .build()
+                datePicker =
+                    MaterialDatePicker.Builder
+                        .datePicker()
+                        .setCalendarConstraints(constraints)
+                        .setSelection(expiration)
+                        .build()
 
-            datePicker!!.addOnPositiveButtonClickListener(
-                MaterialPickerOnPositiveButtonClickListener { selection: Long? ->
-                    expiration = selection!!
-                    bind!!.shareExpirationTextView.setText(UIUtil.getReadableDate(Date(selection)))
-                })
-            datePicker!!.show(requireActivity().supportFragmentManager, null)
-        })
+                datePicker!!.addOnPositiveButtonClickListener(
+                    MaterialPickerOnPositiveButtonClickListener { selection: Long? ->
+                        expiration = selection!!
+                        bind!!.shareExpirationTextView.setText(UIUtil.getReadableDate(Date(selection)))
+                    },
+                )
+                datePicker!!.show(requireActivity().supportFragmentManager, null)
+            },
+        )
     }
 
     private fun setButtonAction() {
-        (Objects.requireNonNull<Dialog?>(dialog) as AlertDialog).getButton(AlertDialog.BUTTON_POSITIVE)
+        (Objects.requireNonNull<Dialog?>(dialog) as AlertDialog)
+            .getButton(AlertDialog.BUTTON_POSITIVE)
             .setOnClickListener(
                 View.OnClickListener { v: View? ->
                     if (validateInput()) {
                         updateShare()
                         Objects.requireNonNull<Dialog?>(dialog).dismiss()
                     }
-                })
+                },
+            )
     }
 
     private fun validateInput(): Boolean {
         descriptionTextView =
-            Objects.requireNonNull<Editable?>(bind!!.shareDescriptionTextView.getText()).toString()
+            Objects
+                .requireNonNull<Editable?>(bind!!.shareDescriptionTextView.getText())
+                .toString()
                 .trim { it <= ' ' }
         expirationTextView =
-            Objects.requireNonNull<Editable?>(bind!!.shareExpirationTextView.getText()).toString()
+            Objects
+                .requireNonNull<Editable?>(bind!!.shareExpirationTextView.getText())
+                .toString()
                 .trim { it <= ' ' }
 
         if (TextUtils.isEmpty(descriptionTextView)) {

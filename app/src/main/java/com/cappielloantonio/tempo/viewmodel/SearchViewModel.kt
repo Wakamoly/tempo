@@ -8,7 +8,9 @@ import com.cappielloantonio.tempo.repository.SearchingRepository
 import com.cappielloantonio.tempo.subsonic.models.SearchResult2
 import com.cappielloantonio.tempo.subsonic.models.SearchResult3
 
-class SearchViewModel(application: Application) : AndroidViewModel(application) {
+class SearchViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     var query: String? = ""
         set(query) {
             field = query
@@ -24,13 +26,9 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         searchingRepository = SearchingRepository()
     }
 
-    fun search2(title: String?): LiveData<SearchResult2?>? {
-        return searchingRepository.search2(title)
-    }
+    fun search2(title: String?): LiveData<SearchResult2?>? = searchingRepository.search2(title)
 
-    fun search3(title: String?): LiveData<SearchResult3?>? {
-        return searchingRepository.search3(title)
-    }
+    fun search3(title: String?): LiveData<SearchResult3?>? = searchingRepository.search3(title)
 
     fun insertNewSearch(search: String) {
         searchingRepository.insert(RecentSearch(search))
@@ -40,9 +38,7 @@ class SearchViewModel(application: Application) : AndroidViewModel(application) 
         searchingRepository.delete(RecentSearch(search))
     }
 
-    fun getSearchSuggestion(query: String?): LiveData<MutableList<String?>?>? {
-        return searchingRepository.getSuggestions(query)
-    }
+    fun getSearchSuggestion(query: String?): LiveData<MutableList<String?>?>? = searchingRepository.getSuggestions(query)
 
     val recentSearchSuggestion: MutableList<String?>
         get() {

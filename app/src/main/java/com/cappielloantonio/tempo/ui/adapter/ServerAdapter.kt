@@ -10,43 +10,47 @@ import com.cappielloantonio.tempo.databinding.ItemLoginServerBinding
 import com.cappielloantonio.tempo.interfaces.ClickCallback
 import com.cappielloantonio.tempo.model.Server
 
-class ServerAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<ServerAdapter.ViewHolder?>() {
+class ServerAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<ServerAdapter.ViewHolder?>() {
     private var servers: MutableList<Server>
 
     init {
         this.servers = ArrayList<Server>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
         val view =
             ItemLoginServerBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return ServerAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val server = servers.get(position)
 
         holder.item.serverNameTextView.text = server.serverName
         holder.item.serverAddressTextView.text = server.address
     }
 
-    override fun getItemCount(): Int {
-        return servers.size
-    }
+    override fun getItemCount(): Int = servers.size
 
     fun setItems(servers: MutableList<Server>) {
         this.servers = servers
         notifyDataSetChanged()
     }
 
-    fun getItem(id: Int): Server? {
-        return servers.get(id)
-    }
+    fun getItem(id: Int): Server? = servers.get(id)
 
-    inner class ViewHolder internal constructor(var item: ItemLoginServerBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLoginServerBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.serverNameTextView.setSelected(true)

@@ -29,7 +29,7 @@ import com.cappielloantonio.tempo.subsonic.models.Playlist
 @Database(
     version = 11,
     entities = [Queue::class, Server::class, RecentSearch::class, Download::class, Chronology::class, Favorite::class, SessionMediaItem::class, Playlist::class],
-    autoMigrations = [AutoMigration(from = 10, to = 11)]
+    autoMigrations = [AutoMigration(from = 10, to = 11)],
 )
 @TypeConverters([DateConverters::class])
 abstract class AppDatabase : RoomDatabase() {
@@ -56,13 +56,13 @@ abstract class AppDatabase : RoomDatabase() {
         var instance: AppDatabase? = null
             get() {
                 if (field == null) {
-                    field = databaseBuilder<AppDatabase?>(
-                        getContext(),
-                        AppDatabase::class.java,
-                        DB_NAME
-                    )
-                        .fallbackToDestructiveMigration()
-                        .build()
+                    field =
+                        databaseBuilder<AppDatabase?>(
+                            getContext(),
+                            AppDatabase::class.java,
+                            DB_NAME,
+                        ).fallbackToDestructiveMigration()
+                            .build()
                 }
 
                 return field

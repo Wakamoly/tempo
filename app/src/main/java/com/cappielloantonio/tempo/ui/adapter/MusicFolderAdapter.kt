@@ -16,53 +16,58 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class MusicFolderAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<MusicFolderAdapter.ViewHolder?>() {
+class MusicFolderAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<MusicFolderAdapter.ViewHolder?>() {
     private var musicFolders: MutableList<MusicFolder>
 
     init {
         this.musicFolders = mutableListOf<MusicFolder?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemLibraryMusicFolderBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemLibraryMusicFolderBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return MusicFolderAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val musicFolder = musicFolders.get(position)
 
         holder.item.musicFolderTitleTextView.text = musicFolder.name
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            musicFolder.name,
-            CustomGlideRequest.ResourceType.Folder
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                musicFolder.name,
+                CustomGlideRequest.ResourceType.Folder,
+            ).build()
             .into(holder.item.musicFolderCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return musicFolders.size
-    }
+    override fun getItemCount(): Int = musicFolders.size
 
     fun setItems(musicFolders: MutableList<MusicFolder>) {
         this.musicFolders = musicFolders
         notifyDataSetChanged()
     }
 
-    fun getItem(position: Int): MusicFolder? {
-        return musicFolders.get(position)
-    }
+    fun getItem(position: Int): MusicFolder? = musicFolders.get(position)
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryMusicFolderBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryMusicFolderBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.musicFolderTitleTextView.setSelected(true)
@@ -76,7 +81,7 @@ class MusicFolderAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.MUSIC_FOLDER_OBJECT,
-                musicFolders.get(getBindingAdapterPosition())
+                musicFolders.get(getBindingAdapterPosition()),
             )
             click.onMusicFolderClick(bundle)
         }

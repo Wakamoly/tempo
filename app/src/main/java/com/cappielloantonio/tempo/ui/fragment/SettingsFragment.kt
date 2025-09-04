@@ -50,15 +50,17 @@ class SettingsFragment : PreferenceFragmentCompat() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        someActivityResultLauncher = registerForActivityResult<Intent?, ActivityResult?>(
-            StartActivityForResult(),
-            ActivityResultCallback { result: ActivityResult? -> })
+        someActivityResultLauncher =
+            registerForActivityResult<Intent?, ActivityResult?>(
+                StartActivityForResult(),
+                ActivityResultCallback { result: ActivityResult? -> },
+            )
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -71,7 +73,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 0,
                 0,
                 0,
-                resources.getDimension(R.dimen.global_padding_bottom).toInt()
+                resources.getDimension(R.dimen.global_padding_bottom).toInt(),
             )
         }
 
@@ -110,7 +112,10 @@ class SettingsFragment : PreferenceFragmentCompat() {
         activity!!.setBottomSheetVisibility(true)
     }
 
-    override fun onCreatePreferences(savedInstanceState: Bundle?, rootKey: String?) {
+    override fun onCreatePreferences(
+        savedInstanceState: Bundle?,
+        rootKey: String?,
+    ) {
         setPreferencesFromResource(R.xml.global_preferences, rootKey)
         val themePreference = findPreference<ListPreference?>(Preferences.THEME)
         if (themePreference != null) {
@@ -131,10 +136,11 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val intent = Intent(AudioEffect.ACTION_DISPLAY_AUDIO_EFFECT_CONTROL_PANEL)
 
         if ((intent.resolveActivity(requireActivity().packageManager) != null)) {
-            equalizer.onPreferenceClickListener = Preference.OnPreferenceClickListener { preference: Preference? ->
-                someActivityResultLauncher!!.launch(intent)
-                true
-            }
+            equalizer.onPreferenceClickListener =
+                Preference.OnPreferenceClickListener { preference: Preference? ->
+                    someActivityResultLauncher!!.launch(intent)
+                    true
+                }
         } else {
             equalizer.isVisible = false
         }
@@ -149,7 +155,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (requireContext().getExternalFilesDirs(null)[1] == null) {
                 storage.isVisible = false
             } else {
-                storage.setSummary(if (getDownloadStoragePreference() == 0) R.string.download_storage_internal_dialog_negative_button else R.string.download_storage_external_dialog_positive_button)
+                storage.setSummary(
+                    if (getDownloadStoragePreference() ==
+                        0
+                    ) {
+                        R.string.download_storage_internal_dialog_negative_button
+                    } else {
+                        R.string.download_storage_external_dialog_positive_button
+                    },
+                )
             }
         } catch (exception: Exception) {
             storage.isVisible = false
@@ -165,7 +179,15 @@ class SettingsFragment : PreferenceFragmentCompat() {
             if (requireContext().getExternalFilesDirs(null)[1] == null) {
                 storage.isVisible = false
             } else {
-                storage.setSummary(if (getDownloadStoragePreference() == 0) R.string.download_storage_internal_dialog_negative_button else R.string.download_storage_external_dialog_positive_button)
+                storage.setSummary(
+                    if (getDownloadStoragePreference() ==
+                        0
+                    ) {
+                        R.string.download_storage_internal_dialog_negative_button
+                    } else {
+                        R.string.download_storage_external_dialog_positive_button
+                    },
+                )
             }
         } catch (exception: Exception) {
             storage.isVisible = false
@@ -176,22 +198,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
         val streamingCachePreference = findPreference<ListPreference?>("streaming_cache_size")
 
         if (streamingCachePreference != null) {
-            streamingCachePreference.setSummaryProvider(object : SummaryProvider<ListPreference?> {
-                override fun provideSummary(preference: ListPreference): CharSequence? {
-                    val entry = preference.getEntry()
+            streamingCachePreference.setSummaryProvider(
+                object : SummaryProvider<ListPreference?> {
+                    override fun provideSummary(preference: ListPreference): CharSequence? {
+                        val entry = preference.getEntry()
 
-                    if (entry == null) return null
+                        if (entry == null) return null
 
-                    val currentSizeMb =
-                        DownloadUtil.getStreamingCacheSize(requireActivity()) / (1024 * 1024)
+                        val currentSizeMb =
+                            DownloadUtil.getStreamingCacheSize(requireActivity()) / (1024 * 1024)
 
-                    return getString(
-                        R.string.settings_summary_streaming_cache_size,
-                        entry,
-                        currentSizeMb.toString()
-                    )
-                }
-            })
+                        return getString(
+                            R.string.settings_summary_streaming_cache_size,
+                            entry,
+                            currentSizeMb.toString(),
+                        )
+                    }
+                },
+            )
         }
     }
 
@@ -242,16 +266,21 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun actionScan() {
         findPreference<Preference?>("scan_library")!!.onPreferenceClickListener =
             Preference.OnPreferenceClickListener { preference: Preference? ->
-                settingViewModel!!.launchScan(object : ScanCallback {
-                    override fun onError(exception: Exception) {
-                        findPreference<Preference?>("scan_library")!!.setSummary(exception.message)
-                    }
+                settingViewModel!!.launchScan(
+                    object : ScanCallback {
+                        override fun onError(exception: Exception) {
+                            findPreference<Preference?>("scan_library")!!.setSummary(exception.message)
+                        }
 
-                    override fun onSuccess(isScanning: Boolean, count: Long) {
-                        findPreference<Preference?>("scan_library")!!.setSummary("Scanning: counting " + count + " tracks")
-                        if (isScanning) this.scanStatus
-                    }
-                })
+                        override fun onSuccess(
+                            isScanning: Boolean,
+                            count: Long,
+                        ) {
+                            findPreference<Preference?>("scan_library")!!.setSummary("Scanning: counting " + count + " tracks")
+                            if (isScanning) this.scanStatus
+                        }
+                    },
+                )
                 true
             }
     }
@@ -261,9 +290,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                 if (newValue is Boolean) {
                     if (newValue) {
-                        val dialog = StarredSyncDialog(Runnable {
-                            (preference as SwitchPreference).setChecked(false)
-                        })
+                        val dialog =
+                            StarredSyncDialog(
+                                Runnable {
+                                    (preference as SwitchPreference).setChecked(false)
+                                },
+                            )
                         dialog.show(activity!!.supportFragmentManager, null)
                     }
                 }
@@ -276,9 +308,12 @@ class SettingsFragment : PreferenceFragmentCompat() {
             Preference.OnPreferenceChangeListener { preference: Preference?, newValue: Any? ->
                 if (newValue is Boolean) {
                     if (newValue) {
-                        val dialog = StarredAlbumSyncDialog(Runnable {
-                            (preference as SwitchPreference).setChecked(false)
-                        })
+                        val dialog =
+                            StarredAlbumSyncDialog(
+                                Runnable {
+                                    (preference as SwitchPreference).setChecked(false)
+                                },
+                            )
                         dialog.show(activity!!.supportFragmentManager, null)
                     }
                 }
@@ -289,15 +324,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun actionChangeStreamingCacheStorage() {
         findPreference<Preference?>("streaming_cache_storage")!!.onPreferenceClickListener =
             Preference.OnPreferenceClickListener { preference: Preference? ->
-                val dialog = StreamingCacheStorageDialog(object : DialogClickCallback {
-                    override fun onPositiveClick() {
-                        findPreference<Preference?>("streaming_cache_storage")!!.setSummary(R.string.streaming_cache_storage_external_dialog_positive_button)
-                    }
+                val dialog =
+                    StreamingCacheStorageDialog(
+                        object : DialogClickCallback {
+                            override fun onPositiveClick() {
+                                findPreference<Preference?>(
+                                    "streaming_cache_storage",
+                                )!!.setSummary(R.string.streaming_cache_storage_external_dialog_positive_button)
+                            }
 
-                    override fun onNegativeClick() {
-                        findPreference<Preference?>("streaming_cache_storage")!!.setSummary(R.string.streaming_cache_storage_internal_dialog_negative_button)
-                    }
-                })
+                            override fun onNegativeClick() {
+                                findPreference<Preference?>(
+                                    "streaming_cache_storage",
+                                )!!.setSummary(R.string.streaming_cache_storage_internal_dialog_negative_button)
+                            }
+                        },
+                    )
                 dialog.show(activity!!.supportFragmentManager, null)
                 true
             }
@@ -306,15 +348,22 @@ class SettingsFragment : PreferenceFragmentCompat() {
     private fun actionChangeDownloadStorage() {
         findPreference<Preference?>("download_storage")!!.onPreferenceClickListener =
             Preference.OnPreferenceClickListener { preference: Preference? ->
-                val dialog = DownloadStorageDialog(object : DialogClickCallback {
-                    override fun onPositiveClick() {
-                        findPreference<Preference?>("download_storage")!!.setSummary(R.string.download_storage_external_dialog_positive_button)
-                    }
+                val dialog =
+                    DownloadStorageDialog(
+                        object : DialogClickCallback {
+                            override fun onPositiveClick() {
+                                findPreference<Preference?>(
+                                    "download_storage",
+                                )!!.setSummary(R.string.download_storage_external_dialog_positive_button)
+                            }
 
-                    override fun onNegativeClick() {
-                        findPreference<Preference?>("download_storage")!!.setSummary(R.string.download_storage_internal_dialog_negative_button)
-                    }
-                })
+                            override fun onNegativeClick() {
+                                findPreference<Preference?>(
+                                    "download_storage",
+                                )!!.setSummary(R.string.download_storage_internal_dialog_negative_button)
+                            }
+                        },
+                    )
                 dialog.show(activity!!.supportFragmentManager, null)
                 true
             }
@@ -331,19 +380,24 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     private val scanStatus: Unit
         get() {
-            settingViewModel!!.getScanStatus(object :
-                ScanCallback {
-                override fun onError(exception: Exception) {
-                    findPreference<Preference?>("scan_library")!!.setSummary(
-                        exception.message
-                    )
-                }
+            settingViewModel!!.getScanStatus(
+                object :
+                    ScanCallback {
+                    override fun onError(exception: Exception) {
+                        findPreference<Preference?>("scan_library")!!.setSummary(
+                            exception.message,
+                        )
+                    }
 
-                override fun onSuccess(isScanning: Boolean, count: Long) {
-                    findPreference<Preference?>("scan_library")!!.setSummary("Scanning: counting " + count + " tracks")
-                    if (isScanning) getScanStatus()
-                }
-            })
+                    override fun onSuccess(
+                        isScanning: Boolean,
+                        count: Long,
+                    ) {
+                        findPreference<Preference?>("scan_library")!!.setSummary("Scanning: counting " + count + " tracks")
+                        if (isScanning) getScanStatus()
+                    }
+                },
+            )
         }
 
     private fun actionKeepScreenOn() {
@@ -353,7 +407,8 @@ class SettingsFragment : PreferenceFragmentCompat() {
                     if (newValue) {
                         activity!!.window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     } else {
-                        activity!!.window
+                        activity!!
+                            .window
                             .clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                     }
                 }

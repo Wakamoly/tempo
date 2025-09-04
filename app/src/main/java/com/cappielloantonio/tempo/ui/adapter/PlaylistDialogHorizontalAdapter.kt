@@ -12,50 +12,56 @@ import com.cappielloantonio.tempo.subsonic.models.Playlist
 import com.cappielloantonio.tempo.util.Constants
 import com.cappielloantonio.tempo.util.MusicUtil
 
-class PlaylistDialogHorizontalAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<PlaylistDialogHorizontalAdapter.ViewHolder?>() {
+class PlaylistDialogHorizontalAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<PlaylistDialogHorizontalAdapter.ViewHolder?>() {
     private var playlists: MutableList<Playlist>
 
     init {
         this.playlists = mutableListOf<Playlist?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHorizontalPlaylistDialogBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHorizontalPlaylistDialogBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return PlaylistDialogHorizontalAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val playlist = playlists.get(position)
 
         holder.item.playlistDialogTitleTextView.text = playlist.name
-        holder.item.playlistDialogCountTextView.text = holder.itemView.context.getString(
-            R.string.playlist_counted_tracks,
-            playlist.songCount,
-            MusicUtil.getReadableDurationString(playlist.duration, false)
-        )
+        holder.item.playlistDialogCountTextView.text =
+            holder.itemView.context.getString(
+                R.string.playlist_counted_tracks,
+                playlist.songCount,
+                MusicUtil.getReadableDurationString(playlist.duration, false),
+            )
     }
 
-    override fun getItemCount(): Int {
-        return playlists.size
-    }
+    override fun getItemCount(): Int = playlists.size
 
     fun setItems(playlists: MutableList<Playlist>) {
         this.playlists = playlists
         notifyDataSetChanged()
     }
 
-    fun getItem(id: Int): Playlist? {
-        return playlists.get(id)
-    }
+    fun getItem(id: Int): Playlist? = playlists.get(id)
 
-    inner class ViewHolder internal constructor(var item: ItemHorizontalPlaylistDialogBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHorizontalPlaylistDialogBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.playlistDialogTitleTextView.setSelected(true)
@@ -67,7 +73,7 @@ class PlaylistDialogHorizontalAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.PLAYLIST_OBJECT,
-                playlists.get(getBindingAdapterPosition())
+                playlists.get(getBindingAdapterPosition()),
             )
 
             click.onPlaylistClick(bundle)

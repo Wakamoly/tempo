@@ -17,84 +17,129 @@ class SharingRepository {
             getSubsonicClientInstance(false)
                 .getSharingClient()
                 .getShares()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.shares != null && response.body()!!.subsonicResponse.shares!!.shares != null) {
-                            shares.setValue(response.body()!!.subsonicResponse.shares!!.shares)
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.shares != null &&
+                                response
+                                    .body()!!
+                                    .subsonicResponse.shares!!
+                                    .shares != null
+                            ) {
+                                shares.setValue(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.shares!!
+                                        .shares,
+                                )
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                        }
+                    },
+                )
 
             return shares
         }
 
-    fun createShare(id: String?, description: String?, expires: Long?): MutableLiveData<Share?> {
+    fun createShare(
+        id: String?,
+        description: String?,
+        expires: Long?,
+    ): MutableLiveData<Share?> {
         val share = MutableLiveData<Share?>()
 
         getSubsonicClientInstance(false)
             .getSharingClient()
             .createShare(id, description, expires)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.shares != null && response.body()!!.subsonicResponse.shares!!.shares != null && response.body()!!.subsonicResponse.shares!!.shares!!.get(
-                            0
-                        ) != null
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
                     ) {
-                        share.value = response.body()!!.subsonicResponse.shares!!.shares!!.get(0)
-                    } else {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.shares != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.shares!!
+                                .shares != null &&
+                            response.body()!!.subsonicResponse.shares!!.shares!!.get(
+                                0,
+                            ) != null
+                        ) {
+                            share.value =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.shares!!
+                                    .shares!!
+                                    .get(0)
+                        } else {
+                            share.value = null
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
                         share.value = null
                     }
-                }
-
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    share.value = null
-                }
-            })
+                },
+            )
 
         return share
     }
 
-    fun updateShare(id: String?, description: String?, expires: Long?) {
+    fun updateShare(
+        id: String?,
+        description: String?,
+        expires: Long?,
+    ) {
         getSubsonicClientInstance(false)
             .getSharingClient()
             .updateShare(id, description, expires)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun deleteShare(id: String?) {
         getSubsonicClientInstance(false)
             .getSharingClient()
             .deleteShare(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 }

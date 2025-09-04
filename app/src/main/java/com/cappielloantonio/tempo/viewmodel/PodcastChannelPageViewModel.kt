@@ -7,7 +7,9 @@ import com.cappielloantonio.tempo.repository.PodcastRepository
 import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
 import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
 
-class PodcastChannelPageViewModel(application: Application) : AndroidViewModel(application) {
+class PodcastChannelPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val podcastRepository: PodcastRepository
 
     private var podcastChannel: PodcastChannel? = null
@@ -19,9 +21,7 @@ class PodcastChannelPageViewModel(application: Application) : AndroidViewModel(a
     val podcastChannelEpisodes: LiveData<MutableList<PodcastChannel?>?>?
         get() = podcastRepository.getPodcastChannels(true, podcastChannel!!.id)
 
-    fun getPodcastChannel(): PodcastChannel {
-        return podcastChannel!!
-    }
+    fun getPodcastChannel(): PodcastChannel = podcastChannel!!
 
     fun setPodcastChannel(podcastChannel: PodcastChannel) {
         this.podcastChannel = podcastChannel

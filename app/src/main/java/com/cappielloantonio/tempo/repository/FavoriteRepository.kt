@@ -13,48 +13,68 @@ import retrofit2.Response
 class FavoriteRepository {
     private val favoriteDao: FavoriteDao = AppDatabase.Companion.getInstance().favoriteDao()
 
-    fun star(id: String?, albumId: String?, artistId: String?, starCallback: StarCallback) {
+    fun star(
+        id: String?,
+        albumId: String?,
+        artistId: String?,
+        starCallback: StarCallback,
+    ) {
         getSubsonicClientInstance(false)
             .getMediaAnnotationClient()
             .star(id, albumId, artistId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful) {
-                        starCallback.onSuccess()
-                    } else {
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful) {
+                            starCallback.onSuccess()
+                        } else {
+                            starCallback.onError()
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
                         starCallback.onError()
                     }
-                }
-
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    starCallback.onError()
-                }
-            })
+                },
+            )
     }
 
-    fun unstar(id: String?, albumId: String?, artistId: String?, starCallback: StarCallback) {
+    fun unstar(
+        id: String?,
+        albumId: String?,
+        artistId: String?,
+        starCallback: StarCallback,
+    ) {
         getSubsonicClientInstance(false)
             .getMediaAnnotationClient()
             .unstar(id, albumId, artistId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful) {
-                        starCallback.onSuccess()
-                    } else {
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful) {
+                            starCallback.onSuccess()
+                        } else {
+                            starCallback.onError()
+                        }
+                    }
+
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
                         starCallback.onError()
                     }
-                }
-
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    starCallback.onError()
-                }
-            })
+                },
+            )
     }
 
     val favorites: MutableList<Favorite?>?
@@ -76,7 +96,9 @@ class FavoriteRepository {
             return favorites
         }
 
-    private class GetAllThreadSafe(private val favoriteDao: FavoriteDao) : Runnable {
+    private class GetAllThreadSafe(
+        private val favoriteDao: FavoriteDao,
+    ) : Runnable {
         var favorites: MutableList<Favorite?>? = ArrayList<Favorite?>()
             private set
 
@@ -85,18 +107,24 @@ class FavoriteRepository {
         }
     }
 
-    fun starLater(id: String?, albumId: String?, artistId: String?, toStar: Boolean) {
-        val insert = InsertThreadSafe(
-            favoriteDao,
-            Favorite(System.currentTimeMillis(), id, albumId, artistId, toStar)
-        )
+    fun starLater(
+        id: String?,
+        albumId: String?,
+        artistId: String?,
+        toStar: Boolean,
+    ) {
+        val insert =
+            InsertThreadSafe(
+                favoriteDao,
+                Favorite(System.currentTimeMillis(), id, albumId, artistId, toStar),
+            )
         val thread = Thread(insert)
         thread.start()
     }
 
     private class InsertThreadSafe(
         private val favoriteDao: FavoriteDao,
-        private val favorite: Favorite?
+        private val favorite: Favorite?,
     ) : Runnable {
         override fun run() {
             favoriteDao.insert(favorite)
@@ -111,7 +139,7 @@ class FavoriteRepository {
 
     private class DeleteThreadSafe(
         private val favoriteDao: FavoriteDao,
-        private val favorite: Favorite?
+        private val favorite: Favorite?,
     ) : Runnable {
         override fun run() {
             favoriteDao.delete(favorite)

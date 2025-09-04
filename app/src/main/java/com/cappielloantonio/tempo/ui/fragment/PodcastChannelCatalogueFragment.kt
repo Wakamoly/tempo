@@ -34,7 +34,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @OptIn(markerClass = UnstableApi::class)
-class PodcastChannelCatalogueFragment : Fragment(), ClickCallback {
+class PodcastChannelCatalogueFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentPodcastChannelCatalogueBinding? = null
     private var activity: MainActivity? = null
     private var podcastChannelCatalogueViewModel: PodcastChannelCatalogueViewModel? = null
@@ -49,7 +51,7 @@ class PodcastChannelCatalogueFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -57,7 +59,7 @@ class PodcastChannelCatalogueFragment : Fragment(), ClickCallback {
         val view: View = bind!!.getRoot()
         podcastChannelCatalogueViewModel =
             ViewModelProvider(requireActivity()).get<PodcastChannelCatalogueViewModel>(
-                PodcastChannelCatalogueViewModel::class.java
+                PodcastChannelCatalogueViewModel::class.java,
             )
 
         initAppBar()
@@ -79,22 +81,28 @@ class PodcastChannelCatalogueFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.podcastChannelInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.podcast_channel_catalogue_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.podcastChannelInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.podcast_channel_catalogue_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -102,52 +110,63 @@ class PodcastChannelCatalogueFragment : Fragment(), ClickCallback {
         bind!!.podcastChannelCatalogueRecyclerView.setLayoutManager(
             GridLayoutManager(
                 requireContext(),
-                2
-            )
+                2,
+            ),
         )
         bind!!.podcastChannelCatalogueRecyclerView.addItemDecoration(
             GridItemDecoration(
                 2,
                 20,
-                false
-            )
+                false,
+            ),
         )
         bind!!.podcastChannelCatalogueRecyclerView.setHasFixedSize(true)
 
         podcastChannelCatalogueAdapter = PodcastChannelCatalogueAdapter(this)
         podcastChannelCatalogueAdapter!!.setStateRestorationPolicy(RecyclerView.Adapter.StateRestorationPolicy.PREVENT_WHEN_EMPTY)
         bind!!.podcastChannelCatalogueRecyclerView.setAdapter(podcastChannelCatalogueAdapter)
-        podcastChannelCatalogueViewModel!!.getPodcastChannels(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<PodcastChannel?>? ->
-                if (albums != null) {
-                    podcastChannelCatalogueAdapter!!.setItems(albums)
-                }
-            })
+        podcastChannelCatalogueViewModel!!
+            .getPodcastChannels(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { albums: MutableList<PodcastChannel?>? ->
+                    if (albums != null) {
+                        podcastChannelCatalogueAdapter!!.setItems(albums)
+                    }
+                },
+            )
 
-        bind!!.podcastChannelCatalogueRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
+        bind!!.podcastChannelCatalogueRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                podcastChannelCatalogueAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    podcastChannelCatalogueAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }

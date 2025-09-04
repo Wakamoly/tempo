@@ -12,13 +12,14 @@ object OpenSubsonicExtensionsUtil {
             var extensions: MutableList<OpenSubsonicExtension?>? = null
 
             if (isOpenSubsonic() && getOpenSubsonicExtensions() != null) {
-                extensions = Gson()
-                    .fromJson<MutableList<OpenSubsonicExtension?>?>(
-                        getOpenSubsonicExtensions(),
-                        object :
-                            TypeToken<MutableList<OpenSubsonicExtension?>?>() {
-                        }.type
-                    )
+                extensions =
+                    Gson()
+                        .fromJson<MutableList<OpenSubsonicExtension?>?>(
+                            getOpenSubsonicExtensions(),
+                            object :
+                                TypeToken<MutableList<OpenSubsonicExtension?>?>() {
+                            }.type,
+                        )
             }
 
             return extensions
@@ -27,9 +28,11 @@ object OpenSubsonicExtensionsUtil {
     private fun getOpenSubsonicExtension(extensionName: String?): OpenSubsonicExtension? {
         if (openSubsonicExtensions == null) return null
 
-        return openSubsonicExtensions!!.stream()
+        return openSubsonicExtensions!!
+            .stream()
             .filter { openSubsonicExtension: OpenSubsonicExtension? -> openSubsonicExtension!!.name == extensionName }
-            .findAny().orElse(null)
+            .findAny()
+            .orElse(null)
     }
 
     val isTranscodeOffsetExtensionAvailable: Boolean

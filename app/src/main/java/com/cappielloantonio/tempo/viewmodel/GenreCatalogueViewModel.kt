@@ -6,7 +6,9 @@ import androidx.lifecycle.LiveData
 import com.cappielloantonio.tempo.repository.GenreRepository
 import com.cappielloantonio.tempo.subsonic.models.Genre
 
-class GenreCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class GenreCatalogueViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val genreRepository: GenreRepository
 
     init {

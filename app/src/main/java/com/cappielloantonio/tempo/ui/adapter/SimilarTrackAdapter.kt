@@ -15,53 +15,58 @@ import com.cappielloantonio.tempo.util.Constants
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class SimilarTrackAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<SimilarTrackAdapter.ViewHolder?>() {
+class SimilarTrackAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<SimilarTrackAdapter.ViewHolder?>() {
     private var songs: MutableList<Child>
 
     init {
         this.songs = mutableListOf<Child?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomeSimilarTrackBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomeSimilarTrackBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return SimilarTrackAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val song = songs.get(position)
 
         holder.item.titleTrackLabel.text = song.title
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            song.coverArtId,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                song.coverArtId,
+                CustomGlideRequest.ResourceType.Song,
+            ).build()
             .into(holder.item.trackCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return songs.size
-    }
+    override fun getItemCount(): Int = songs.size
 
-    fun getItem(position: Int): Child? {
-        return songs.get(position)
-    }
+    fun getItem(position: Int): Child? = songs.get(position)
 
     fun setItems(songs: MutableList<Child>) {
         this.songs = songs
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemHomeSimilarTrackBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomeSimilarTrackBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })

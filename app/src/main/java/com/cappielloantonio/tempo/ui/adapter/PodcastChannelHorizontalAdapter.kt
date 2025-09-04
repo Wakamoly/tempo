@@ -16,56 +16,62 @@ import com.cappielloantonio.tempo.util.MusicUtil
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class PodcastChannelHorizontalAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<PodcastChannelHorizontalAdapter.ViewHolder?>() {
+class PodcastChannelHorizontalAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<PodcastChannelHorizontalAdapter.ViewHolder?>() {
     private var podcastChannels: MutableList<PodcastChannel>
 
     init {
         this.podcastChannels = mutableListOf<PodcastChannel?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHorizontalPodcastChannelBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHorizontalPodcastChannelBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return PodcastChannelHorizontalAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val podcastChannel = podcastChannels.get(position)
 
         holder.item.podcastChannelTitleTextView.text = podcastChannel.title
-        holder.item.podcastChannelDescriptionTextView.text = MusicUtil.getReadableString(
-            podcastChannel.description
-        )
+        holder.item.podcastChannelDescriptionTextView.text =
+            MusicUtil.getReadableString(
+                podcastChannel.description,
+            )
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            podcastChannel.coverArtId,
-            CustomGlideRequest.ResourceType.Podcast
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                podcastChannel.coverArtId,
+                CustomGlideRequest.ResourceType.Podcast,
+            ).build()
             .into(holder.item.podcastChannelCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return podcastChannels.size
-    }
+    override fun getItemCount(): Int = podcastChannels.size
 
     fun setItems(podcastChannels: MutableList<PodcastChannel>) {
         this.podcastChannels = podcastChannels
         notifyDataSetChanged()
     }
 
-    fun getItem(id: Int): PodcastChannel? {
-        return podcastChannels.get(id)
-    }
+    fun getItem(id: Int): PodcastChannel? = podcastChannels.get(id)
 
-    inner class ViewHolder internal constructor(var item: ItemHorizontalPodcastChannelBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHorizontalPodcastChannelBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.podcastChannelTitleTextView.setSelected(true)
@@ -81,7 +87,7 @@ class PodcastChannelHorizontalAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.PODCAST_CHANNEL_OBJECT,
-                podcastChannels.get(getBindingAdapterPosition())
+                podcastChannels.get(getBindingAdapterPosition()),
             )
 
             click.onPodcastChannelClick(bundle)
@@ -91,7 +97,7 @@ class PodcastChannelHorizontalAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.PODCAST_CHANNEL_OBJECT,
-                podcastChannels.get(getBindingAdapterPosition())
+                podcastChannels.get(getBindingAdapterPosition()),
             )
 
             click.onPodcastChannelLongClick(bundle)

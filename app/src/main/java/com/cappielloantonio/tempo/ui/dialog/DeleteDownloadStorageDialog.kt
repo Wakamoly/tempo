@@ -35,15 +35,19 @@ class DeleteDownloadStorageDialog : DialogFragment() {
 
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                DownloadUtil.getDownloadTracker(requireContext()).removeAll()
-                dialog.dismiss()
-            })
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    DownloadUtil.getDownloadTracker(requireContext()).removeAll()
+                    dialog.dismiss()
+                },
+            )
 
             val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
-            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
-                dialog.dismiss()
-            })
+            negativeButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    dialog.dismiss()
+                },
+            )
         }
     }
 }

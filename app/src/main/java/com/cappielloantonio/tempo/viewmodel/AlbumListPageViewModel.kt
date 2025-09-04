@@ -15,7 +15,9 @@ import java.util.Calendar
 import java.util.Date
 import kotlin.math.min
 
-class AlbumListPageViewModel(application: Application) : AndroidViewModel(application) {
+class AlbumListPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val albumRepository: AlbumRepository
     private val downloadRepository: DownloadRepository
 
@@ -35,43 +37,56 @@ class AlbumListPageViewModel(application: Application) : AndroidViewModel(applic
         albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
 
         when (title) {
-            Constants.ALBUM_RECENTLY_PLAYED -> albumRepository.getAlbums(
-                "recent",
-                maxNumber,
-                null,
-                null
-            ).observe(
-                owner,
-                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+            Constants.ALBUM_RECENTLY_PLAYED ->
+                albumRepository
+                    .getAlbums(
+                        "recent",
+                        maxNumber,
+                        null,
+                        null,
+                    ).observe(
+                        owner,
+                        Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums },
+                    )
 
-            Constants.ALBUM_MOST_PLAYED -> albumRepository.getAlbums(
-                "frequent",
-                maxNumber,
-                null,
-                null
-            ).observe(
-                owner,
-                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+            Constants.ALBUM_MOST_PLAYED ->
+                albumRepository
+                    .getAlbums(
+                        "frequent",
+                        maxNumber,
+                        null,
+                        null,
+                    ).observe(
+                        owner,
+                        Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums },
+                    )
 
-            Constants.ALBUM_RECENTLY_ADDED -> albumRepository.getAlbums(
-                "newest",
-                maxNumber,
-                null,
-                null
-            ).observe(
-                owner,
-                Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums })
+            Constants.ALBUM_RECENTLY_ADDED ->
+                albumRepository
+                    .getAlbums(
+                        "newest",
+                        maxNumber,
+                        null,
+                        null,
+                    ).observe(
+                        owner,
+                        Observer { albums: MutableList<AlbumID3?>? -> albumList!!.value = albums },
+                    )
 
             Constants.ALBUM_STARRED -> albumList = albumRepository.getStarredAlbums(false, -1)
             Constants.ALBUM_NEW_RELEASES -> {
                 val currentYear = Calendar.getInstance().get(Calendar.YEAR)
-                albumRepository.getAlbums("byYear", maxNumber, currentYear, currentYear)
-                    .observe(owner, Observer { albums: MutableList<AlbumID3?>? ->
-                        albums!!.sort(
-                            Comparator.comparing<AlbumID3?, Date?>(AlbumID3::created).reversed()
-                        )
-                        albumList!!.postValue(albums.subList(0, min(20, albums.size)))
-                    })
+                albumRepository
+                    .getAlbums("byYear", maxNumber, currentYear, currentYear)
+                    .observe(
+                        owner,
+                        Observer { albums: MutableList<AlbumID3?>? ->
+                            albums!!.sort(
+                                Comparator.comparing<AlbumID3?, Date?>(AlbumID3::created).reversed(),
+                            )
+                            albumList!!.postValue(albums.subList(0, min(20, albums.size)))
+                        },
+                    )
             }
         }
 

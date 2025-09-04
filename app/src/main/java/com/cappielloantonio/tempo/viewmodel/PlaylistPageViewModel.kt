@@ -9,7 +9,9 @@ import androidx.lifecycle.Observer
 import com.cappielloantonio.tempo.repository.PlaylistRepository
 import com.cappielloantonio.tempo.subsonic.models.Playlist
 
-class PlaylistPageViewModel(application: Application) : AndroidViewModel(application) {
+class PlaylistPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val playlistRepository: PlaylistRepository
 
     private var playlist: Playlist? = null
@@ -22,9 +24,7 @@ class PlaylistPageViewModel(application: Application) : AndroidViewModel(applica
     val playlistSongLiveList: LiveData<MutableList<Child?>?>?
         get() = playlistRepository.getPlaylistSongs(playlist!!.id)
 
-    fun getPlaylist(): Playlist {
-        return playlist!!
-    }
+    fun getPlaylist(): Playlist = playlist!!
 
     fun setPlaylist(playlist: Playlist) {
         this.playlist = playlist
@@ -33,11 +33,14 @@ class PlaylistPageViewModel(application: Application) : AndroidViewModel(applica
     fun isPinned(owner: LifecycleOwner): LiveData<Boolean?> {
         val isPinnedLive = MutableLiveData<Boolean?>()
 
-        playlistRepository.getPinnedPlaylists()
-            .observe(owner, Observer { playlists: MutableList<Playlist?>? ->
-                isPinnedLive.postValue(
-                    playlists!!.stream().anyMatch { obj: Playlist? -> obj!!.id == playlist!!.id })
-            })
+        playlistRepository
+            .getPinnedPlaylists()
+            .observe(
+                owner,
+                Observer { playlists: MutableList<Playlist?>? ->
+                    isPinnedLive.postValue(playlists!!.stream().anyMatch { obj: Playlist? -> obj!!.id == playlist!!.id })
+                },
+            )
 
         return isPinnedLive
     }

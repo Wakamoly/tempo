@@ -30,7 +30,7 @@ class DownloadRepository {
 
     private class GetDownloadThreadSafe(
         private val downloadDao: DownloadDao,
-        private val id: String?
+        private val id: String?,
     ) : Runnable {
         var download: Download? = null
             private set
@@ -48,7 +48,7 @@ class DownloadRepository {
 
     private class InsertThreadSafe(
         private val downloadDao: DownloadDao,
-        private val download: Download?
+        private val download: Download?,
     ) : Runnable {
         override fun run() {
             downloadDao.insert(download)
@@ -61,8 +61,10 @@ class DownloadRepository {
         thread.start()
     }
 
-    private class UpdateThreadSafe(private val downloadDao: DownloadDao, private val id: String?) :
-        Runnable {
+    private class UpdateThreadSafe(
+        private val downloadDao: DownloadDao,
+        private val id: String?,
+    ) : Runnable {
         override fun run() {
             downloadDao.update(id)
         }
@@ -76,7 +78,7 @@ class DownloadRepository {
 
     private class InsertAllThreadSafe(
         private val downloadDao: DownloadDao,
-        private val downloads: MutableList<Download?>?
+        private val downloads: MutableList<Download?>?,
     ) : Runnable {
         override fun run() {
             downloadDao.insertAll(downloads)
@@ -89,7 +91,9 @@ class DownloadRepository {
         thread.start()
     }
 
-    private class DeleteAllThreadSafe(private val downloadDao: DownloadDao) : Runnable {
+    private class DeleteAllThreadSafe(
+        private val downloadDao: DownloadDao,
+    ) : Runnable {
         override fun run() {
             downloadDao.deleteAll()
         }
@@ -101,8 +105,10 @@ class DownloadRepository {
         thread.start()
     }
 
-    private class DeleteThreadSafe(private val downloadDao: DownloadDao, private val id: String?) :
-        Runnable {
+    private class DeleteThreadSafe(
+        private val downloadDao: DownloadDao,
+        private val id: String?,
+    ) : Runnable {
         override fun run() {
             downloadDao.delete(id)
         }

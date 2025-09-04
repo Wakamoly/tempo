@@ -16,8 +16,9 @@ import com.cappielloantonio.tempo.util.Preferences.setDownloadStoragePreference
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 @OptIn(markerClass = UnstableApi::class)
-class DownloadStorageDialog(private val dialogClickCallback: DialogClickCallback) :
-    DialogFragment() {
+class DownloadStorageDialog(
+    private val dialogClickCallback: DialogClickCallback,
+) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogDownloadStorageBinding.inflate(getLayoutInflater())
 
@@ -39,30 +40,34 @@ class DownloadStorageDialog(private val dialogClickCallback: DialogClickCallback
 
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                val currentPreference = getDownloadStoragePreference()
-                val newPreference = 1
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val currentPreference = getDownloadStoragePreference()
+                    val newPreference = 1
 
-                if (currentPreference != newPreference) {
-                    setDownloadStoragePreference(newPreference)
-                    DownloadUtil.getDownloadTracker(requireContext()).removeAll()
-                    dialogClickCallback.onPositiveClick()
-                }
-                dialog.dismiss()
-            })
+                    if (currentPreference != newPreference) {
+                        setDownloadStoragePreference(newPreference)
+                        DownloadUtil.getDownloadTracker(requireContext()).removeAll()
+                        dialogClickCallback.onPositiveClick()
+                    }
+                    dialog.dismiss()
+                },
+            )
 
             val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
-            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
-                val currentPreference = getDownloadStoragePreference()
-                val newPreference = 0
+            negativeButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val currentPreference = getDownloadStoragePreference()
+                    val newPreference = 0
 
-                if (currentPreference != newPreference) {
-                    setDownloadStoragePreference(newPreference)
-                    DownloadUtil.getDownloadTracker(requireContext()).removeAll()
-                    dialogClickCallback.onNegativeClick()
-                }
-                dialog.dismiss()
-            })
+                    if (currentPreference != newPreference) {
+                        setDownloadStoragePreference(newPreference)
+                        DownloadUtil.getDownloadTracker(requireContext()).removeAll()
+                        dialogClickCallback.onNegativeClick()
+                    }
+                    dialog.dismiss()
+                },
+            )
         }
     }
 }

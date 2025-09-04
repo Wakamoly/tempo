@@ -15,8 +15,9 @@ import com.cappielloantonio.tempo.util.Preferences.setStreamingCacheStoragePrefe
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 
 @OptIn(markerClass = UnstableApi::class)
-class StreamingCacheStorageDialog(private val dialogClickCallback: DialogClickCallback) :
-    DialogFragment() {
+class StreamingCacheStorageDialog(
+    private val dialogClickCallback: DialogClickCallback,
+) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogStreamingCacheStorageBinding.inflate(getLayoutInflater())
 
@@ -25,13 +26,11 @@ class StreamingCacheStorageDialog(private val dialogClickCallback: DialogClickCa
             .setTitle(R.string.streaming_cache_storage_dialog_title)
             .setPositiveButton(
                 R.string.streaming_cache_storage_external_dialog_positive_button,
-                null
-            )
-            .setNegativeButton(
+                null,
+            ).setNegativeButton(
                 R.string.streaming_cache_storage_internal_dialog_negative_button,
-                null
-            )
-            .create()
+                null,
+            ).create()
     }
 
     override fun onResume() {
@@ -44,28 +43,32 @@ class StreamingCacheStorageDialog(private val dialogClickCallback: DialogClickCa
 
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                val currentPreference = getStreamingCacheStoragePreference()
-                val newPreference = 1
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val currentPreference = getStreamingCacheStoragePreference()
+                    val newPreference = 1
 
-                if (currentPreference != newPreference) {
-                    setStreamingCacheStoragePreference(newPreference)
-                    dialogClickCallback.onPositiveClick()
-                }
-                dialog.dismiss()
-            })
+                    if (currentPreference != newPreference) {
+                        setStreamingCacheStoragePreference(newPreference)
+                        dialogClickCallback.onPositiveClick()
+                    }
+                    dialog.dismiss()
+                },
+            )
 
             val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
-            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
-                val currentPreference = getStreamingCacheStoragePreference()
-                val newPreference = 0
+            negativeButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val currentPreference = getStreamingCacheStoragePreference()
+                    val newPreference = 0
 
-                if (currentPreference != newPreference) {
-                    setStreamingCacheStoragePreference(newPreference)
-                    dialogClickCallback.onNegativeClick()
-                }
-                dialog.dismiss()
-            })
+                    if (currentPreference != newPreference) {
+                        setStreamingCacheStoragePreference(newPreference)
+                        dialogClickCallback.onNegativeClick()
+                    }
+                    dialog.dismiss()
+                },
+            )
         }
     }
 }

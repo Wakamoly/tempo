@@ -42,7 +42,9 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class ArtistPageFragment : Fragment(), ClickCallback {
+class ArtistPageFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentArtistPageBinding? = null
     private var activity: MainActivity? = null
     private var artistPageViewModel: ArtistPageViewModel? = null
@@ -56,7 +58,7 @@ class ArtistPageFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -95,21 +97,26 @@ class ArtistPageFragment : Fragment(), ClickCallback {
     private fun init() {
         artistPageViewModel!!.setArtist(requireArguments().getParcelable<ArtistID3?>(Constants.ARTIST_OBJECT))
 
-        bind!!.mostStreamedSongTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            val bundle = Bundle()
-            bundle.putString(Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_ARTIST)
-            bundle.putParcelable(Constants.ARTIST_OBJECT, artistPageViewModel!!.getArtist())
-            activity!!.navController.navigate(
-                R.id.action_artistPageFragment_to_songListPageFragment,
-                bundle
-            )
-        })
+        bind!!.mostStreamedSongTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                val bundle = Bundle()
+                bundle.putString(Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_ARTIST)
+                bundle.putParcelable(Constants.ARTIST_OBJECT, artistPageViewModel!!.getArtist())
+                activity!!.navController.navigate(
+                    R.id.action_artistPageFragment_to_songListPageFragment,
+                    bundle,
+                )
+            },
+        )
     }
 
     private fun initAppBar() {
         activity!!.setSupportActionBar(bind!!.animToolbar)
-        if (activity!!.supportActionBar != null) activity!!.supportActionBar!!
-            .setDisplayHomeAsUpEnabled(true)
+        if (activity!!.supportActionBar != null) {
+            activity!!
+                .supportActionBar!!
+                .setDisplayHomeAsUpEnabled(true)
+        }
 
         bind!!.collapsingToolbar.setTitle(artistPageViewModel!!.getArtist().name)
         bind!!.animToolbar.setNavigationOnClickListener(View.OnClickListener { v: View? -> activity!!.navController.navigateUp() })
@@ -117,70 +124,107 @@ class ArtistPageFragment : Fragment(), ClickCallback {
     }
 
     private fun initArtistInfo() {
-        artistPageViewModel!!.getArtistInfo(artistPageViewModel!!.getArtist().id)
-            .observe(getViewLifecycleOwner(), Observer { artistInfo: ArtistInfo2? ->
-                if (artistInfo == null) {
-                    if (bind != null) bind!!.artistPageBioSector.visibility = View.GONE
-                } else {
-                    val normalizedBio = MusicUtil.forceReadableString(artistInfo.biography)
+        artistPageViewModel!!
+            .getArtistInfo(artistPageViewModel!!.getArtist().id)
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { artistInfo: ArtistInfo2? ->
+                    if (artistInfo == null) {
+                        if (bind != null) bind!!.artistPageBioSector.visibility = View.GONE
+                    } else {
+                        val normalizedBio = MusicUtil.forceReadableString(artistInfo.biography)
 
-                    if (bind != null) bind!!.artistPageBioSector.visibility = if (!normalizedBio.trim { it <= ' ' }
-                            .isEmpty()) View.VISIBLE else View.GONE
-                    if (bind != null) bind!!.bioMoreTextViewClickable.visibility = if (artistInfo.lastFmUrl != null) View.VISIBLE else View.GONE
+                        if (bind != null) {
+                            bind!!.artistPageBioSector.visibility =
+                                if (!normalizedBio
+                                        .trim { it <= ' ' }
+                                        .isEmpty()
+                                ) {
+                                    View.VISIBLE
+                                } else {
+                                    View.GONE
+                                }
+                        }
+                        if (bind !=
+                            null
+                        ) {
+                            bind!!.bioMoreTextViewClickable.visibility = if (artistInfo.lastFmUrl != null) View.VISIBLE else View.GONE
+                        }
 
-                    if (context != null && bind != null) CustomGlideRequest.Builder.Companion.from(
-                        requireContext(),
-                        artistPageViewModel!!.getArtist().id,
-                        CustomGlideRequest.ResourceType.Artist
-                    )
-                        .build()
-                        .into(bind!!.artistBackdropImageView)
+                        if (context != null && bind != null) {
+                            CustomGlideRequest.Builder.Companion
+                                .from(
+                                    requireContext(),
+                                    artistPageViewModel!!.getArtist().id,
+                                    CustomGlideRequest.ResourceType.Artist,
+                                ).build()
+                                .into(bind!!.artistBackdropImageView)
+                        }
 
-                    if (bind != null) bind!!.bioTextView.text = normalizedBio
+                        if (bind != null) bind!!.bioTextView.text = normalizedBio
 
-                    if (bind != null) bind!!.bioMoreTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-                        val intent = Intent(Intent.ACTION_VIEW)
-                        intent.setData(Uri.parse(artistInfo.lastFmUrl))
-                        startActivity(intent)
-                    })
+                        if (bind != null) {
+                            bind!!.bioMoreTextViewClickable.setOnClickListener(
+                                View.OnClickListener { v: View? ->
+                                    val intent = Intent(Intent.ACTION_VIEW)
+                                    intent.setData(Uri.parse(artistInfo.lastFmUrl))
+                                    startActivity(intent)
+                                },
+                            )
+                        }
 
-                    if (bind != null) bind!!.artistPageBioSector.visibility = View.VISIBLE
-                }
-            })
+                        if (bind != null) bind!!.artistPageBioSector.visibility = View.VISIBLE
+                    }
+                },
+            )
     }
 
     private fun initPlayButtons() {
-        bind!!.artistPageShuffleButton.setOnClickListener(View.OnClickListener { v: View? ->
-            artistPageViewModel!!.getArtistShuffleList()
-                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
-                    if (!songs!!.isEmpty()) {
-                        MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-                        activity!!.setBottomSheetInPeek(true)
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            getString(R.string.artist_error_retrieving_tracks),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                })
-        })
+        bind!!.artistPageShuffleButton.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                artistPageViewModel!!
+                    .getArtistShuffleList()
+                    .observe(
+                        getViewLifecycleOwner(),
+                        Observer { songs: MutableList<Child?>? ->
+                            if (!songs!!.isEmpty()) {
+                                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                                activity!!.setBottomSheetInPeek(true)
+                            } else {
+                                Toast
+                                    .makeText(
+                                        requireContext(),
+                                        getString(R.string.artist_error_retrieving_tracks),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                            }
+                        },
+                    )
+            },
+        )
 
-        bind!!.artistPageRadioButton.setOnClickListener(View.OnClickListener { v: View? ->
-            artistPageViewModel!!.getArtistInstantMix()
-                .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
-                    if (!songs!!.isEmpty()) {
-                        MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-                        activity!!.setBottomSheetInPeek(true)
-                    } else {
-                        Toast.makeText(
-                            requireContext(),
-                            getString(R.string.artist_error_retrieving_radio),
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
-                })
-        })
+        bind!!.artistPageRadioButton.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                artistPageViewModel!!
+                    .getArtistInstantMix()
+                    .observe(
+                        getViewLifecycleOwner(),
+                        Observer { songs: MutableList<Child?>? ->
+                            if (!songs!!.isEmpty()) {
+                                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                                activity!!.setBottomSheetInPeek(true)
+                            } else {
+                                Toast
+                                    .makeText(
+                                        requireContext(),
+                                        getString(R.string.artist_error_retrieving_radio),
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                            }
+                        },
+                    )
+            },
+        )
     }
 
     private fun initTopSongsView() {
@@ -188,16 +232,20 @@ class ArtistPageFragment : Fragment(), ClickCallback {
 
         songHorizontalAdapter = SongHorizontalAdapter(this, true, true, null)
         bind!!.mostStreamedSongRecyclerView.setAdapter(songHorizontalAdapter)
-        artistPageViewModel!!.getArtistTopSongList()
-            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
-                if (songs == null) {
-                    if (bind != null) bind!!.artistPageTopSongsSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.artistPageTopSongsSector.visibility = if (!songs.isEmpty()) View.VISIBLE else View.GONE
-                    if (bind != null) bind!!.artistPageShuffleButton.setEnabled(!songs.isEmpty())
-                    songHorizontalAdapter!!.setItems(songs)
-                }
-            })
+        artistPageViewModel!!
+            .getArtistTopSongList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { songs: MutableList<Child?>? ->
+                    if (songs == null) {
+                        if (bind != null) bind!!.artistPageTopSongsSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.artistPageTopSongsSector.visibility = if (!songs.isEmpty()) View.VISIBLE else View.GONE
+                        if (bind != null) bind!!.artistPageShuffleButton.setEnabled(!songs.isEmpty())
+                        songHorizontalAdapter!!.setItems(songs)
+                    }
+                },
+            )
     }
 
     private fun initAlbumsView() {
@@ -208,15 +256,19 @@ class ArtistPageFragment : Fragment(), ClickCallback {
         albumCatalogueAdapter = AlbumCatalogueAdapter(this, false)
         bind!!.albumsRecyclerView.setAdapter(albumCatalogueAdapter)
 
-        artistPageViewModel!!.getAlbumList()
-            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<AlbumID3?>? ->
-                if (albums == null) {
-                    if (bind != null) bind!!.artistPageAlbumsSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.artistPageAlbumsSector.visibility = if (!albums.isEmpty()) View.VISIBLE else View.GONE
-                    albumCatalogueAdapter!!.setItems(albums)
-                }
-            })
+        artistPageViewModel!!
+            .getAlbumList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { albums: MutableList<AlbumID3?>? ->
+                    if (albums == null) {
+                        if (bind != null) bind!!.artistPageAlbumsSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.artistPageAlbumsSector.visibility = if (!albums.isEmpty()) View.VISIBLE else View.GONE
+                        albumCatalogueAdapter!!.setItems(albums)
+                    }
+                },
+            )
     }
 
     private fun initSimilarArtistsView() {
@@ -227,36 +279,44 @@ class ArtistPageFragment : Fragment(), ClickCallback {
         artistCatalogueAdapter = ArtistCatalogueAdapter(this)
         bind!!.similarArtistsRecyclerView.setAdapter(artistCatalogueAdapter)
 
-        artistPageViewModel!!.getArtistInfo(artistPageViewModel!!.getArtist().id)
-            .observe(getViewLifecycleOwner(), Observer { artist: ArtistInfo2? ->
-                if (artist == null) {
-                    if (bind != null) bind!!.similarArtistSector.visibility = View.GONE
-                } else {
-                    if (bind != null && artist.similarArtists != null) bind!!.similarArtistSector.visibility =
-                        if (!artist.similarArtists!!.isEmpty()) View.VISIBLE else View.GONE
+        artistPageViewModel!!
+            .getArtistInfo(artistPageViewModel!!.getArtist().id)
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { artist: ArtistInfo2? ->
+                    if (artist == null) {
+                        if (bind != null) bind!!.similarArtistSector.visibility = View.GONE
+                    } else {
+                        if (bind != null && artist.similarArtists != null) {
+                            bind!!.similarArtistSector.visibility =
+                                if (!artist.similarArtists!!.isEmpty()) View.VISIBLE else View.GONE
+                        }
 
-                    val artists: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
+                        val artists: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
 
-                    if (artist.similarArtists != null) {
-                        artists.addAll(artist.similarArtists!!)
+                        if (artist.similarArtists != null) {
+                            artists.addAll(artist.similarArtists!!)
+                        }
+
+                        artistCatalogueAdapter!!.setItems(artists)
                     }
-
-                    artistCatalogueAdapter!!.setItems(artists)
-                }
-            })
+                },
+            )
 
         val similarArtistSnapHelper = CustomLinearSnapHelper()
         similarArtistSnapHelper.attachToRecyclerView(bind!!.similarArtistsRecyclerView)
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -265,9 +325,11 @@ class ArtistPageFragment : Fragment(), ClickCallback {
 
     override fun onMediaClick(bundle: Bundle) {
         MediaManager.startQueue(
-            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
-                Constants.TRACKS_OBJECT
-            ), bundle.getInt(Constants.ITEM_POSITION)
+            mediaBrowserListenableFuture,
+            bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT,
+            ),
+            bundle.getInt(Constants.ITEM_POSITION),
         )
         activity!!.setBottomSheetInPeek(true)
     }

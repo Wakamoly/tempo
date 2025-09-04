@@ -31,10 +31,16 @@ interface QueueDao {
     fun count(): Int
 
     @Query("UPDATE queue SET last_play=:timestamp WHERE id=:id")
-    fun setLastPlay(id: String?, timestamp: Long)
+    fun setLastPlay(
+        id: String?,
+        timestamp: Long,
+    )
 
     @Query("UPDATE queue SET playing_changed=:timestamp WHERE id=:id")
-    fun setPlayingChanged(id: String?, timestamp: Long)
+    fun setPlayingChanged(
+        id: String?,
+        timestamp: Long,
+    )
 
     @get:Query("SELECT * FROM queue ORDER BY last_play DESC LIMIT 1")
     val lastPlayed: Queue?

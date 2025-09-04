@@ -23,15 +23,19 @@ class ServerRepository {
         thread.start()
     }
 
-    private class InsertThreadSafe(private val serverDao: ServerDao, private val server: Server?) :
-        Runnable {
+    private class InsertThreadSafe(
+        private val serverDao: ServerDao,
+        private val server: Server?,
+    ) : Runnable {
         override fun run() {
             serverDao.insert(server)
         }
     }
 
-    private class DeleteThreadSafe(private val serverDao: ServerDao, private val server: Server?) :
-        Runnable {
+    private class DeleteThreadSafe(
+        private val serverDao: ServerDao,
+        private val server: Server?,
+    ) : Runnable {
         override fun run() {
             serverDao.delete(server)
         }

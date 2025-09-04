@@ -8,7 +8,9 @@ import com.cappielloantonio.tempo.ui.fragment.PlayerCoverFragment
 import com.cappielloantonio.tempo.ui.fragment.PlayerLyricsFragment
 
 @OptIn(markerClass = UnstableApi::class)
-class PlayerControllerHorizontalPager(fragment: Fragment) : FragmentStateAdapter(fragment) {
+class PlayerControllerHorizontalPager(
+    fragment: Fragment,
+) : FragmentStateAdapter(fragment) {
     override fun createFragment(position: Int): Fragment {
         when (position) {
             0 -> return PlayerCoverFragment()
@@ -18,9 +20,7 @@ class PlayerControllerHorizontalPager(fragment: Fragment) : FragmentStateAdapter
         return PlayerCoverFragment()
     }
 
-    override fun getItemCount(): Int {
-        return 2
-    }
+    override fun getItemCount(): Int = 2
 
     companion object {
         private const val TAG = "PlayerControllerHorizontalPager"

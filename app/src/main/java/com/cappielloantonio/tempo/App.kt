@@ -24,10 +24,11 @@ class App : Application() {
 
         val sharedPreferences =
             PreferenceManager.getDefaultSharedPreferences(applicationContext)
-        val themePref: String = sharedPreferences.getString(
-            com.cappielloantonio.tempo.util.Preferences.THEME,
-            ThemeHelper.DEFAULT_MODE
-        )!!
+        val themePref: String =
+            sharedPreferences.getString(
+                com.cappielloantonio.tempo.util.Preferences.THEME,
+                ThemeHelper.DEFAULT_MODE,
+            )!!
         ThemeHelper.applyTheme(themePref)
 
         instance = App()
@@ -42,7 +43,6 @@ class App : Application() {
                 Companion.preferences = prefs
                 prefs
             }
-
 
     companion object {
         private var instance: App? = null
@@ -96,12 +96,15 @@ class App : Application() {
                     subsonicPreferences
 
                 if (preferences.authentication != null) {
-                    if (preferences.authentication.password != null)
+                    if (preferences.authentication.password != null) {
                         setPassword(preferences.authentication.password)
-                    if (preferences.authentication.token != null)
+                    }
+                    if (preferences.authentication.token != null) {
                         setToken(preferences.authentication.token)
-                    if (preferences.authentication.salt != null)
+                    }
+                    if (preferences.authentication.salt != null) {
                         setSalt(preferences.authentication.salt)
+                    }
                 }
 
                 return Subsonic(preferences)

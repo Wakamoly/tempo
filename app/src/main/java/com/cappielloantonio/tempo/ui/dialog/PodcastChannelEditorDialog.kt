@@ -16,7 +16,9 @@ import com.cappielloantonio.tempo.viewmodel.PodcastChannelEditorViewModel
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Objects
 
-class PodcastChannelEditorDialog(private val podcastCallback: PodcastCallback) : DialogFragment() {
+class PodcastChannelEditorDialog(
+    private val podcastCallback: PodcastCallback,
+) : DialogFragment() {
     private var bind: DialogPodcastChannelEditorBinding? = null
     private var podcastChannelEditorViewModel: PodcastChannelEditorViewModel? = null
 
@@ -27,7 +29,7 @@ class PodcastChannelEditorDialog(private val podcastCallback: PodcastCallback) :
 
         podcastChannelEditorViewModel =
             ViewModelProvider(requireActivity()).get<PodcastChannelEditorViewModel>(
-                PodcastChannelEditorViewModel::class.java
+                PodcastChannelEditorViewModel::class.java,
             )
 
         return MaterialAlertDialogBuilder(activity!!)
@@ -35,11 +37,11 @@ class PodcastChannelEditorDialog(private val podcastCallback: PodcastCallback) :
             .setTitle(R.string.podcast_channel_editor_dialog_title)
             .setPositiveButton(
                 R.string.radio_editor_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNegativeButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            ).setNegativeButton(
                 R.string.radio_editor_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .create()
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).create()
     }
 
     override fun onStart() {
@@ -57,20 +59,23 @@ class PodcastChannelEditorDialog(private val podcastCallback: PodcastCallback) :
         val dialog = dialog as AlertDialog?
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                if (validateInput()) {
-                    podcastChannelEditorViewModel!!.createChannel(channelUrl)
-                    dismissDialog()
-                }
-            })
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    if (validateInput()) {
+                        podcastChannelEditorViewModel!!.createChannel(channelUrl)
+                        dismissDialog()
+                    }
+                },
+            )
         }
     }
 
-
     private fun validateInput(): Boolean {
         channelUrl =
-            Objects.requireNonNull<Editable?>(bind!!.podcastChannelRssUrlNameTextView.getText())
-                .toString().trim { it <= ' ' }
+            Objects
+                .requireNonNull<Editable?>(bind!!.podcastChannelRssUrlNameTextView.getText())
+                .toString()
+                .trim { it <= ' ' }
 
         if (TextUtils.isEmpty(channelUrl)) {
             bind!!.podcastChannelRssUrlNameTextView.error = getString(R.string.error_required)

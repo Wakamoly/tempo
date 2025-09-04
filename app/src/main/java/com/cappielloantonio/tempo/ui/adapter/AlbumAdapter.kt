@@ -15,51 +15,55 @@ import com.cappielloantonio.tempo.util.Constants
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class AlbumAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<AlbumAdapter.ViewHolder?>() {
+class AlbumAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<AlbumAdapter.ViewHolder?>() {
     private var albums: MutableList<AlbumID3>
 
     init {
         this.albums = mutableListOf<AlbumID3?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
         val view =
             ItemLibraryAlbumBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return AlbumAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val album = albums.get(position)
 
         holder.item.albumNameLabel.text = album.name
         holder.item.artistNameLabel.text = album.artist
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            album.coverArtId,
-            CustomGlideRequest.ResourceType.Album
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                album.coverArtId,
+                CustomGlideRequest.ResourceType.Album,
+            ).build()
             .into(holder.item.albumCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return albums.size
-    }
+    override fun getItemCount(): Int = albums.size
 
-    fun getItem(position: Int): AlbumID3? {
-        return albums.get(position)
-    }
+    fun getItem(position: Int): AlbumID3? = albums.get(position)
 
     fun setItems(albums: MutableList<AlbumID3>) {
         this.albums = albums
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryAlbumBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryAlbumBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.albumNameLabel.setSelected(true)

@@ -15,7 +15,9 @@ import com.cappielloantonio.tempo.subsonic.models.Child
 import com.cappielloantonio.tempo.subsonic.models.Genre
 import com.cappielloantonio.tempo.util.Constants
 
-class SongListPageViewModel(application: Application) : AndroidViewModel(application) {
+class SongListPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val songRepository: SongRepository
     private val artistRepository: ArtistRepository
 
@@ -46,8 +48,9 @@ class SongListPageViewModel(application: Application) : AndroidViewModel(applica
             Constants.MEDIA_BY_GENRE -> songList = songRepository.getSongsByGenre(genre!!.genre, 0)
             Constants.MEDIA_BY_ARTIST -> songList = artistRepository.getTopSongs(artist!!.name, 50)
             Constants.MEDIA_BY_GENRES -> songList = songRepository.getSongsByGenres(filters)
-            Constants.MEDIA_BY_YEAR -> songList =
-                songRepository.getRandomSample(maxNumberByYear, year, year + 10)
+            Constants.MEDIA_BY_YEAR ->
+                songList =
+                    songRepository.getRandomSample(maxNumberByYear, year, year + 10)
 
             Constants.MEDIA_STARRED -> songList = songRepository.getStarredSongs(false, -1)
         }
@@ -64,14 +67,18 @@ class SongListPageViewModel(application: Application) : AndroidViewModel(applica
                 if (songCount > 0 && songCount % maxNumberByGenre != 0) return
 
                 val page = songCount / maxNumberByGenre
-                songRepository.getSongsByGenre(genre!!.genre, page)
-                    .observe(owner, Observer { children: MutableList<Child?>? ->
-                        if (children != null && !children.isEmpty()) {
-                            val currentMedia = songList!!.getValue()
-                            currentMedia!!.addAll(children)
-                            songList!!.value = currentMedia
-                        }
-                    })
+                songRepository
+                    .getSongsByGenre(genre!!.genre, page)
+                    .observe(
+                        owner,
+                        Observer { children: MutableList<Child?>? ->
+                            if (children != null && !children.isEmpty()) {
+                                val currentMedia = songList!!.getValue()
+                                currentMedia!!.addAll(children)
+                                songList!!.value = currentMedia
+                            }
+                        },
+                    )
             }
 
             Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_BY_YEAR, Constants.MEDIA_STARRED -> {}

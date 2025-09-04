@@ -22,19 +22,24 @@ class SearchingRepository {
         getSubsonicClientInstance(false)
             .getSearchingClient()
             .search3(query, 20, 20, 20)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        result.value = response.body()!!.subsonicResponse.searchResult2
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            result.value = response.body()!!.subsonicResponse.searchResult2
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return result
     }
@@ -45,19 +50,24 @@ class SearchingRepository {
         getSubsonicClientInstance(false)
             .getSearchingClient()
             .search3(query, 20, 20, 20)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null) {
-                        result.value = response.body()!!.subsonicResponse.searchResult3
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null) {
+                            result.value = response.body()!!.subsonicResponse.searchResult3
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return result
     }
@@ -68,42 +78,68 @@ class SearchingRepository {
         getSubsonicClientInstance(false)
             .getSearchingClient()
             .search3(query, 5, 5, 5)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    val newSuggestions: MutableList<String?> = ArrayList<Any?>()
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        val newSuggestions: MutableList<String?> = ArrayList<Any?>()
 
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
-                        if (response.body()!!.subsonicResponse.searchResult3!!.artists != null) {
-                            for (artistID3 in response.body()!!.subsonicResponse.searchResult3!!.artists!!) {
-                                newSuggestions.add(artistID3.name)
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .artists != null
+                            ) {
+                                for (artistID3 in response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .artists!!) {
+                                    newSuggestions.add(artistID3.name)
+                                }
                             }
-                        }
 
-                        if (response.body()!!.subsonicResponse.searchResult3!!.albums != null) {
-                            for (albumID3 in response.body()!!.subsonicResponse.searchResult3!!.albums!!) {
-                                newSuggestions.add(albumID3.name)
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .albums != null
+                            ) {
+                                for (albumID3 in response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .albums!!) {
+                                    newSuggestions.add(albumID3.name)
+                                }
                             }
-                        }
 
-                        if (response.body()!!.subsonicResponse.searchResult3!!.songs != null) {
-                            for (song in response.body()!!.subsonicResponse.searchResult3!!.songs!!) {
-                                newSuggestions.add(song.title)
+                            if (response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .songs != null
+                            ) {
+                                for (song in response
+                                    .body()!!
+                                    .subsonicResponse.searchResult3!!
+                                    .songs!!) {
+                                    newSuggestions.add(song.title)
+                                }
                             }
+
+                            val hashSet = LinkedHashSet<String?>(newSuggestions)
+                            val suggestionsWithoutDuplicates = ArrayList<String?>(hashSet)
+
+                            suggestions.value = suggestionsWithoutDuplicates
                         }
-
-                        val hashSet = LinkedHashSet<String?>(newSuggestions)
-                        val suggestionsWithoutDuplicates = ArrayList<String?>(hashSet)
-
-                        suggestions.value = suggestionsWithoutDuplicates
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return suggestions
     }
@@ -141,7 +177,7 @@ class SearchingRepository {
 
     private class DeleteThreadSafe(
         private val recentSearchDao: RecentSearchDao,
-        private val recentSearch: RecentSearch?
+        private val recentSearch: RecentSearch?,
     ) : Runnable {
         override fun run() {
             recentSearchDao.delete(recentSearch)
@@ -150,14 +186,16 @@ class SearchingRepository {
 
     private class InsertThreadSafe(
         private val recentSearchDao: RecentSearchDao,
-        private val recentSearch: RecentSearch?
+        private val recentSearch: RecentSearch?,
     ) : Runnable {
         override fun run() {
             recentSearchDao.insert(recentSearch)
         }
     }
 
-    private class RecentThreadSafe(private val recentSearchDao: RecentSearchDao) : Runnable {
+    private class RecentThreadSafe(
+        private val recentSearchDao: RecentSearchDao,
+    ) : Runnable {
         var recent: MutableList<String?>? = ArrayList<String?>()
             private set
 

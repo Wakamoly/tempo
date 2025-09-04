@@ -81,7 +81,7 @@ class PlayerControllerFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -90,7 +90,7 @@ class PlayerControllerFragment : Fragment() {
 
         playerBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
-                PlayerBottomSheetViewModel::class.java
+                PlayerBottomSheetViewModel::class.java,
             )
         ratingViewModel =
             ViewModelProvider(requireActivity()).get<RatingViewModel>(RatingViewModel::class.java)
@@ -149,27 +149,33 @@ class PlayerControllerFragment : Fragment() {
         playerQuickActionView!!.setBackgroundColor(
             SurfaceColors.getColorForElevation(
                 requireContext(),
-                8f
-            )
+                8f,
+            ),
         )
 
-        playerOpenQueueButton!!.setOnClickListener(View.OnClickListener { view: View? ->
-            val playerBottomSheetFragment = requireActivity().supportFragmentManager
-                .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
-            if (playerBottomSheetFragment != null) {
-                playerBottomSheetFragment.goToQueuePage()
-            }
-        })
+        playerOpenQueueButton!!.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val playerBottomSheetFragment =
+                    requireActivity()
+                        .supportFragmentManager
+                        .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
+                if (playerBottomSheetFragment != null) {
+                    playerBottomSheetFragment.goToQueuePage()
+                }
+            },
+        )
     }
 
     private fun initializeBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseBrowser() {
@@ -177,18 +183,21 @@ class PlayerControllerFragment : Fragment() {
     }
 
     private fun bindMediaController() {
-        mediaBrowserListenableFuture!!.addListener(Runnable {
-            try {
-                val mediaBrowser = mediaBrowserListenableFuture!!.get()
+        mediaBrowserListenableFuture!!.addListener(
+            Runnable {
+                try {
+                    val mediaBrowser = mediaBrowserListenableFuture!!.get()
 
-                bind!!.nowPlayingMediaControllerView.setPlayer(mediaBrowser)
-                mediaBrowser.setShuffleModeEnabled(isShuffleModeEnabled())
-                mediaBrowser.setRepeatMode(getRepeatMode())
-                setMediaControllerListener(mediaBrowser)
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }, MoreExecutors.directExecutor())
+                    bind!!.nowPlayingMediaControllerView.setPlayer(mediaBrowser)
+                    mediaBrowser.setShuffleModeEnabled(isShuffleModeEnabled())
+                    mediaBrowser.setRepeatMode(getRepeatMode())
+                    setMediaControllerListener(mediaBrowser)
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                }
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     private fun setMediaControllerListener(mediaBrowser: MediaBrowser) {
@@ -196,68 +205,94 @@ class PlayerControllerFragment : Fragment() {
         setMetadata(mediaBrowser.getMediaMetadata())
         setMediaInfo(mediaBrowser.getMediaMetadata())
 
-        mediaBrowser.addListener(object : Player.Listener {
-            override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
-                setMediaControllerUI(mediaBrowser)
-                setMetadata(mediaMetadata)
-                setMediaInfo(mediaMetadata)
-            }
+        mediaBrowser.addListener(
+            object : Player.Listener {
+                override fun onMediaMetadataChanged(mediaMetadata: MediaMetadata) {
+                    setMediaControllerUI(mediaBrowser)
+                    setMetadata(mediaMetadata)
+                    setMediaInfo(mediaMetadata)
+                }
 
-            override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
-                setShuffleModeEnabled(shuffleModeEnabled)
-            }
+                override fun onShuffleModeEnabledChanged(shuffleModeEnabled: Boolean) {
+                    setShuffleModeEnabled(shuffleModeEnabled)
+                }
 
-            override fun onRepeatModeChanged(repeatMode: Int) {
-                setRepeatMode(repeatMode)
-            }
-        })
+                override fun onRepeatModeChanged(repeatMode: Int) {
+                    setRepeatMode(repeatMode)
+                }
+            },
+        )
     }
 
     private fun setMetadata(mediaMetadata: MediaMetadata) {
         playerMediaTitleLabel!!.text = mediaMetadata.title.toString()
-        playerArtistNameLabel!!.text = if (mediaMetadata.artist != null) mediaMetadata.artist.toString() else
-            if (mediaMetadata.extras != null && mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO)
-                mediaMetadata.extras!!.getString("uri", getString(R.string.label_placeholder))
-            else
-                ""
+        playerArtistNameLabel!!.text =
+            if (mediaMetadata.artist != null) {
+                mediaMetadata.artist.toString()
+            } else {
+                if (mediaMetadata.extras != null && mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO) {
+                    mediaMetadata.extras!!.getString("uri", getString(R.string.label_placeholder))
+                } else {
+                    ""
+                }
+            }
 
         playerMediaTitleLabel!!.setSelected(true)
         playerArtistNameLabel!!.setSelected(true)
 
         playerMediaTitleLabel!!.visibility = if (mediaMetadata.title != null && mediaMetadata.title != "") View.VISIBLE else View.GONE
-        playerArtistNameLabel!!.visibility = if ((mediaMetadata.artist != null && mediaMetadata.artist != "")
-            || mediaMetadata.extras != null && mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO && mediaMetadata.extras!!.getString(
-                "uri"
-            ) != null
-        )
-            View.VISIBLE
-        else
-            View.GONE
+        playerArtistNameLabel!!.visibility =
+            if ((mediaMetadata.artist != null && mediaMetadata.artist != "") ||
+                mediaMetadata.extras != null && mediaMetadata.extras!!.getString("type") == Constants.MEDIA_TYPE_RADIO &&
+                mediaMetadata.extras!!.getString(
+                    "uri",
+                ) != null
+            ) {
+                View.VISIBLE
+            } else {
+                View.GONE
+            }
     }
 
     private fun setMediaInfo(mediaMetadata: MediaMetadata) {
         if (mediaMetadata.extras != null) {
-            val extension = mediaMetadata.extras!!.getString(
-                "suffix",
-                getString(R.string.player_unknown_format)
-            )
+            val extension =
+                mediaMetadata.extras!!.getString(
+                    "suffix",
+                    getString(R.string.player_unknown_format),
+                )
             val bitrate =
-                if (mediaMetadata.extras!!.getInt("bitrate", 0) != 0) mediaMetadata.extras!!.getInt(
-                    "bitrate",
-                    0
-                ).toString() + "kbps" else "Original"
-            val samplingRate = if (mediaMetadata.extras!!.getInt(
-                    "samplingRate",
-                    0
-                ) != 0
-            ) DecimalFormat("0.#").format(
-                mediaMetadata.extras!!.getInt("samplingRate", 0) / 1000.0
-            ) + "kHz" else ""
-            val bitDepth = if (mediaMetadata.extras!!.getInt(
-                    "bitDepth",
-                    0
-                ) != 0
-            ) mediaMetadata.extras!!.getInt("bitDepth", 0).toString() + "b" else ""
+                if (mediaMetadata.extras!!.getInt("bitrate", 0) != 0) {
+                    mediaMetadata.extras!!
+                        .getInt(
+                            "bitrate",
+                            0,
+                        ).toString() + "kbps"
+                } else {
+                    "Original"
+                }
+            val samplingRate =
+                if (mediaMetadata.extras!!.getInt(
+                        "samplingRate",
+                        0,
+                    ) != 0
+                ) {
+                    DecimalFormat("0.#").format(
+                        mediaMetadata.extras!!.getInt("samplingRate", 0) / 1000.0,
+                    ) + "kHz"
+                } else {
+                    ""
+                }
+            val bitDepth =
+                if (mediaMetadata.extras!!.getInt(
+                        "bitDepth",
+                        0,
+                    ) != 0
+                ) {
+                    mediaMetadata.extras!!.getInt("bitDepth", 0).toString() + "b"
+                } else {
+                    ""
+                }
 
             playerMediaExtension!!.text = extension
 
@@ -281,29 +316,39 @@ class PlayerControllerFragment : Fragment() {
 
         if (isTranscodingExtension || isTranscodingBitrate) {
             playerMediaExtension!!.setText(
-                MusicUtil.getTranscodingFormatPreference() + " (" + getString(
-                    R.string.player_transcoding
-                ) + ")"
+                MusicUtil.getTranscodingFormatPreference() + " (" +
+                    getString(
+                        R.string.player_transcoding,
+                    ) + ")",
             )
-            playerMediaBitrate!!.text = if (MusicUtil.getBitratePreference() != "0") MusicUtil.getBitratePreference() + "kbps" else getString(
-                R.string.player_transcoding_requested
-            )
+            playerMediaBitrate!!.text =
+                if (MusicUtil.getBitratePreference() != "0") {
+                    MusicUtil.getBitratePreference() + "kbps"
+                } else {
+                    getString(
+                        R.string.player_transcoding_requested,
+                    )
+                }
         }
 
-        playerTrackInfo!!.setOnClickListener(View.OnClickListener { view: View? ->
-            val dialog = TrackInfoDialog(mediaMetadata)
-            dialog.show(activity!!.supportFragmentManager, null)
-        })
+        playerTrackInfo!!.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val dialog = TrackInfoDialog(mediaMetadata)
+                dialog.show(activity!!.supportFragmentManager, null)
+            },
+        )
     }
 
     private fun setMediaControllerUI(mediaBrowser: MediaBrowser) {
         initPlaybackSpeedButton(mediaBrowser)
 
         if (mediaBrowser.getMediaMetadata().extras != null) {
-            when (mediaBrowser.getMediaMetadata().extras!!.getString(
-                "type",
-                Constants.MEDIA_TYPE_MUSIC
-            )) {
+            when (
+                mediaBrowser.getMediaMetadata().extras!!.getString(
+                    "type",
+                    Constants.MEDIA_TYPE_MUSIC,
+                )
+            ) {
                 Constants.MEDIA_TYPE_PODCAST -> {
                     bind!!.getRoot().setShowShuffleButton(false)
                     bind!!.getRoot().setShowRewindButton(true)
@@ -340,7 +385,8 @@ class PlayerControllerFragment : Fragment() {
                     bind!!.getRoot().setShowPreviousButton(true)
                     bind!!.getRoot().setShowNextButton(true)
                     bind!!.getRoot().setShowFastForwardButton(false)
-                    bind!!.getRoot()
+                    bind!!
+                        .getRoot()
                         .setRepeatToggleModes(RepeatModeUtil.REPEAT_TOGGLE_MODE_ALL or RepeatModeUtil.REPEAT_TOGGLE_MODE_ONE)
                     bind!!.getRoot().findViewById<View?>(R.id.player_playback_speed_button).visibility =
                         View.GONE
@@ -356,7 +402,8 @@ class PlayerControllerFragment : Fragment() {
                     bind!!.getRoot().setShowPreviousButton(true)
                     bind!!.getRoot().setShowNextButton(true)
                     bind!!.getRoot().setShowFastForwardButton(false)
-                    bind!!.getRoot()
+                    bind!!
+                        .getRoot()
                         .setRepeatToggleModes(RepeatModeUtil.REPEAT_TOGGLE_MODE_ALL or RepeatModeUtil.REPEAT_TOGGLE_MODE_ONE)
                     bind!!.getRoot().findViewById<View?>(R.id.player_playback_speed_button).visibility =
                         View.GONE
@@ -373,168 +420,204 @@ class PlayerControllerFragment : Fragment() {
         playerMediaCoverViewPager!!.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL)
         playerMediaCoverViewPager!!.setAdapter(PlayerControllerHorizontalPager(this))
 
-        playerMediaCoverViewPager!!.registerOnPageChangeCallback(object :
-            ViewPager2.OnPageChangeCallback() {
-            override fun onPageSelected(position: Int) {
-                super.onPageSelected(position)
+        playerMediaCoverViewPager!!.registerOnPageChangeCallback(
+            object :
+                ViewPager2.OnPageChangeCallback() {
+                override fun onPageSelected(position: Int) {
+                    super.onPageSelected(position)
 
-                val playerBottomSheetFragment = requireActivity().supportFragmentManager
-                    .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
+                    val playerBottomSheetFragment =
+                        requireActivity()
+                            .supportFragmentManager
+                            .findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
 
-                if (position == 0) {
-                    activity!!.setBottomSheetDraggableState(true)
+                    if (position == 0) {
+                        activity!!.setBottomSheetDraggableState(true)
 
-                    if (playerBottomSheetFragment != null) {
-                        playerBottomSheetFragment.setPlayerControllerVerticalPagerDraggableState(
-                            true
-                        )
-                    }
-                } else if (position == 1) {
-                    activity!!.setBottomSheetDraggableState(false)
+                        if (playerBottomSheetFragment != null) {
+                            playerBottomSheetFragment.setPlayerControllerVerticalPagerDraggableState(
+                                true,
+                            )
+                        }
+                    } else if (position == 1) {
+                        activity!!.setBottomSheetDraggableState(false)
 
-                    if (playerBottomSheetFragment != null) {
-                        playerBottomSheetFragment.setPlayerControllerVerticalPagerDraggableState(
-                            false
-                        )
+                        if (playerBottomSheetFragment != null) {
+                            playerBottomSheetFragment.setPlayerControllerVerticalPagerDraggableState(
+                                false,
+                            )
+                        }
                     }
                 }
-            }
-        })
+            },
+        )
     }
 
     private fun initMediaListenable() {
-        playerBottomSheetViewModel!!.getLiveMedia()
-            .observe(getViewLifecycleOwner(), Observer { media: Child? ->
-                if (media != null) {
-                    ratingViewModel!!.setSong(media)
-                    buttonFavorite!!.setChecked(media.starred != null)
-                    buttonFavorite!!.setOnClickListener(View.OnClickListener { v: View? ->
-                        playerBottomSheetViewModel!!.setFavorite(
-                            requireContext(),
-                            media
+        playerBottomSheetViewModel!!
+            .getLiveMedia()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { media: Child? ->
+                    if (media != null) {
+                        ratingViewModel!!.setSong(media)
+                        buttonFavorite!!.setChecked(media.starred != null)
+                        buttonFavorite!!.setOnClickListener(
+                            View.OnClickListener { v: View? ->
+                                playerBottomSheetViewModel!!.setFavorite(
+                                    requireContext(),
+                                    media,
+                                )
+                            },
                         )
-                    })
-                    buttonFavorite!!.setOnLongClickListener(OnLongClickListener { v: View? ->
-                        val bundle = Bundle()
-                        bundle.putParcelable(Constants.TRACK_OBJECT, media)
+                        buttonFavorite!!.setOnLongClickListener(
+                            OnLongClickListener { v: View? ->
+                                val bundle = Bundle()
+                                bundle.putParcelable(Constants.TRACK_OBJECT, media)
 
-                        val dialog = RatingDialog()
-                        dialog.setArguments(bundle)
-                        dialog.show(requireActivity().supportFragmentManager, null)
-                        true
-                    })
+                                val dialog = RatingDialog()
+                                dialog.setArguments(bundle)
+                                dialog.show(requireActivity().supportFragmentManager, null)
+                                true
+                            },
+                        )
 
-                    val currentRating = media.userRating
+                        val currentRating = media.userRating
 
-                    if (currentRating != null) {
-                        songRatingBar!!.rating = currentRating.toFloat()
-                    } else {
-                        songRatingBar!!.rating = 0f
-                    }
+                        if (currentRating != null) {
+                            songRatingBar!!.rating = currentRating.toFloat()
+                        } else {
+                            songRatingBar!!.rating = 0f
+                        }
 
-                    songRatingBar!!.onRatingBarChangeListener = object :
-                        OnRatingBarChangeListener {
-                        override fun onRatingChanged(
-                            ratingBar: RatingBar?,
-                            rating: Float,
-                            fromUser: Boolean
-                        ) {
-                            if (fromUser) {
-                                ratingViewModel!!.rate(rating.toInt())
-                                media.userRating = rating.toInt()
+                        songRatingBar!!.onRatingBarChangeListener =
+                            object :
+                                OnRatingBarChangeListener {
+                                override fun onRatingChanged(
+                                    ratingBar: RatingBar?,
+                                    rating: Float,
+                                    fromUser: Boolean,
+                                ) {
+                                    if (fromUser) {
+                                        ratingViewModel!!.rate(rating.toInt())
+                                        media.userRating = rating.toInt()
+                                    }
+                                }
                             }
+
+                        if (activity != null) {
+                            playerBottomSheetViewModel!!.refreshMediaInfo(requireActivity(), media)
                         }
                     }
-
-
-                    if (activity != null) {
-                        playerBottomSheetViewModel!!.refreshMediaInfo(requireActivity(), media)
-                    }
-                }
-            })
+                },
+            )
     }
 
     private fun initMediaLabelButton() {
-        playerBottomSheetViewModel!!.getLiveAlbum()
-            .observe(getViewLifecycleOwner(), Observer { album: AlbumID3? ->
-                if (album != null) {
-                    playerMediaTitleLabel!!.setOnClickListener(View.OnClickListener { view: View? ->
-                        val bundle = Bundle()
-                        bundle.putParcelable(Constants.ALBUM_OBJECT, album)
-                        NavHostFragment.findNavController(this)
-                            .navigate(R.id.albumPageFragment, bundle)
-                        activity!!.collapseBottomSheetDelayed()
-                    })
-                }
-            })
+        playerBottomSheetViewModel!!
+            .getLiveAlbum()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { album: AlbumID3? ->
+                    if (album != null) {
+                        playerMediaTitleLabel!!.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                val bundle = Bundle()
+                                bundle.putParcelable(Constants.ALBUM_OBJECT, album)
+                                NavHostFragment
+                                    .findNavController(this)
+                                    .navigate(R.id.albumPageFragment, bundle)
+                                activity!!.collapseBottomSheetDelayed()
+                            },
+                        )
+                    }
+                },
+            )
     }
 
     private fun initArtistLabelButton() {
-        playerBottomSheetViewModel!!.getLiveArtist()
-            .observe(getViewLifecycleOwner(), Observer { artist: ArtistID3? ->
-                if (artist != null) {
-                    playerArtistNameLabel!!.setOnClickListener(View.OnClickListener { view: View? ->
-                        val bundle = Bundle()
-                        bundle.putParcelable(Constants.ARTIST_OBJECT, artist)
-                        NavHostFragment.findNavController(this)
-                            .navigate(R.id.artistPageFragment, bundle)
-                        activity!!.collapseBottomSheetDelayed()
-                    })
-                }
-            })
+        playerBottomSheetViewModel!!
+            .getLiveArtist()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { artist: ArtistID3? ->
+                    if (artist != null) {
+                        playerArtistNameLabel!!.setOnClickListener(
+                            View.OnClickListener { view: View? ->
+                                val bundle = Bundle()
+                                bundle.putParcelable(Constants.ARTIST_OBJECT, artist)
+                                NavHostFragment
+                                    .findNavController(this)
+                                    .navigate(R.id.artistPageFragment, bundle)
+                                activity!!.collapseBottomSheetDelayed()
+                            },
+                        )
+                    }
+                },
+            )
     }
 
     private fun initPlaybackSpeedButton(mediaBrowser: MediaBrowser) {
-        playbackSpeedButton!!.setOnClickListener(View.OnClickListener { view: View? ->
-            val currentSpeed = getPlaybackSpeed()
-            if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_080) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_100))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_100
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_100)
-            } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_100) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_125))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_125
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_125)
-            } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_125) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_150))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_150
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_150)
-            } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_150) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_175))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_175
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_175)
-            } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_175) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_200))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_200
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_200)
-            } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_200) {
-                mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_080))
-                playbackSpeedButton!!.text = getString(
-                    R.string.player_playback_speed,
-                    Constants.MEDIA_PLAYBACK_SPEED_080
-                )
-                setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_080)
-            }
-        })
+        playbackSpeedButton!!.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val currentSpeed = getPlaybackSpeed()
+                if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_080) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_100))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_100,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_100)
+                } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_100) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_125))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_125,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_125)
+                } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_125) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_150))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_150,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_150)
+                } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_150) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_175))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_175,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_175)
+                } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_175) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_200))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_200,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_200)
+                } else if (currentSpeed == Constants.MEDIA_PLAYBACK_SPEED_200) {
+                    mediaBrowser.setPlaybackParameters(PlaybackParameters(Constants.MEDIA_PLAYBACK_SPEED_080))
+                    playbackSpeedButton!!.text =
+                        getString(
+                            R.string.player_playback_speed,
+                            Constants.MEDIA_PLAYBACK_SPEED_080,
+                        )
+                    setPlaybackSpeed(Constants.MEDIA_PLAYBACK_SPEED_080)
+                }
+            },
+        )
 
-        skipSilenceToggleButton!!.setOnClickListener(View.OnClickListener { view: View? ->
-            setSkipSilenceMode(!skipSilenceToggleButton!!.isChecked)
-        })
+        skipSilenceToggleButton!!.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                setSkipSilenceMode(!skipSilenceToggleButton!!.isChecked)
+            },
+        )
     }
 
     fun goToControllerPage() {

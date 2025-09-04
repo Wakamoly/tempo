@@ -13,7 +13,9 @@ import com.cappielloantonio.tempo.subsonic.models.Child
 import com.cappielloantonio.tempo.util.Preferences.getDefaultDownloadViewType
 import java.util.stream.Collectors
 
-class DownloadViewModel(application: Application) : AndroidViewModel(application) {
+class DownloadViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val downloadRepository: DownloadRepository
 
     private val downloadedTrackSample = MutableLiveData<MutableList<Child?>?>(null)
@@ -26,20 +28,25 @@ class DownloadViewModel(application: Application) : AndroidViewModel(application
     }
 
     fun getDownloadedTracks(owner: LifecycleOwner): LiveData<MutableList<Child?>?> {
-        downloadRepository.getLiveDownload()
-            .observe(owner, Observer { downloads: MutableList<Download?>? ->
-                downloadedTrackSample.postValue(
-                    downloads!!.stream().map<Child?> { download: Download? -> download as Child? }
-                        .collect(
-                            Collectors.toList()
-                        ))
-            })
+        downloadRepository
+            .getLiveDownload()
+            .observe(
+                owner,
+                Observer { downloads: MutableList<Download?>? ->
+                    downloadedTrackSample.postValue(
+                        downloads!!
+                            .stream()
+                            .map<Child?> { download: Download? -> download as Child? }
+                            .collect(
+                                Collectors.toList(),
+                            ),
+                    )
+                },
+            )
         return downloadedTrackSample
     }
 
-    fun getViewStack(): LiveData<ArrayList<DownloadStack?>?> {
-        return viewStack
-    }
+    fun getViewStack(): LiveData<ArrayList<DownloadStack?>?> = viewStack
 
     fun initViewStack(level: DownloadStack?) {
         val stack = ArrayList<DownloadStack?>()

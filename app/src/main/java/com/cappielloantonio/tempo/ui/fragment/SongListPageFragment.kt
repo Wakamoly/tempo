@@ -47,7 +47,9 @@ import java.util.Collections
 import kotlin.math.min
 
 @UnstableApi
-class SongListPageFragment : Fragment(), ClickCallback {
+class SongListPageFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentSongListPageBinding? = null
     private var activity: MainActivity? = null
     private var songListPageViewModel: SongListPageViewModel? = null
@@ -66,7 +68,7 @@ class SongListPageFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -124,10 +126,11 @@ class SongListPageFragment : Fragment(), ClickCallback {
                 requireArguments().getParcelable<ArtistID3?>(Constants.ARTIST_OBJECT)
             songListPageViewModel!!.toolbarTitle =
                 getString(R.string.song_list_page_top, songListPageViewModel!!.artist.name)
-            bind!!.pageTitleLabel.text = getString(
-                R.string.song_list_page_top,
-                songListPageViewModel!!.artist.name
-            )
+            bind!!.pageTitleLabel.text =
+                getString(
+                    R.string.song_list_page_top,
+                    songListPageViewModel!!.artist.name,
+                )
         } else if (requireArguments().getString(Constants.MEDIA_BY_GENRES) != null) {
             songListPageViewModel!!.title = Constants.MEDIA_BY_GENRES
             songListPageViewModel!!.filters = requireArguments().getStringArrayList("filters_list")
@@ -140,10 +143,11 @@ class SongListPageFragment : Fragment(), ClickCallback {
             songListPageViewModel!!.year = requireArguments().getInt("year_object")
             songListPageViewModel!!.toolbarTitle =
                 getString(R.string.song_list_page_year, songListPageViewModel!!.year)
-            bind!!.pageTitleLabel.text = getString(
-                R.string.song_list_page_year,
-                songListPageViewModel!!.year
-            )
+            bind!!.pageTitleLabel.text =
+                getString(
+                    R.string.song_list_page_year,
+                    songListPageViewModel!!.year,
+                )
         } else if (requireArguments().getString(Constants.MEDIA_STARRED) != null) {
             songListPageViewModel!!.title = Constants.MEDIA_STARRED
             songListPageViewModel!!.toolbarTitle = getString(R.string.song_list_page_starred)
@@ -169,40 +173,59 @@ class SongListPageFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        if (bind != null) bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        if (bind != null) {
+            bind!!.toolbar.setNavigationOnClickListener(
+                View.OnClickListener { v: View? ->
+                    hideKeyboard(v!!)
+                    activity!!.navController.navigateUp()
+                },
+            )
+        }
 
-        if (bind != null) bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.albumInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(songListPageViewModel!!.toolbarTitle)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        if (bind !=
+            null
+        ) {
+            bind!!.appBarLayout.addOnOffsetChangedListener(
+                OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                    if ((bind!!.albumInfoSector.height + verticalOffset) < (
+                            2 *
+                                ViewCompat.getMinimumHeight(
+                                    bind!!.toolbar,
+                                )
+                        )
+                    ) {
+                        bind!!.toolbar.setTitle(songListPageViewModel!!.toolbarTitle)
+                    } else {
+                        bind!!.toolbar.setTitle(R.string.empty_string)
+                    }
+                },
+            )
+        }
     }
 
     private fun initButtons() {
-        songListPageViewModel!!.getSongList()
-            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
-                if (bind != null) {
-                    setSongListPageSorter()
+        songListPageViewModel!!
+            .getSongList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { songs: MutableList<Child?>? ->
+                    if (bind != null) {
+                        setSongListPageSorter()
 
-                    bind!!.songListShuffleImageView.setOnClickListener(View.OnClickListener { v: View? ->
-                        Collections.shuffle(songs)
-                        MediaManager.startQueue(
-                            mediaBrowserListenableFuture,
-                            songs!!.subList(0, min(25, songs.size)),
-                            0
+                        bind!!.songListShuffleImageView.setOnClickListener(
+                            View.OnClickListener { v: View? ->
+                                Collections.shuffle(songs)
+                                MediaManager.startQueue(
+                                    mediaBrowserListenableFuture,
+                                    songs!!.subList(0, min(25, songs.size)),
+                                    0,
+                                )
+                                activity!!.setBottomSheetInPeek(true)
+                            },
                         )
-                        activity!!.setBottomSheetInPeek(true)
-                    })
-                }
-            })
+                    }
+                },
+            )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -212,56 +235,69 @@ class SongListPageFragment : Fragment(), ClickCallback {
 
         songHorizontalAdapter = SongHorizontalAdapter(this, true, false, null)
         bind!!.songListRecyclerView.setAdapter(songHorizontalAdapter)
-        songListPageViewModel!!.getSongList()
-            .observe(getViewLifecycleOwner(), Observer { songs: MutableList<Child?>? ->
-                isLoading = false
-                songHorizontalAdapter!!.setItems(songs)
-                setSongListPageSubtitle(songs!!)
-            })
-
-        bind!!.songListRecyclerView.addOnScrollListener(object :
-            PaginationScrollListener(bind!!.songListRecyclerView.layoutManager as LinearLayoutManager?) {
-            override fun loadMoreItems() {
-                isLoading = true
-                songListPageViewModel!!.getSongsByPage(getViewLifecycleOwner())
-            }
-
-            override fun isLoading(): Boolean {
-                return isLoading
-            }
-        })
-
-        bind!!.songListRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
-
-        bind!!.songListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_song_popup_menu
+        songListPageViewModel!!
+            .getSongList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { songs: MutableList<Child?>? ->
+                    isLoading = false
+                    songHorizontalAdapter!!.setItems(songs)
+                    setSongListPageSubtitle(songs!!)
+                },
             )
-        })
+
+        bind!!.songListRecyclerView.addOnScrollListener(
+            object :
+                PaginationScrollListener(bind!!.songListRecyclerView.layoutManager as LinearLayoutManager?) {
+                override fun loadMoreItems() {
+                    isLoading = true
+                    songListPageViewModel!!.getSongsByPage(getViewLifecycleOwner())
+                }
+
+                override fun isLoading(): Boolean = isLoading
+            },
+        )
+
+        bind!!.songListRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
+
+        bind!!.songListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_song_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                songHorizontalAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    songHorizontalAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -272,68 +308,90 @@ class SongListPageFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_song_sort_name) {
-                songHorizontalAdapter!!.sort(Constants.MEDIA_BY_TITLE)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_song_sort_most_recently_starred) {
-                songHorizontalAdapter!!.sort(Constants.MEDIA_MOST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_song_sort_least_recently_starred) {
-                songHorizontalAdapter!!.sort(Constants.MEDIA_LEAST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_song_sort_name) {
+                    songHorizontalAdapter!!.sort(Constants.MEDIA_BY_TITLE)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_song_sort_most_recently_starred) {
+                    songHorizontalAdapter!!.sort(Constants.MEDIA_MOST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_song_sort_least_recently_starred) {
+                    songHorizontalAdapter!!.sort(Constants.MEDIA_LEAST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }
 
     private fun setSongListPageSubtitle(children: MutableList<Child?>) {
         when (songListPageViewModel!!.title) {
-            Constants.MEDIA_BY_GENRE -> bind!!.pageSubtitleLabel.text = if (children.size < songListPageViewModel!!.maxNumberByGenre) getString(
-                R.string.generic_list_page_count,
-                children.size
-            ) else getString(
-                R.string.generic_list_page_count_unknown,
-                songListPageViewModel!!.maxNumberByGenre
-            )
+            Constants.MEDIA_BY_GENRE ->
+                bind!!.pageSubtitleLabel.text =
+                    if (children.size < songListPageViewModel!!.maxNumberByGenre) {
+                        getString(
+                            R.string.generic_list_page_count,
+                            children.size,
+                        )
+                    } else {
+                        getString(
+                            R.string.generic_list_page_count_unknown,
+                            songListPageViewModel!!.maxNumberByGenre,
+                        )
+                    }
 
-            Constants.MEDIA_BY_YEAR -> bind!!.pageSubtitleLabel.text = if (children.size < songListPageViewModel!!.maxNumberByYear) getString(
-                R.string.generic_list_page_count,
-                children.size
-            ) else getString(
-                R.string.generic_list_page_count_unknown,
-                songListPageViewModel!!.maxNumberByYear
-            )
+            Constants.MEDIA_BY_YEAR ->
+                bind!!.pageSubtitleLabel.text =
+                    if (children.size < songListPageViewModel!!.maxNumberByYear) {
+                        getString(
+                            R.string.generic_list_page_count,
+                            children.size,
+                        )
+                    } else {
+                        getString(
+                            R.string.generic_list_page_count_unknown,
+                            songListPageViewModel!!.maxNumberByYear,
+                        )
+                    }
 
-            Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_STARRED -> bind!!.pageSubtitleLabel.text =
-                getString(R.string.generic_list_page_count, children.size)
+            Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_STARRED ->
+                bind!!.pageSubtitleLabel.text =
+                    getString(R.string.generic_list_page_count, children.size)
         }
     }
 
     private fun setSongListPageSorter() {
         when (songListPageViewModel!!.title) {
-            Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_YEAR -> bind!!.songListSortImageView.visibility =
-                View.GONE
+            Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_YEAR ->
+                bind!!.songListSortImageView.visibility =
+                    View.GONE
 
-            Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_STARRED -> bind!!.songListSortImageView.visibility =
-                View.VISIBLE
+            Constants.MEDIA_BY_ARTIST, Constants.MEDIA_BY_GENRES, Constants.MEDIA_STARRED ->
+                bind!!.songListSortImageView.visibility =
+                    View.VISIBLE
         }
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -343,9 +401,11 @@ class SongListPageFragment : Fragment(), ClickCallback {
     override fun onMediaClick(bundle: Bundle) {
         hideKeyboard(requireView())
         MediaManager.startQueue(
-            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
-                Constants.TRACKS_OBJECT
-            ), bundle.getInt(Constants.ITEM_POSITION)
+            mediaBrowserListenableFuture,
+            bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT,
+            ),
+            bundle.getInt(Constants.ITEM_POSITION),
         )
         activity!!.setBottomSheetInPeek(true)
     }

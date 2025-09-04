@@ -11,10 +11,8 @@ class ChronologyRepository {
     fun getChronology(
         server: String?,
         start: Long,
-        end: Long
-    ): LiveData<MutableList<Chronology?>?>? {
-        return chronologyDao.getAllFrom(start, end, server)
-    }
+        end: Long,
+    ): LiveData<MutableList<Chronology?>?>? = chronologyDao.getAllFrom(start, end, server)
 
     fun insert(item: Chronology?) {
         val insert = InsertThreadSafe(chronologyDao, item)
@@ -24,7 +22,7 @@ class ChronologyRepository {
 
     private class InsertThreadSafe(
         private val chronologyDao: ChronologyDao,
-        private val item: Chronology?
+        private val item: Chronology?,
     ) : Runnable {
         override fun run() {
             chronologyDao.insert(item)

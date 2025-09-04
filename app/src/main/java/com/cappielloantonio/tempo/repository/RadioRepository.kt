@@ -17,76 +17,108 @@ class RadioRepository {
             getSubsonicClientInstance(false)
                 .getInternetRadioClient()
                 .getInternetRadioStations()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.internetRadioStations != null && response.body()!!.subsonicResponse.internetRadioStations!!.internetRadioStations != null) {
-                            radioStation.setValue(response.body()!!.subsonicResponse.internetRadioStations!!.internetRadioStations)
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null &&
+                                response.body()!!.subsonicResponse.internetRadioStations != null &&
+                                response
+                                    .body()!!
+                                    .subsonicResponse.internetRadioStations!!
+                                    .internetRadioStations != null
+                            ) {
+                                radioStation.setValue(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.internetRadioStations!!
+                                        .internetRadioStations,
+                                )
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                        }
+                    },
+                )
 
             return radioStation
         }
 
-    fun createInternetRadioStation(name: String?, streamURL: String?, homepageURL: String?) {
+    fun createInternetRadioStation(
+        name: String?,
+        streamURL: String?,
+        homepageURL: String?,
+    ) {
         getSubsonicClientInstance(false)
             .getInternetRadioClient()
             .createInternetRadioStation(streamURL, name, homepageURL)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun updateInternetRadioStation(
         id: String?,
         name: String?,
         streamURL: String?,
-        homepageURL: String?
+        homepageURL: String?,
     ) {
         getSubsonicClientInstance(false)
             .getInternetRadioClient()
             .updateInternetRadioStation(id, streamURL, name, homepageURL)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun deleteInternetRadioStation(id: String?) {
         getSubsonicClientInstance(false)
             .getInternetRadioClient()
             .deleteInternetRadioStation(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 }

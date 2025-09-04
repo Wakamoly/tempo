@@ -9,11 +9,12 @@ import androidx.lifecycle.Observer
 import com.cappielloantonio.tempo.repository.PodcastRepository
 import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
 
-class PodcastChannelCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class PodcastChannelCatalogueViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val podcastRepository: PodcastRepository
 
     private val podcastChannels = MutableLiveData<MutableList<PodcastChannel?>?>(null)
-
 
     init {
         podcastRepository = PodcastRepository()
@@ -23,7 +24,8 @@ class PodcastChannelCatalogueViewModel(application: Application) : AndroidViewMo
         if (podcastChannels.getValue() == null) {
             podcastRepository.getPodcastChannels(false, null).observe(
                 owner,
-                Observer { value: MutableList<PodcastChannel?>? -> podcastChannels.postValue(value) })
+                Observer { value: MutableList<PodcastChannel?>? -> podcastChannels.postValue(value) },
+            )
         }
 
         return podcastChannels

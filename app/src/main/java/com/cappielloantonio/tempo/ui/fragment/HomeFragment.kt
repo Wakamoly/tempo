@@ -32,14 +32,17 @@ class HomeFragment : Fragment() {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
         bind = FragmentHomeBinding.inflate(inflater, container, false)
         return bind!!.getRoot()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         initAppBar()
@@ -63,7 +66,8 @@ class HomeFragment : Fragment() {
         materialToolbar = bind!!.getRoot().findViewById<MaterialToolbar>(R.id.toolbar)
 
         activity!!.setSupportActionBar(materialToolbar)
-        Objects.requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
+        Objects
+            .requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
             .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
 
         tabLayout = TabLayout(requireContext())
@@ -79,30 +83,35 @@ class HomeFragment : Fragment() {
         pager.addFragment(
             HomeTabMusicFragment(),
             getString(R.string.home_section_music),
-            R.drawable.ic_home
+            R.drawable.ic_home,
         )
 
-        if (isPodcastSectionVisible()) pager.addFragment(
-            HomeTabPodcastFragment(),
-            getString(R.string.home_section_podcast),
-            R.drawable.ic_graphic_eq
-        )
+        if (isPodcastSectionVisible()) {
+            pager.addFragment(
+                HomeTabPodcastFragment(),
+                getString(R.string.home_section_podcast),
+                R.drawable.ic_graphic_eq,
+            )
+        }
 
-        if (isRadioSectionVisible()) pager.addFragment(
-            HomeTabRadioFragment(),
-            getString(R.string.home_section_radio),
-            R.drawable.ic_play_for_work
-        )
+        if (isRadioSectionVisible()) {
+            pager.addFragment(
+                HomeTabRadioFragment(),
+                getString(R.string.home_section_radio),
+                R.drawable.ic_play_for_work,
+            )
+        }
 
         bind!!.homeViewPager.setAdapter(pager)
         bind!!.homeViewPager.setOffscreenPageLimit(3)
         bind!!.homeViewPager.setUserInputEnabled(false)
 
         TabLayoutMediator(
-            tabLayout!!, bind!!.homeViewPager,
+            tabLayout!!,
+            bind!!.homeViewPager,
             TabConfigurationStrategy { tab: TabLayout.Tab?, position: Int ->
                 tab!!.setText(pager.getPageTitle(position))
-            }
+            },
         ).attach()
 
         tabLayout!!.visibility = if (isPodcastSectionVisible() || isRadioSectionVisible()) View.VISIBLE else View.GONE

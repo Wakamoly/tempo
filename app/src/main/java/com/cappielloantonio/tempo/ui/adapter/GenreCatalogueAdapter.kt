@@ -14,37 +14,43 @@ import com.cappielloantonio.tempo.util.Constants
 import java.util.Collections
 import java.util.Locale
 
-class GenreCatalogueAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<GenreCatalogueAdapter.ViewHolder?>(), Filterable {
-    private val filtering: Filter = object : Filter() {
-        override fun performFiltering(constraint: CharSequence?): FilterResults {
-            val filteredList: MutableList<Genre?> = ArrayList<Genre?>()
+class GenreCatalogueAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<GenreCatalogueAdapter.ViewHolder?>(),
+    Filterable {
+    private val filtering: Filter =
+        object : Filter() {
+            override fun performFiltering(constraint: CharSequence?): FilterResults {
+                val filteredList: MutableList<Genre?> = ArrayList<Genre?>()
 
-            if (constraint == null || constraint.length == 0) {
-                filteredList.addAll(genresFull!!)
-            } else {
-                val filterPattern =
-                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
+                if (constraint == null || constraint.length == 0) {
+                    filteredList.addAll(genresFull!!)
+                } else {
+                    val filterPattern =
+                        constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
 
-                for (item in genresFull!!) {
-                    if (item.genre!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
-                        filteredList.add(item)
+                    for (item in genresFull!!) {
+                        if (item.genre!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                            filteredList.add(item)
+                        }
                     }
                 }
+
+                val results = FilterResults()
+                results.values = filteredList
+
+                return results
             }
 
-            val results = FilterResults()
-            results.values = filteredList
-
-            return results
+            override fun publishResults(
+                constraint: CharSequence?,
+                results: FilterResults,
+            ) {
+                genres.clear()
+                if (results.count > 0) genres.addAll(results.values as MutableList<*>?)
+                notifyDataSetChanged()
+            }
         }
-
-        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
-            genres.clear()
-            if (results.count > 0) genres.addAll(results.values as MutableList<*>?)
-            notifyDataSetChanged()
-        }
-    }
 
     private var genres: MutableList<Genre>
     private var genresFull: MutableList<Genre>? = null
@@ -53,28 +59,31 @@ class GenreCatalogueAdapter(private val click: ClickCallback) :
         this.genres = mutableListOf<Genre?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemLibraryCatalogueGenreBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemLibraryCatalogueGenreBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return GenreCatalogueAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val genre = genres.get(position)
 
         holder.item.genreLabel.text = genre.genre
     }
 
-    override fun getItemCount(): Int {
-        return genres.size
-    }
+    override fun getItemCount(): Int = genres.size
 
-    fun getItem(position: Int): Genre? {
-        return genres.get(position)
-    }
+    fun getItem(position: Int): Genre? = genres.get(position)
 
     fun setItems(genres: MutableList<Genre>) {
         this.genres = genres
@@ -82,24 +91,25 @@ class GenreCatalogueAdapter(private val click: ClickCallback) :
         notifyDataSetChanged()
     }
 
-    override fun getFilter(): Filter {
-        return filtering
-    }
+    override fun getFilter(): Filter = filtering
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryCatalogueGenreBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryCatalogueGenreBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
-            itemView.setOnClickListener(View.OnClickListener { v: View? ->
-                val bundle = Bundle()
-                bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE)
-                bundle.putParcelable(
-                    Constants.GENRE_OBJECT,
-                    genres.get(getBindingAdapterPosition())
-                )
-                click.onGenreClick(bundle)
-            })
+            itemView.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val bundle = Bundle()
+                    bundle.putString(Constants.MEDIA_BY_GENRE, Constants.MEDIA_BY_GENRE)
+                    bundle.putParcelable(
+                        Constants.GENRE_OBJECT,
+                        genres.get(getBindingAdapterPosition()),
+                    )
+                    click.onGenreClick(bundle)
+                },
+            )
         }
     }
 

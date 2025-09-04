@@ -35,7 +35,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @UnstableApi
-class PlaylistCatalogueFragment : Fragment(), ClickCallback {
+class PlaylistCatalogueFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentPlaylistCatalogueBinding? = null
     private var activity: MainActivity? = null
     private var playlistCatalogueViewModel: PlaylistCatalogueViewModel? = null
@@ -50,7 +52,7 @@ class PlaylistCatalogueFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -58,7 +60,7 @@ class PlaylistCatalogueFragment : Fragment(), ClickCallback {
         val view: View = bind!!.getRoot()
         playlistCatalogueViewModel =
             ViewModelProvider(requireActivity()).get<PlaylistCatalogueViewModel>(
-                PlaylistCatalogueViewModel::class.java
+                PlaylistCatalogueViewModel::class.java,
             )
 
         init()
@@ -89,22 +91,28 @@ class PlaylistCatalogueFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.albumInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.playlist_catalogue_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.albumInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.playlist_catalogue_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -116,43 +124,56 @@ class PlaylistCatalogueFragment : Fragment(), ClickCallback {
         bind!!.playlistCatalogueRecyclerView.setAdapter(playlistHorizontalAdapter)
 
         if (activity != null) {
-            playlistCatalogueViewModel!!.getPlaylistList(getViewLifecycleOwner())
-                .observe(getViewLifecycleOwner(), Observer { playlists: MutableList<Playlist?>? ->
-                    if (playlists != null) playlistHorizontalAdapter!!.setItems(playlists)
-                })
+            playlistCatalogueViewModel!!
+                .getPlaylistList(getViewLifecycleOwner())
+                .observe(
+                    getViewLifecycleOwner(),
+                    Observer { playlists: MutableList<Playlist?>? ->
+                        if (playlists != null) playlistHorizontalAdapter!!.setItems(playlists)
+                    },
+                )
         }
 
-        bind!!.playlistCatalogueRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
+        bind!!.playlistCatalogueRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
 
-        bind!!.playlistListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_playlist_popup_menu
-            )
-        })
+        bind!!.playlistListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_playlist_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                playlistHorizontalAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    playlistHorizontalAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -162,20 +183,25 @@ class PlaylistCatalogueFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_playlist_sort_name) {
-                playlistHorizontalAdapter!!.sort(Constants.GENRE_ORDER_BY_NAME)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_playlist_sort_random) {
-                playlistHorizontalAdapter!!.sort(Constants.GENRE_ORDER_BY_RANDOM)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_playlist_sort_name) {
+                    playlistHorizontalAdapter!!.sort(Constants.GENRE_ORDER_BY_NAME)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_playlist_sort_random) {
+                    playlistHorizontalAdapter!!.sort(Constants.GENRE_ORDER_BY_RANDOM)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }

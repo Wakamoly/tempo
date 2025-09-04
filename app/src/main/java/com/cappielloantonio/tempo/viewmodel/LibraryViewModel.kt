@@ -18,7 +18,9 @@ import com.cappielloantonio.tempo.subsonic.models.Indexes
 import com.cappielloantonio.tempo.subsonic.models.MusicFolder
 import com.cappielloantonio.tempo.subsonic.models.Playlist
 
-class LibraryViewModel(application: Application) : AndroidViewModel(application) {
+class LibraryViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val directoryRepository: DirectoryRepository
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
@@ -44,7 +46,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         if (musicFolders.getValue() == null) {
             directoryRepository.getMusicFolders().observe(
                 owner,
-                Observer { value: MutableList<MusicFolder?>? -> musicFolders.postValue(value) })
+                Observer { value: MutableList<MusicFolder?>? -> musicFolders.postValue(value) },
+            )
         }
 
         return musicFolders
@@ -52,7 +55,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
 
     fun getIndexes(owner: LifecycleOwner): LiveData<Indexes?> {
         if (indexes.getValue() == null) {
-            directoryRepository.getIndexes("0", null)
+            directoryRepository
+                .getIndexes("0", null)
                 .observe(owner, Observer { value: Indexes? -> indexes.postValue(value) })
         }
 
@@ -63,7 +67,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         if (sampleAlbum.getValue() == null) {
             albumRepository.getAlbums("random", 10, null, null).observe(
                 owner,
-                Observer { value: MutableList<AlbumID3?>? -> sampleAlbum.postValue(value) })
+                Observer { value: MutableList<AlbumID3?>? -> sampleAlbum.postValue(value) },
+            )
         }
 
         return sampleAlbum
@@ -73,7 +78,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         if (sampleArtist.getValue() == null) {
             artistRepository.getArtists(true, 10).observe(
                 owner,
-                Observer { value: MutableList<ArtistID3?>? -> sampleArtist.postValue(value) })
+                Observer { value: MutableList<ArtistID3?>? -> sampleArtist.postValue(value) },
+            )
         }
 
         return sampleArtist
@@ -83,7 +89,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         if (sampleGenres.getValue() == null) {
             genreRepository.getGenres(true, 15).observe(
                 owner,
-                Observer { value: MutableList<Genre?>? -> sampleGenres.postValue(value) })
+                Observer { value: MutableList<Genre?>? -> sampleGenres.postValue(value) },
+            )
         }
 
         return sampleGenres
@@ -93,7 +100,8 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
         if (playlistSample.getValue() == null) {
             playlistRepository.getPlaylists(true, 10).observe(
                 owner,
-                Observer { value: MutableList<Playlist?>? -> playlistSample.postValue(value) })
+                Observer { value: MutableList<Playlist?>? -> playlistSample.postValue(value) },
+            )
         }
 
         return playlistSample
@@ -102,25 +110,29 @@ class LibraryViewModel(application: Application) : AndroidViewModel(application)
     fun refreshAlbumSample(owner: LifecycleOwner) {
         albumRepository.getAlbums("random", 10, null, null).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> sampleAlbum.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> sampleAlbum.postValue(value) },
+        )
     }
 
     fun refreshArtistSample(owner: LifecycleOwner) {
         artistRepository.getArtists(true, 10).observe(
             owner,
-            Observer { value: MutableList<ArtistID3?>? -> sampleArtist.postValue(value) })
+            Observer { value: MutableList<ArtistID3?>? -> sampleArtist.postValue(value) },
+        )
     }
 
     fun refreshGenreSample(owner: LifecycleOwner) {
         genreRepository.getGenres(true, 15).observe(
             owner,
-            Observer { value: MutableList<Genre?>? -> sampleGenres.postValue(value) })
+            Observer { value: MutableList<Genre?>? -> sampleGenres.postValue(value) },
+        )
     }
 
     fun refreshPlaylistSample(owner: LifecycleOwner) {
         playlistRepository.getPlaylists(true, 10).observe(
             owner,
-            Observer { value: MutableList<Playlist?>? -> playlistSample.postValue(value) })
+            Observer { value: MutableList<Playlist?>? -> playlistSample.postValue(value) },
+        )
     }
 
     companion object {

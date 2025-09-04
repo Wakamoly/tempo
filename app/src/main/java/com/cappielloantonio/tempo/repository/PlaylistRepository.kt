@@ -21,36 +21,54 @@ import kotlin.math.min
 class PlaylistRepository {
     @UnstableApi
     private val playlistDao: PlaylistDao = AppDatabase.Companion.getInstance().playlistDao()
-    fun getPlaylists(random: Boolean, size: Int): MutableLiveData<MutableList<Playlist?>?> {
+
+    fun getPlaylists(
+        random: Boolean,
+        size: Int,
+    ): MutableLiveData<MutableList<Playlist?>?> {
         val listLivePlaylists = MutableLiveData<MutableList<Playlist?>?>(ArrayList<Playlist?>())
 
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .getPlaylists()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null && response.body()!!.subsonicResponse.playlists!!.playlists != null) {
-                        val playlists: MutableList<Playlist?>? =
-                            response.body()!!.subsonicResponse.playlists!!.playlists
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.playlists!!
+                                .playlists != null
+                        ) {
+                            val playlists: MutableList<Playlist?>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.playlists!!
+                                    .playlists
 
-                        if (random) {
-                            Collections.shuffle(playlists)
-                            listLivePlaylists.value = playlists!!.subList(
-                                0,
-                                min(playlists.size, size)
-                            )
-                        } else {
-                            listLivePlaylists.value = playlists
+                            if (random) {
+                                Collections.shuffle(playlists)
+                                listLivePlaylists.value =
+                                    playlists!!.subList(
+                                        0,
+                                        min(playlists.size, size),
+                                    )
+                            } else {
+                                listLivePlaylists.value = playlists
+                            }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return listLivePlaylists
     }
@@ -61,82 +79,118 @@ class PlaylistRepository {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .getPlaylist(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null) {
-                        val songs: MutableList<Child?>? =
-                            response.body()!!.subsonicResponse.playlist!!.entries
-                        listLivePlaylistSongs.value = songs
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null) {
+                            val songs: MutableList<Child?>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.playlist!!
+                                    .entries
+                            listLivePlaylistSongs.value = songs
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return listLivePlaylistSongs
     }
 
-    fun addSongToPlaylist(playlistId: String?, songsId: ArrayList<String?>?) {
+    fun addSongToPlaylist(
+        playlistId: String?,
+        songsId: ArrayList<String?>?,
+    ) {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .updatePlaylist(playlistId, null, true, songsId, null)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    Toast.makeText(
-                        getContext(),
-                        getContext().getString(R.string.playlist_chooser_dialog_toast_add_success),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        Toast
+                            .makeText(
+                                getContext(),
+                                getContext().getString(R.string.playlist_chooser_dialog_toast_add_success),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    Toast.makeText(
-                        getContext(),
-                        getContext().getString(R.string.playlist_chooser_dialog_toast_add_failure),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        Toast
+                            .makeText(
+                                getContext(),
+                                getContext().getString(R.string.playlist_chooser_dialog_toast_add_failure),
+                                Toast.LENGTH_SHORT,
+                            ).show()
+                    }
+                },
+            )
     }
 
-    fun createPlaylist(playlistId: String?, name: String?, songsId: ArrayList<String?>?) {
+    fun createPlaylist(
+        playlistId: String?,
+        name: String?,
+        songsId: ArrayList<String?>?,
+    ) {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .createPlaylist(playlistId, name, songsId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
-    fun updatePlaylist(playlistId: String?, name: String?, songsId: ArrayList<String?>?) {
+    fun updatePlaylist(
+        playlistId: String?,
+        name: String?,
+        songsId: ArrayList<String?>?,
+    ) {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .deletePlaylist(playlistId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    createPlaylist(null, name, songsId)
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        createPlaylist(null, name, songsId)
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun updatePlaylist(
@@ -144,37 +198,47 @@ class PlaylistRepository {
         name: String?,
         isPublic: Boolean,
         songIdToAdd: ArrayList<String?>?,
-        songIndexToRemove: ArrayList<Int?>?
+        songIndexToRemove: ArrayList<Int?>?,
     ) {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .updatePlaylist(playlistId, name, isPublic, songIdToAdd, songIndexToRemove)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun deletePlaylist(playlistId: String?) {
         getSubsonicClientInstance(false)
             .getPlaylistClient()
             .deletePlaylist(playlistId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     @get:UnstableApi
@@ -197,7 +261,7 @@ class PlaylistRepository {
 
     private class InsertThreadSafe(
         private val playlistDao: PlaylistDao,
-        private val playlist: Playlist?
+        private val playlist: Playlist?,
     ) : Runnable {
         override fun run() {
             playlistDao.insert(playlist)
@@ -206,7 +270,7 @@ class PlaylistRepository {
 
     private class DeleteThreadSafe(
         private val playlistDao: PlaylistDao,
-        private val playlist: Playlist?
+        private val playlist: Playlist?,
     ) : Runnable {
         override fun run() {
             playlistDao.delete(playlist)

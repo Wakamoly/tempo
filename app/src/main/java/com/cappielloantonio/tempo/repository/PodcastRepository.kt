@@ -12,7 +12,7 @@ import retrofit2.Response
 class PodcastRepository {
     fun getPodcastChannels(
         includeEpisodes: Boolean,
-        channelId: String?
+        channelId: String?,
     ): MutableLiveData<MutableList<PodcastChannel?>?> {
         val livePodcastChannel =
             MutableLiveData<MutableList<PodcastChannel?>?>(ArrayList<PodcastChannel?>())
@@ -20,19 +20,29 @@ class PodcastRepository {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .getPodcasts(includeEpisodes, channelId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.podcasts != null) {
-                        livePodcastChannel.setValue(response.body()!!.subsonicResponse.podcasts!!.channels)
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.podcasts != null) {
+                            livePodcastChannel.setValue(
+                                response
+                                    .body()!!
+                                    .subsonicResponse.podcasts!!
+                                    .channels,
+                            )
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return livePodcastChannel
     }
@@ -44,19 +54,29 @@ class PodcastRepository {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .getNewestPodcasts(count)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null) {
-                        liveNewestPodcastEpisodes.setValue(response.body()!!.subsonicResponse.newestPodcasts!!.episodes)
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null) {
+                            liveNewestPodcastEpisodes.setValue(
+                                response
+                                    .body()!!
+                                    .subsonicResponse.newestPodcasts!!
+                                    .episodes,
+                            )
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return liveNewestPodcastEpisodes
     }
@@ -65,80 +85,105 @@ class PodcastRepository {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .refreshPodcasts()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun createPodcastChannel(url: String?) {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .createPodcastChannel(url)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun deletePodcastChannel(channelId: String?) {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .deletePodcastChannel(channelId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun deletePodcastEpisode(episodeId: String?) {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .deletePodcastEpisode(episodeId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     fun downloadPodcastEpisode(episodeId: String?) {
         getSubsonicClientInstance(false)
             .getPodcastClient()
             .downloadPodcastEpisode(episodeId)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
     companion object {

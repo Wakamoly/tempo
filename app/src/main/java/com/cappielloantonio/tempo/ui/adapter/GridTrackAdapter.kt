@@ -14,51 +14,56 @@ import com.cappielloantonio.tempo.util.Constants
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class GridTrackAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<GridTrackAdapter.ViewHolder?>() {
+class GridTrackAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<GridTrackAdapter.ViewHolder?>() {
     private var items: MutableList<Chronology>
 
     init {
         this.items = mutableListOf<Chronology?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomeGridTrackBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomeGridTrackBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return GridTrackAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val item = items.get(position)
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            item.coverArtId,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                item.coverArtId,
+                CustomGlideRequest.ResourceType.Song,
+            ).build()
             .into(holder.item.trackCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return items.size
-    }
+    override fun getItemCount(): Int = items.size
 
-    fun getItem(position: Int): Chronology? {
-        return items.get(position)
-    }
+    fun getItem(position: Int): Chronology? = items.get(position)
 
     fun setItems(items: MutableList<Chronology>) {
         this.items = items
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemHomeGridTrackBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomeGridTrackBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })

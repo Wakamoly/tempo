@@ -24,7 +24,9 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickListener {
+class PodcastChannelBottomSheetDialog :
+    BottomSheetDialogFragment(),
+    View.OnClickListener {
     private var podcastChannelBottomSheetViewModel: PodcastChannelBottomSheetViewModel? = null
     private var podcastChannel: PodcastChannel? = null
 
@@ -33,7 +35,7 @@ class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.bottom_sheet_podcast_channel_dialog, container, false)
 
@@ -42,7 +44,7 @@ class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
 
         podcastChannelBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PodcastChannelBottomSheetViewModel>(
-                PodcastChannelBottomSheetViewModel::class.java
+                PodcastChannelBottomSheetViewModel::class.java,
             )
         podcastChannelBottomSheetViewModel!!.setPodcastChannel(podcastChannel)
 
@@ -65,22 +67,24 @@ class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     private fun init(view: View) {
         val coverPodcast = view.findViewById<ImageView>(R.id.podcast_cover_image_view)
 
-        CustomGlideRequest.Builder.Companion.from(
-            requireContext(),
-            podcastChannelBottomSheetViewModel!!.getPodcastChannel().coverArtId,
-            CustomGlideRequest.ResourceType.Podcast
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                requireContext(),
+                podcastChannelBottomSheetViewModel!!.getPodcastChannel().coverArtId,
+                CustomGlideRequest.ResourceType.Podcast,
+            ).build()
             .into(coverPodcast)
 
         val titlePodcast = view.findViewById<TextView>(R.id.podcast_title_text_view)
         titlePodcast.setText(podcastChannelBottomSheetViewModel!!.getPodcastChannel().title)
 
         val delete = view.findViewById<TextView>(R.id.delete_text_view)
-        delete.setOnClickListener(View.OnClickListener { v: View? ->
-            podcastChannelBottomSheetViewModel!!.deletePodcastChannel()
-            dismissBottomSheet()
-        })
+        delete.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                podcastChannelBottomSheetViewModel!!.deletePodcastChannel()
+                dismissBottomSheet()
+            },
+        )
     }
 
     override fun onClick(v: View?) {
@@ -92,13 +96,15 @@ class PodcastChannelBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {

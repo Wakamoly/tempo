@@ -12,16 +12,16 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class AlbumCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class AlbumCatalogueViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val albumList = MutableLiveData<MutableList<AlbumID3?>?>(ArrayList<AlbumID3?>())
     private val loading = MutableLiveData<Boolean?>(true)
 
     private var page = 0
     private var status = Status.STOPPED
 
-    fun getAlbumList(): LiveData<MutableList<AlbumID3?>?> {
-        return albumList
-    }
+    fun getAlbumList(): LiveData<MutableList<AlbumID3?>?> = albumList
 
     val loadingStatus: LiveData<Boolean?>
         get() = loading
@@ -38,57 +38,79 @@ class AlbumCatalogueViewModel(application: Application) : AndroidViewModel(appli
     }
 
     private fun loadAlbums(size: Int) {
-        retrieveAlbums(object : MediaCallback {
-            override fun onError(exception: Exception?) {
-            }
-
-            override fun onLoadMedia(media: MutableList<*>?) {
-                if (status == Status.STOPPED) {
-                    loading.value = false
-                    return
+        retrieveAlbums(
+            object : MediaCallback {
+                override fun onError(exception: Exception?) {
                 }
 
-                val liveAlbum = albumList.getValue()
+                override fun onLoadMedia(media: MutableList<*>?) {
+                    if (status == Status.STOPPED) {
+                        loading.value = false
+                        return
+                    }
 
-                liveAlbum!!.addAll((media as MutableList<AlbumID3?>?)!!)
-                albumList.value = liveAlbum
+                    val liveAlbum = albumList.getValue()
 
-                if (media.size == size) {
-                    loadAlbums(size)
-                    loading.value = true
-                } else {
-                    status = Status.STOPPED
-                    loading.value = false
+                    liveAlbum!!.addAll((media as MutableList<AlbumID3?>?)!!)
+                    albumList.value = liveAlbum
+
+                    if (media.size == size) {
+                        loadAlbums(size)
+                        loading.value = true
+                    } else {
+                        status = Status.STOPPED
+                        loading.value = false
+                    }
                 }
-            }
-        }, size, size * page++)
+            },
+            size,
+            size * page++,
+        )
     }
 
-
-    private fun retrieveAlbums(callback: MediaCallback, size: Int, offset: Int) {
+    private fun retrieveAlbums(
+        callback: MediaCallback,
+        size: Int,
+        offset: Int,
+    ) {
         getSubsonicClientInstance(false)
             .getAlbumSongListClient()
             .getAlbumList2("alphabeticalByName", size, offset, null, null)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null && response.body()!!.subsonicResponse.albumList2!!.albums != null) {
-                        val albumList: MutableList<AlbumID3?> =
-                            ArrayList<AlbumID3?>(response.body()!!.subsonicResponse.albumList2!!.albums)
-                        callback.onLoadMedia(albumList)
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
+                            response
+                                .body()!!
+                                .subsonicResponse.albumList2!!
+                                .albums != null
+                        ) {
+                            val albumList: MutableList<AlbumID3?> =
+                                ArrayList<AlbumID3?>(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.albumList2!!
+                                        .albums,
+                                )
+                            callback.onLoadMedia(albumList)
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    callback.onError(Exception(t.message))
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        callback.onError(Exception(t.message))
+                    }
+                },
+            )
     }
 
     private enum class Status {
         RUNNING,
-        STOPPED
+        STOPPED,
     }
 }

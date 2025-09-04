@@ -12,53 +12,89 @@ class ScanRepository {
         getSubsonicClientInstance(false)
             .getMediaLibraryScanningClient()
             .startScan()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
-                        if (response.body()!!.subsonicResponse.error != null) {
-                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.message))
-                        } else if (response.body()!!.subsonicResponse.scanStatus != null) {
-                            callback.onSuccess(
-                                response.body()!!.subsonicResponse.scanStatus!!.isScanning,
-                                response.body()!!.subsonicResponse.scanStatus!!.count!!
-                            )
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
+                            if (response.body()!!.subsonicResponse.error != null) {
+                                callback.onError(
+                                    Exception(
+                                        response
+                                            .body()!!
+                                            .subsonicResponse.error!!
+                                            .message,
+                                    ),
+                                )
+                            } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                                callback.onSuccess(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.scanStatus!!
+                                        .isScanning,
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.scanStatus!!
+                                        .count!!,
+                                )
+                            }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    callback.onError(Exception(t.message))
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        callback.onError(Exception(t.message))
+                    }
+                },
+            )
     }
 
     fun getScanStatus(callback: ScanCallback) {
         getSubsonicClientInstance(false)
             .getMediaLibraryScanningClient()
             .startScan()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
-                        if (response.body()!!.subsonicResponse.error != null) {
-                            callback.onError(Exception(response.body()!!.subsonicResponse.error!!.message))
-                        } else if (response.body()!!.subsonicResponse.scanStatus != null) {
-                            callback.onSuccess(
-                                response.body()!!.subsonicResponse.scanStatus!!.isScanning,
-                                response.body()!!.subsonicResponse.scanStatus!!.count!!
-                            )
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
+                            if (response.body()!!.subsonicResponse.error != null) {
+                                callback.onError(
+                                    Exception(
+                                        response
+                                            .body()!!
+                                            .subsonicResponse.error!!
+                                            .message,
+                                    ),
+                                )
+                            } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                                callback.onSuccess(
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.scanStatus!!
+                                        .isScanning,
+                                    response
+                                        .body()!!
+                                        .subsonicResponse.scanStatus!!
+                                        .count!!,
+                                )
+                            }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                    callback.onError(Exception(t.message))
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                        callback.onError(Exception(t.message))
+                    }
+                },
+            )
     }
 }

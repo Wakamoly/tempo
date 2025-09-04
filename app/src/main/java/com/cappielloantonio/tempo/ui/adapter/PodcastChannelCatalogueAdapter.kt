@@ -18,37 +18,43 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 import java.util.Locale
 
-class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<PodcastChannelCatalogueAdapter.ViewHolder?>(), Filterable {
-    private val filtering: Filter = object : Filter() {
-        override fun performFiltering(constraint: CharSequence?): FilterResults {
-            val filteredList: MutableList<PodcastChannel?> = ArrayList<PodcastChannel?>()
+class PodcastChannelCatalogueAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<PodcastChannelCatalogueAdapter.ViewHolder?>(),
+    Filterable {
+    private val filtering: Filter =
+        object : Filter() {
+            override fun performFiltering(constraint: CharSequence?): FilterResults {
+                val filteredList: MutableList<PodcastChannel?> = ArrayList<PodcastChannel?>()
 
-            if (constraint == null || constraint.length == 0) {
-                filteredList.addAll(podcastChannelsFull!!)
-            } else {
-                val filterPattern =
-                    constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
+                if (constraint == null || constraint.length == 0) {
+                    filteredList.addAll(podcastChannelsFull!!)
+                } else {
+                    val filterPattern =
+                        constraint.toString().lowercase(Locale.getDefault()).trim { it <= ' ' }
 
-                for (item in podcastChannelsFull!!) {
-                    if (item.title!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
-                        filteredList.add(item)
+                    for (item in podcastChannelsFull!!) {
+                        if (item.title!!.lowercase(Locale.getDefault()).contains(filterPattern)) {
+                            filteredList.add(item)
+                        }
                     }
                 }
+
+                val results = FilterResults()
+                results.values = filteredList
+
+                return results
             }
 
-            val results = FilterResults()
-            results.values = filteredList
-
-            return results
+            override fun publishResults(
+                constraint: CharSequence?,
+                results: FilterResults,
+            ) {
+                podcastChannels.clear()
+                if (results.count > 0) podcastChannels.addAll(results.values as MutableList<*>?)
+                notifyDataSetChanged()
+            }
         }
-
-        override fun publishResults(constraint: CharSequence?, results: FilterResults) {
-            podcastChannels.clear()
-            if (results.count > 0) podcastChannels.addAll(results.values as MutableList<*>?)
-            notifyDataSetChanged()
-        }
-    }
 
     private var podcastChannels: MutableList<PodcastChannel>
     private var podcastChannelsFull: MutableList<PodcastChannel>? = null
@@ -57,36 +63,39 @@ class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
         this.podcastChannels = mutableListOf<PodcastChannel?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomeCataloguePodcastChannelBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomeCataloguePodcastChannelBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return PodcastChannelCatalogueAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val podcastChannel = podcastChannels.get(position)
 
         holder.item.podcastChannelTitleLabel.text = podcastChannel.title
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            podcastChannel.coverArtId,
-            CustomGlideRequest.ResourceType.Podcast
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                podcastChannel.coverArtId,
+                CustomGlideRequest.ResourceType.Podcast,
+            ).build()
             .into(holder.item.podcastChannelCatalogueCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return podcastChannels.size
-    }
+    override fun getItemCount(): Int = podcastChannels.size
 
-    fun getItem(position: Int): PodcastChannel? {
-        return podcastChannels.get(position)
-    }
+    fun getItem(position: Int): PodcastChannel? = podcastChannels.get(position)
 
     fun setItems(podcastChannels: MutableList<PodcastChannel>) {
         this.podcastChannels = podcastChannels
@@ -94,21 +103,16 @@ class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
         notifyDataSetChanged()
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return position
-    }
+    override fun getItemViewType(position: Int): Int = position
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
-    override fun getFilter(): Filter {
-        return filtering
-    }
+    override fun getFilter(): Filter = filtering
 
-    inner class ViewHolder internal constructor(var item: ItemHomeCataloguePodcastChannelBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomeCataloguePodcastChannelBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.podcastChannelTitleLabel.setSelected(true)
@@ -121,7 +125,7 @@ class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.PODCAST_CHANNEL_OBJECT,
-                podcastChannels.get(getBindingAdapterPosition())
+                podcastChannels.get(getBindingAdapterPosition()),
             )
 
             click.onPodcastChannelClick(bundle)
@@ -131,7 +135,7 @@ class PodcastChannelCatalogueAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.PODCAST_CHANNEL_OBJECT,
-                podcastChannels.get(getBindingAdapterPosition())
+                podcastChannels.get(getBindingAdapterPosition()),
             )
 
             click.onPodcastChannelLongClick(bundle)

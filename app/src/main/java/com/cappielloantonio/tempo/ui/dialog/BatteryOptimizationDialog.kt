@@ -23,11 +23,11 @@ class BatteryOptimizationDialog : DialogFragment() {
             .setTitle(R.string.activity_battery_optimizations_title)
             .setPositiveButton(
                 R.string.battery_optimization_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, listener: Int -> openPowerSettings() })
-            .setNeutralButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, listener: Int -> openPowerSettings() },
+            ).setNeutralButton(
                 R.string.battery_optimization_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, listener: Int -> dontAskForOptimization() })
-            .setNegativeButton(R.string.battery_optimization_negative_button, null)
+                DialogInterface.OnClickListener { dialog: DialogInterface?, listener: Int -> dontAskForOptimization() },
+            ).setNegativeButton(R.string.battery_optimization_negative_button, null)
             .create()
     }
 

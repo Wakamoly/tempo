@@ -33,7 +33,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Collections
 import java.util.Objects
 
-class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : DialogFragment() {
+class PlaylistEditorDialog(
+    private val playlistCallback: PlaylistCallback?,
+) : DialogFragment() {
     private var bind: DialogPlaylistEditorBinding? = null
     private var playlistEditorViewModel: PlaylistEditorViewModel? = null
 
@@ -43,23 +45,24 @@ class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : Di
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         bind = DialogPlaylistEditorBinding.inflate(getLayoutInflater())
 
-        playlistEditorViewModel = ViewModelProvider(requireActivity()).get<PlaylistEditorViewModel>(
-            PlaylistEditorViewModel::class.java
-        )
+        playlistEditorViewModel =
+            ViewModelProvider(requireActivity()).get<PlaylistEditorViewModel>(
+                PlaylistEditorViewModel::class.java,
+            )
 
         return MaterialAlertDialogBuilder(activity!!)
             .setView(bind!!.getRoot())
             .setTitle(R.string.playlist_editor_dialog_title)
             .setPositiveButton(
                 R.string.playlist_editor_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNeutralButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            ).setNeutralButton(
                 R.string.playlist_editor_dialog_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .setNegativeButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).setNegativeButton(
                 R.string.playlist_editor_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .create()
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).create()
     }
 
     override fun onStart() {
@@ -79,16 +82,16 @@ class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : Di
         if (requireArguments().getParcelableArrayList<Parcelable?>(Constants.TRACKS_OBJECT) != null) {
             playlistEditorViewModel!!.setSongsToAdd(
                 requireArguments().getParcelableArrayList<Child?>(
-                    Constants.TRACKS_OBJECT
-                )
+                    Constants.TRACKS_OBJECT,
+                ),
             )
             playlistEditorViewModel!!.setPlaylistToEdit(null)
         } else if (requireArguments().getParcelable<Parcelable?>(Constants.PLAYLIST_OBJECT) != null) {
             playlistEditorViewModel!!.setSongsToAdd(null)
             playlistEditorViewModel!!.setPlaylistToEdit(
                 requireArguments().getParcelable<Playlist?>(
-                    Constants.PLAYLIST_OBJECT
-                )
+                    Constants.PLAYLIST_OBJECT,
+                ),
             )
 
             if (playlistEditorViewModel!!.getPlaylistToEdit() != null) {
@@ -100,45 +103,61 @@ class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : Di
     private fun setButtonAction() {
         val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                if (validateInput()) {
-                    if (playlistEditorViewModel!!.getSongsToAdd() != null) {
-                        playlistEditorViewModel!!.createPlaylist(playlistName)
-                    } else if (playlistEditorViewModel!!.getPlaylistToEdit() != null) {
-                        playlistEditorViewModel!!.updatePlaylist(playlistName)
+        alertDialog
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    if (validateInput()) {
+                        if (playlistEditorViewModel!!.getSongsToAdd() != null) {
+                            playlistEditorViewModel!!.createPlaylist(playlistName)
+                        } else if (playlistEditorViewModel!!.getPlaylistToEdit() != null) {
+                            playlistEditorViewModel!!.updatePlaylist(playlistName)
+                        }
+
+                        dialogDismiss()
                     }
+                },
+            )
 
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    Toast
+                        .makeText(
+                            requireContext(),
+                            R.string.playlist_editor_dialog_action_delete_toast,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                },
+            )
+
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnLongClickListener(
+                OnLongClickListener { v: View? ->
+                    playlistEditorViewModel!!.deletePlaylist()
                     dialogDismiss()
-                }
-            })
+                    false
+                },
+            )
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                Toast.makeText(
-                    requireContext(),
-                    R.string.playlist_editor_dialog_action_delete_toast,
-                    Toast.LENGTH_SHORT
-                ).show()
-            })
-
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnLongClickListener(OnLongClickListener { v: View? ->
-                playlistEditorViewModel!!.deletePlaylist()
-                dialogDismiss()
-                false
-            })
-
-        bind!!.playlistShareButton.setOnClickListener(View.OnClickListener { view: View? ->
-            playlistEditorViewModel!!.sharePlaylist()
-                .observe(requireActivity(), Observer { sharedPlaylist: Share? ->
-                    val clipboardManager =
-                        requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                    val clipData =
-                        ClipData.newPlainText(getString(R.string.app_name), sharedPlaylist!!.url)
-                    clipboardManager.setPrimaryClip(clipData)
-                })
-        })
+        bind!!.playlistShareButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                playlistEditorViewModel!!
+                    .sharePlaylist()
+                    .observe(
+                        requireActivity(),
+                        Observer { sharedPlaylist: Share? ->
+                            val clipboardManager =
+                                requireActivity().getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clipData =
+                                ClipData.newPlainText(getString(R.string.app_name), sharedPlaylist!!.url)
+                            clipboardManager.setPrimaryClip(clipData)
+                        },
+                    )
+            },
+        )
 
         bind!!.playlistShareButton.visibility = if (isSharingEnabled()) View.VISIBLE else View.GONE
     }
@@ -150,72 +169,86 @@ class PlaylistEditorDialog(private val playlistCallback: PlaylistCallback?) : Di
         playlistDialogSongHorizontalAdapter = PlaylistDialogSongHorizontalAdapter()
         bind!!.playlistSongRecyclerView.setAdapter(playlistDialogSongHorizontalAdapter)
 
-        playlistEditorViewModel!!.getPlaylistSongLiveList()
-            .observe(requireActivity(), Observer { songs: MutableList<Child?>? ->
-                if (songs != null) playlistDialogSongHorizontalAdapter!!.setItems(songs)
-            })
+        playlistEditorViewModel!!
+            .getPlaylistSongLiveList()
+            .observe(
+                requireActivity(),
+                Observer { songs: MutableList<Child?>? ->
+                    if (songs != null) playlistDialogSongHorizontalAdapter!!.setItems(songs)
+                },
+            )
 
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ItemTouchHelper.LEFT
-        ) {
-            var originalPosition: Int = -1
-            var fromPosition: Int = -1
-            var toPosition: Int = -1
-
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                if (originalPosition == -1) originalPosition =
-                    viewHolder.getBindingAdapterPosition()
-
-                fromPosition = viewHolder.getBindingAdapterPosition()
-                toPosition = target.getBindingAdapterPosition()
-
-                Collections.swap(
-                    playlistDialogSongHorizontalAdapter!!.getItems(),
-                    fromPosition,
-                    toPosition
-                )
-                Objects.requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
-                    .notifyItemMoved(fromPosition, toPosition)
-
-                return false
-            }
-
-            override fun clearView(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
+        ItemTouchHelper(
+            object : ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT,
             ) {
-                super.clearView(recyclerView, viewHolder)
+                var originalPosition: Int = -1
+                var fromPosition: Int = -1
+                var toPosition: Int = -1
+
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder,
+                ): Boolean {
+                    if (originalPosition == -1) {
+                        originalPosition =
+                            viewHolder.getBindingAdapterPosition()
+                    }
+
+                    fromPosition = viewHolder.getBindingAdapterPosition()
+                    toPosition = target.getBindingAdapterPosition()
+
+                    Collections.swap(
+                        playlistDialogSongHorizontalAdapter!!.getItems(),
+                        fromPosition,
+                        toPosition,
+                    )
+                    Objects
+                        .requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
+                        .notifyItemMoved(fromPosition, toPosition)
+
+                    return false
+                }
+
+                override fun clearView(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ) {
+                    super.clearView(recyclerView, viewHolder)
 
                 /*
                  * Qui vado a riscivere tutta la table Queue, quando teoricamente potrei solo swappare l'ordine degli elementi interessati
                  * Nel caso la coda contenesse parecchi brani, potrebbero verificarsi rallentamenti pesanti
                  */
-                playlistEditorViewModel!!.orderPlaylistSongLiveListAfterSwap(
-                    playlistDialogSongHorizontalAdapter!!.getItems()
-                )
+                    playlistEditorViewModel!!.orderPlaylistSongLiveListAfterSwap(
+                        playlistDialogSongHorizontalAdapter!!.getItems(),
+                    )
 
-                originalPosition = -1
-                fromPosition = -1
-                toPosition = -1
-            }
+                    originalPosition = -1
+                    fromPosition = -1
+                    toPosition = -1
+                }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                playlistEditorViewModel!!.removeFromPlaylistSongLiveList(viewHolder.getBindingAdapterPosition())
-                Objects.requireNonNull<RecyclerView.Adapter<*>?>(bind!!.playlistSongRecyclerView.adapter)
-                    .notifyItemRemoved(viewHolder.getBindingAdapterPosition())
-            }
-        }
+                override fun onSwiped(
+                    viewHolder: RecyclerView.ViewHolder,
+                    direction: Int,
+                ) {
+                    playlistEditorViewModel!!.removeFromPlaylistSongLiveList(viewHolder.getBindingAdapterPosition())
+                    Objects
+                        .requireNonNull<RecyclerView.Adapter<*>?>(bind!!.playlistSongRecyclerView.adapter)
+                        .notifyItemRemoved(viewHolder.getBindingAdapterPosition())
+                }
+            },
         ).attachToRecyclerView(bind!!.playlistSongRecyclerView)
     }
 
     private fun validateInput(): Boolean {
         playlistName =
-            Objects.requireNonNull<Editable?>(bind!!.playlistNameTextView.getText()).toString()
+            Objects
+                .requireNonNull<Editable?>(bind!!.playlistNameTextView.getText())
+                .toString()
                 .trim { it <= ' ' }
 
         if (TextUtils.isEmpty(playlistName)) {

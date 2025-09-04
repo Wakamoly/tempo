@@ -38,7 +38,9 @@ import com.cappielloantonio.tempo.viewmodel.SearchViewModel
 import com.google.common.util.concurrent.ListenableFuture
 
 @UnstableApi
-class SearchFragment : Fragment(), ClickCallback {
+class SearchFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentSearchBinding? = null
     private var activity: MainActivity? = null
     private var searchViewModel: SearchViewModel? = null
@@ -52,7 +54,7 @@ class SearchFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
 
@@ -89,8 +91,8 @@ class SearchFragment : Fragment(), ClickCallback {
             LinearLayoutManager(
                 requireContext(),
                 LinearLayoutManager.HORIZONTAL,
-                false
-            )
+                false,
+            ),
         )
         bind!!.searchResultArtistRecyclerView.setHasFixedSize(true)
 
@@ -105,8 +107,8 @@ class SearchFragment : Fragment(), ClickCallback {
             LinearLayoutManager(
                 requireContext(),
                 LinearLayoutManager.HORIZONTAL,
-                false
-            )
+                false,
+            ),
         )
         bind!!.searchResultAlbumRecyclerView.setHasFixedSize(true)
 
@@ -127,56 +129,64 @@ class SearchFragment : Fragment(), ClickCallback {
     private fun initSearchView() {
         setRecentSuggestions()
 
-        bind!!.searchView
+        bind!!
+            .searchView
             .getEditText()
-            .setOnEditorActionListener(OnEditorActionListener { textView: TextView?, actionId: Int, keyEvent: KeyEvent? ->
-                val query = bind!!.searchView.text.toString()
-                if (isQueryValid(query)) {
-                    search(query)
-                    return@setOnEditorActionListener true
-                }
-                false
-            })
-
-        bind!!.searchView
-            .getEditText()
-            .addTextChangedListener(object : TextWatcher {
-                override fun beforeTextChanged(
-                    charSequence: CharSequence?,
-                    start: Int,
-                    count: Int,
-                    after: Int
-                ) {
-                }
-
-                override fun onTextChanged(
-                    charSequence: CharSequence,
-                    start: Int,
-                    before: Int,
-                    count: Int
-                ) {
-                    if (start + count > 1) {
-                        setSearchSuggestions(charSequence.toString())
-                    } else {
-                        setRecentSuggestions()
+            .setOnEditorActionListener(
+                OnEditorActionListener { textView: TextView?, actionId: Int, keyEvent: KeyEvent? ->
+                    val query = bind!!.searchView.text.toString()
+                    if (isQueryValid(query)) {
+                        search(query)
+                        return@setOnEditorActionListener true
                     }
-                }
+                    false
+                },
+            )
 
-                override fun afterTextChanged(editable: Editable?) {
-                }
-            })
+        bind!!
+            .searchView
+            .getEditText()
+            .addTextChangedListener(
+                object : TextWatcher {
+                    override fun beforeTextChanged(
+                        charSequence: CharSequence?,
+                        start: Int,
+                        count: Int,
+                        after: Int,
+                    ) {
+                    }
+
+                    override fun onTextChanged(
+                        charSequence: CharSequence,
+                        start: Int,
+                        before: Int,
+                        count: Int,
+                    ) {
+                        if (start + count > 1) {
+                            setSearchSuggestions(charSequence.toString())
+                        } else {
+                            setRecentSuggestions()
+                        }
+                    }
+
+                    override fun afterTextChanged(editable: Editable?) {
+                    }
+                },
+            )
     }
 
     fun setRecentSuggestions() {
         bind!!.searchViewSuggestionContainer.removeAllViews()
 
         for (suggestion in searchViewModel!!.getRecentSearchSuggestion()) {
-            val view = LayoutInflater.from(bind!!.searchViewSuggestionContainer.context)
-                .inflate(
-                    R.layout.item_search_suggestion,
-                    bind!!.searchViewSuggestionContainer,
-                    false
-                )
+            val view =
+                LayoutInflater
+                    .from(bind!!.searchViewSuggestionContainer.context)
+                    .inflate(
+                        R.layout.item_search_suggestion,
+                        bind!!.searchViewSuggestionContainer,
+                        false,
+                    )
 
             val leadingImageView = view.findViewById<ImageView>(R.id.search_suggestion_icon)
             val titleView = view.findViewById<TextView>(R.id.search_suggestion_title)
@@ -185,54 +195,61 @@ class SearchFragment : Fragment(), ClickCallback {
             leadingImageView.setImageDrawable(
                 resources.getDrawable(
                     R.drawable.ic_history,
-                    null
-                )
+                    null,
+                ),
             )
             titleView.setText(suggestion)
 
             view.setOnClickListener(View.OnClickListener { v: View? -> search(suggestion) })
 
-            tailingImageView.setOnClickListener(View.OnClickListener { v: View? ->
-                searchViewModel!!.deleteRecentSearch(suggestion)
-                setRecentSuggestions()
-            })
+            tailingImageView.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    searchViewModel!!.deleteRecentSearch(suggestion)
+                    setRecentSuggestions()
+                },
+            )
 
             bind!!.searchViewSuggestionContainer.addView(view)
         }
     }
 
     fun setSearchSuggestions(query: String?) {
-        searchViewModel!!.getSearchSuggestion(query)
-            .observe(getViewLifecycleOwner(), Observer { suggestions: MutableList<String>? ->
-                bind!!.searchViewSuggestionContainer.removeAllViews()
-                for (suggestion in suggestions!!) {
-                    val view =
-                        LayoutInflater.from(bind!!.searchViewSuggestionContainer.context)
-                            .inflate(
-                                R.layout.item_search_suggestion,
-                                bind!!.searchViewSuggestionContainer,
-                                false
-                            )
+        searchViewModel!!
+            .getSearchSuggestion(query)
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { suggestions: MutableList<String>? ->
+                    bind!!.searchViewSuggestionContainer.removeAllViews()
+                    for (suggestion in suggestions!!) {
+                        val view =
+                            LayoutInflater
+                                .from(bind!!.searchViewSuggestionContainer.context)
+                                .inflate(
+                                    R.layout.item_search_suggestion,
+                                    bind!!.searchViewSuggestionContainer,
+                                    false,
+                                )
 
-                    val leadingImageView = view.findViewById<ImageView>(R.id.search_suggestion_icon)
-                    val titleView = view.findViewById<TextView>(R.id.search_suggestion_title)
-                    val tailingImageView =
-                        view.findViewById<ImageView>(R.id.search_suggestion_delete_icon)
+                        val leadingImageView = view.findViewById<ImageView>(R.id.search_suggestion_icon)
+                        val titleView = view.findViewById<TextView>(R.id.search_suggestion_title)
+                        val tailingImageView =
+                            view.findViewById<ImageView>(R.id.search_suggestion_delete_icon)
 
-                    leadingImageView.setImageDrawable(
-                        resources.getDrawable(
-                            R.drawable.ic_search,
-                            null
+                        leadingImageView.setImageDrawable(
+                            resources.getDrawable(
+                                R.drawable.ic_search,
+                                null,
+                            ),
                         )
-                    )
-                    titleView.text = suggestion
-                    tailingImageView.setVisibility(View.GONE)
+                        titleView.text = suggestion
+                        tailingImageView.setVisibility(View.GONE)
 
-                    view.setOnClickListener(View.OnClickListener { v: View? -> search(suggestion) })
+                        view.setOnClickListener(View.OnClickListener { v: View? -> search(suggestion) })
 
-                    bind!!.searchViewSuggestionContainer.addView(view)
-                }
-            })
+                        bind!!.searchViewSuggestionContainer.addView(view)
+                    }
+                },
+            )
     }
 
     fun search(query: String) {
@@ -243,54 +260,58 @@ class SearchFragment : Fragment(), ClickCallback {
     }
 
     private fun performSearch(query: String?) {
-        searchViewModel!!.search3(query)
-            .observe(getViewLifecycleOwner(), Observer { result: SearchResult3? ->
-                if (bind != null) {
-                    if (result!!.artists != null) {
-                        bind!!.searchArtistSector.visibility = if (!result.artists!!.isEmpty()) View.VISIBLE else View.GONE
-                        artistAdapter!!.setItems(result.artists)
-                    } else {
-                        artistAdapter!!.setItems(mutableListOf<ArtistID3?>())
-                        bind!!.searchArtistSector.visibility = View.GONE
-                    }
+        searchViewModel!!
+            .search3(query)
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { result: SearchResult3? ->
+                    if (bind != null) {
+                        if (result!!.artists != null) {
+                            bind!!.searchArtistSector.visibility = if (!result.artists!!.isEmpty()) View.VISIBLE else View.GONE
+                            artistAdapter!!.setItems(result.artists)
+                        } else {
+                            artistAdapter!!.setItems(mutableListOf<ArtistID3?>())
+                            bind!!.searchArtistSector.visibility = View.GONE
+                        }
 
-                    if (result.albums != null) {
-                        bind!!.searchAlbumSector.visibility = if (!result.albums!!.isEmpty()) View.VISIBLE else View.GONE
-                        albumAdapter!!.setItems(result.albums)
-                    } else {
-                        albumAdapter!!.setItems(mutableListOf<AlbumID3?>())
-                        bind!!.searchAlbumSector.visibility = View.GONE
-                    }
+                        if (result.albums != null) {
+                            bind!!.searchAlbumSector.visibility = if (!result.albums!!.isEmpty()) View.VISIBLE else View.GONE
+                            albumAdapter!!.setItems(result.albums)
+                        } else {
+                            albumAdapter!!.setItems(mutableListOf<AlbumID3?>())
+                            bind!!.searchAlbumSector.visibility = View.GONE
+                        }
 
-                    if (result.songs != null) {
-                        bind!!.searchSongSector.visibility = if (!result.songs!!.isEmpty()) View.VISIBLE else View.GONE
-                        songHorizontalAdapter!!.setItems(result.songs)
-                    } else {
-                        songHorizontalAdapter!!.setItems(mutableListOf<Child?>())
-                        bind!!.searchSongSector.visibility = View.GONE
+                        if (result.songs != null) {
+                            bind!!.searchSongSector.visibility = if (!result.songs!!.isEmpty()) View.VISIBLE else View.GONE
+                            songHorizontalAdapter!!.setItems(result.songs)
+                        } else {
+                            songHorizontalAdapter!!.setItems(mutableListOf<Child?>())
+                            bind!!.searchSongSector.visibility = View.GONE
+                        }
                     }
-                }
-            })
+                },
+            )
 
         bind!!.searchResultLayout.visibility = View.VISIBLE
     }
 
-    private fun isQueryValid(query: String): Boolean {
-        return query != "" && query.trim { it <= ' ' }.length > 2
-    }
+    private fun isQueryValid(query: String): Boolean = query != "" && query.trim { it <= ' ' }.length > 2
 
     private fun inputFocus() {
         bind!!.searchView.show()
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -299,9 +320,11 @@ class SearchFragment : Fragment(), ClickCallback {
 
     override fun onMediaClick(bundle: Bundle) {
         MediaManager.startQueue(
-            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
-                Constants.TRACKS_OBJECT
-            ), bundle.getInt(Constants.ITEM_POSITION)
+            mediaBrowserListenableFuture,
+            bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT,
+            ),
+            bundle.getInt(Constants.ITEM_POSITION),
         )
         activity!!.setBottomSheetInPeek(true)
     }

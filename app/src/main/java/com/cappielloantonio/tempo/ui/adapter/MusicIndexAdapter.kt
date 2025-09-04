@@ -19,57 +19,70 @@ import java.util.Locale
 import java.util.Objects
 
 @UnstableApi
-class MusicIndexAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<MusicIndexAdapter.ViewHolder?>(), BubbleTextGetter {
+class MusicIndexAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<MusicIndexAdapter.ViewHolder?>(),
+    BubbleTextGetter {
     private var artists: MutableList<Artist>?
 
     init {
         this.artists = mutableListOf<Artist?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemLibraryMusicIndexBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemLibraryMusicIndexBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return MusicIndexAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val artist = artists!!.get(position)
 
         holder.item.musicIndexTitleTextView.text = artist.name
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            artist.name,
-            CustomGlideRequest.ResourceType.Directory
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                artist.name,
+                CustomGlideRequest.ResourceType.Directory,
+            ).build()
             .into(holder.item.musicIndexCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return artists!!.size
-    }
+    override fun getItemCount(): Int = artists!!.size
 
     fun setItems(artists: MutableList<Artist>?) {
         this.artists = artists
         notifyDataSetChanged()
     }
 
-    override fun getTextToShowInBubble(pos: Int): String? {
-        return if (artists != null && !artists!!.isEmpty()) Objects.requireNonNull<String?>(
-            artists!!.get(pos).name!!.uppercase(
-                Locale.getDefault()
-            )
-        ).get(0).toString() else null
-    }
+    override fun getTextToShowInBubble(pos: Int): String? =
+        if (artists != null && !artists!!.isEmpty()) {
+            Objects
+                .requireNonNull<String?>(
+                    artists!!.get(pos).name!!.uppercase(
+                        Locale.getDefault(),
+                    ),
+                ).get(0)
+                .toString()
+        } else {
+            null
+        }
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryMusicIndexBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryMusicIndexBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.musicIndexTitleTextView.setSelected(true)
@@ -82,7 +95,7 @@ class MusicIndexAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putString(
                 Constants.MUSIC_DIRECTORY_ID,
-                artists!!.get(getBindingAdapterPosition()).id
+                artists!!.get(getBindingAdapterPosition()).id,
             )
             click.onMusicIndexClick(bundle)
         }

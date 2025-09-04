@@ -15,19 +15,24 @@ class OpenRepository {
         getSubsonicClientInstance(false)
             .getOpenClient()
             .getLyricsBySongId(id)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.lyricsList != null) {
-                        lyricsList.value = response.body()!!.subsonicResponse.lyricsList
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.lyricsList != null) {
+                            lyricsList.value = response.body()!!.subsonicResponse.lyricsList
+                        }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return lyricsList
     }

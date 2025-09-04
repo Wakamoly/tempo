@@ -37,7 +37,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @OptIn(markerClass = UnstableApi::class)
-class AlbumListPageFragment : Fragment(), ClickCallback {
+class AlbumListPageFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentAlbumListPageBinding? = null
 
     private var activity: MainActivity? = null
@@ -52,7 +54,7 @@ class AlbumListPageFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -108,21 +110,28 @@ class AlbumListPageFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.albumInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.album_list_page_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.albumInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.album_list_page_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -130,50 +139,67 @@ class AlbumListPageFragment : Fragment(), ClickCallback {
         bind!!.albumListRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
         bind!!.albumListRecyclerView.setHasFixedSize(true)
 
-        albumHorizontalAdapter = AlbumHorizontalAdapter(
-            this,
-            (albumListPageViewModel!!.title == Constants.ALBUM_DOWNLOADED || albumListPageViewModel!!.title == Constants.ALBUM_FROM_ARTIST)
-        )
+        albumHorizontalAdapter =
+            AlbumHorizontalAdapter(
+                this,
+                (
+                    albumListPageViewModel!!.title == Constants.ALBUM_DOWNLOADED ||
+                        albumListPageViewModel!!.title == Constants.ALBUM_FROM_ARTIST
+                ),
+            )
 
         bind!!.albumListRecyclerView.setAdapter(albumHorizontalAdapter)
-        albumListPageViewModel!!.getAlbumList(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<AlbumID3?>? ->
-                albumHorizontalAdapter!!.setItems(albums)
-                setAlbumListPageSubtitle(albums!!)
-                setAlbumListPageSorter()
-            })
-
-        bind!!.albumListRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
-
-        bind!!.albumListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_horizontal_album_popup_menu
+        albumListPageViewModel!!
+            .getAlbumList(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { albums: MutableList<AlbumID3?>? ->
+                    albumHorizontalAdapter!!.setItems(albums)
+                    setAlbumListPageSubtitle(albums!!)
+                    setAlbumListPageSorter()
+                },
             )
-        })
+
+        bind!!.albumListRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
+
+        bind!!.albumListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_horizontal_album_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.artist_list_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                albumHorizontalAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    albumHorizontalAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -184,49 +210,62 @@ class AlbumListPageFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_horizontal_album_sort_name) {
-                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_NAME)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_most_recently_starred) {
-                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_MOST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_least_recently_starred) {
-                albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_LEAST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_horizontal_album_sort_name) {
+                    albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_NAME)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_most_recently_starred) {
+                    albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_MOST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_horizontal_album_sort_least_recently_starred) {
+                    albumHorizontalAdapter!!.sort(Constants.ALBUM_ORDER_BY_LEAST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }
 
     private fun setAlbumListPageSubtitle(albums: MutableList<AlbumID3?>) {
         when (albumListPageViewModel!!.title) {
-            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED -> bind!!.pageSubtitleLabel.text =
-                if (albums.size < albumListPageViewModel!!.maxNumber) getString(
-                    R.string.generic_list_page_count,
-                    albums.size
-                ) else getString(
-                    R.string.generic_list_page_count_unknown,
-                    albumListPageViewModel!!.maxNumber
-                )
+            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED ->
+                bind!!.pageSubtitleLabel.text =
+                    if (albums.size < albumListPageViewModel!!.maxNumber) {
+                        getString(
+                            R.string.generic_list_page_count,
+                            albums.size,
+                        )
+                    } else {
+                        getString(
+                            R.string.generic_list_page_count_unknown,
+                            albumListPageViewModel!!.maxNumber,
+                        )
+                    }
 
-            Constants.ALBUM_STARRED -> bind!!.pageSubtitleLabel.text = getString(
-                R.string.generic_list_page_count,
-                albums.size
-            )
+            Constants.ALBUM_STARRED ->
+                bind!!.pageSubtitleLabel.text =
+                    getString(
+                        R.string.generic_list_page_count,
+                        albums.size,
+                    )
         }
     }
 
     private fun setAlbumListPageSorter() {
         when (albumListPageViewModel!!.title) {
-            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED -> bind!!.albumListSortImageView.visibility =
-                View.GONE
+            Constants.ALBUM_RECENTLY_PLAYED, Constants.ALBUM_MOST_PLAYED, Constants.ALBUM_RECENTLY_ADDED ->
+                bind!!.albumListSortImageView.visibility =
+                    View.GONE
 
             Constants.ALBUM_STARRED -> bind!!.albumListSortImageView.visibility = View.VISIBLE
         }

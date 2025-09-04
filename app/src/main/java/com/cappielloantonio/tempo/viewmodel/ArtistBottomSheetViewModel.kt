@@ -9,7 +9,9 @@ import com.cappielloantonio.tempo.subsonic.models.ArtistID3
 import com.cappielloantonio.tempo.util.NetworkUtil
 import java.util.Date
 
-class ArtistBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+class ArtistBottomSheetViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val artistRepository: ArtistRepository
     private val favoriteRepository: FavoriteRepository
 
@@ -20,9 +22,7 @@ class ArtistBottomSheetViewModel(application: Application) : AndroidViewModel(ap
         favoriteRepository = FavoriteRepository()
     }
 
-    fun getArtist(): ArtistID3 {
-        return artist!!
-    }
+    fun getArtist(): ArtistID3 = artist!!
 
     fun setArtist(artist: ArtistID3) {
         this.artist = artist
@@ -50,12 +50,17 @@ class ArtistBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     }
 
     private fun removeFavoriteOnline() {
-        favoriteRepository.unstar(null, null, artist!!.id, object : StarCallback {
-            override fun onError() {
-                // artist.setStarred(new Date());
-                favoriteRepository.starLater(null, null, artist!!.id, false)
-            }
-        })
+        favoriteRepository.unstar(
+            null,
+            null,
+            artist!!.id,
+            object : StarCallback {
+                override fun onError() {
+                    // artist.setStarred(new Date());
+                    favoriteRepository.starLater(null, null, artist!!.id, false)
+                }
+            },
+        )
 
         artist!!.starred = null
     }
@@ -66,12 +71,17 @@ class ArtistBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     }
 
     private fun setFavoriteOnline() {
-        favoriteRepository.star(null, null, artist!!.id, object : StarCallback {
-            override fun onError() {
-                // artist.setStarred(null);
-                favoriteRepository.starLater(null, null, artist!!.id, true)
-            }
-        })
+        favoriteRepository.star(
+            null,
+            null,
+            artist!!.id,
+            object : StarCallback {
+                override fun onError() {
+                    // artist.setStarred(null);
+                    favoriteRepository.starLater(null, null, artist!!.id, true)
+                }
+            },
+        )
 
         artist!!.starred = Date()
     }

@@ -17,55 +17,63 @@ import com.cappielloantonio.tempo.util.UIUtil
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class ShareHorizontalAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<ShareHorizontalAdapter.ViewHolder?>() {
+class ShareHorizontalAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<ShareHorizontalAdapter.ViewHolder?>() {
     private var shares: MutableList<Share>
 
     init {
         this.shares = mutableListOf<Share?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHorizontalShareBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHorizontalShareBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return ShareHorizontalAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val share = shares.get(position)
 
         holder.item.shareTitleTextView.text = share.description
-        holder.item.shareSubtitleTextView.text = holder.itemView.context
-            .getString(R.string.share_subtitle_item, UIUtil.getReadableDate(share.expires))
+        holder.item.shareSubtitleTextView.text =
+            holder.itemView.context
+                .getString(R.string.share_subtitle_item, UIUtil.getReadableDate(share.expires))
 
-        if (share.entries != null && !share.entries!!.isEmpty()) CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            share.entries!!.get(0).coverArtId,
-            CustomGlideRequest.ResourceType.Album
-        )
-            .build()
-            .into(holder.item.shareCoverImageView)
+        if (share.entries != null && !share.entries!!.isEmpty()) {
+            CustomGlideRequest.Builder.Companion
+                .from(
+                    holder.itemView.context,
+                    share.entries!!.get(0).coverArtId,
+                    CustomGlideRequest.ResourceType.Album,
+                ).build()
+                .into(holder.item.shareCoverImageView)
+        }
     }
 
-    override fun getItemCount(): Int {
-        return shares.size
-    }
+    override fun getItemCount(): Int = shares.size
 
     fun setItems(shares: MutableList<Share>) {
         this.shares = shares
         notifyDataSetChanged()
     }
 
-    fun getItem(id: Int): Share? {
-        return shares.get(id)
-    }
+    fun getItem(id: Int): Share? = shares.get(id)
 
-    inner class ViewHolder internal constructor(var item: ItemHorizontalShareBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHorizontalShareBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.shareTitleTextView.setSelected(true)

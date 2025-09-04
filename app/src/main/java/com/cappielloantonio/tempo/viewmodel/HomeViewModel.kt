@@ -31,7 +31,9 @@ import java.util.Date
 import java.util.stream.Collectors
 import kotlin.math.min
 
-class HomeViewModel(application: Application) : AndroidViewModel(application) {
+class HomeViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val songRepository: SongRepository
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
@@ -85,7 +87,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (dicoverSongSample.getValue() == null) {
             songRepository.getRandomSample(10, null, null).observe(
                 owner,
-                Observer { value: MutableList<Child?>? -> dicoverSongSample.postValue(value) })
+                Observer { value: MutableList<Child?>? -> dicoverSongSample.postValue(value) },
+            )
         }
 
         return dicoverSongSample
@@ -106,7 +109,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         chronologyRepository.getChronology(server, start, end).observe(
             owner,
-            Observer { value: MutableList<Chronology?>? -> thisGridTopSong.postValue(value) })
+            Observer { value: MutableList<Chronology?>? -> thisGridTopSong.postValue(value) },
+        )
         return thisGridTopSong
     }
 
@@ -114,15 +118,19 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (newReleasedAlbum.getValue() == null) {
             val currentYear = Calendar.getInstance().get(Calendar.YEAR)
 
-            albumRepository.getAlbums("byYear", 500, currentYear, currentYear)
-                .observe(owner, Observer { albums: MutableList<AlbumID3?>? ->
-                    if (albums != null) {
-                        albums.sort(
-                            Comparator.comparing<AlbumID3?, Date?>(AlbumID3::created).reversed()
-                        )
-                        newReleasedAlbum.postValue(albums.subList(0, min(20, albums.size)))
-                    }
-                })
+            albumRepository
+                .getAlbums("byYear", 500, currentYear, currentYear)
+                .observe(
+                    owner,
+                    Observer { albums: MutableList<AlbumID3?>? ->
+                        if (albums != null) {
+                            albums.sort(
+                                Comparator.comparing<AlbumID3?, Date?>(AlbumID3::created).reversed(),
+                            )
+                            newReleasedAlbum.postValue(albums.subList(0, min(20, albums.size)))
+                        }
+                    },
+                )
         }
 
         return newReleasedAlbum
@@ -132,7 +140,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (starredTracksSample.getValue() == null) {
             songRepository.getStarredSongs(true, 10).observe(
                 owner,
-                Observer { value: MutableList<Child?>? -> starredTracksSample.postValue(value) })
+                Observer { value: MutableList<Child?>? -> starredTracksSample.postValue(value) },
+            )
         }
 
         return starredTracksSample
@@ -142,7 +151,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (starredArtistsSample.getValue() == null) {
             artistRepository.getStarredArtists(true, 10).observe(
                 owner,
-                Observer { value: MutableList<ArtistID3?>? -> starredArtistsSample.postValue(value) })
+                Observer { value: MutableList<ArtistID3?>? -> starredArtistsSample.postValue(value) },
+            )
         }
 
         return starredArtistsSample
@@ -152,7 +162,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (bestOfArtists.getValue() == null) {
             artistRepository.getStarredArtists(true, 20).observe(
                 owner,
-                Observer { value: MutableList<ArtistID3?>? -> bestOfArtists.postValue(value) })
+                Observer { value: MutableList<ArtistID3?>? -> bestOfArtists.postValue(value) },
+            )
         }
 
         return bestOfArtists
@@ -162,7 +173,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (starredTracks.getValue() == null) {
             songRepository.getStarredSongs(true, 20).observe(
                 owner,
-                Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) })
+                Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) },
+            )
         }
 
         return starredTracks
@@ -172,7 +184,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (starredAlbums.getValue() == null) {
             albumRepository.getStarredAlbums(true, 20).observe(
                 owner,
-                Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) })
+                Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) },
+            )
         }
 
         return starredAlbums
@@ -185,7 +198,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (starredArtists.getValue() == null) {
             artistRepository.getStarredArtists(true, 20).observe(
                 owner,
-                Observer { value: MutableList<ArtistID3?>? -> starredArtists.postValue(value) })
+                Observer { value: MutableList<ArtistID3?>? -> starredArtists.postValue(value) },
+            )
         }
 
         return starredArtists
@@ -193,7 +207,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     fun getYearList(owner: LifecycleOwner): LiveData<MutableList<Int?>?> {
         if (years.getValue() == null) {
-            albumRepository.getDecades()
+            albumRepository
+                .getDecades()
                 .observe(owner, Observer { value: MutableList<Int?>? -> years.postValue(value) })
         }
 
@@ -204,7 +219,8 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
         if (mostPlayedAlbumSample.getValue() == null) {
             albumRepository.getAlbums("frequent", 20, null, null).observe(
                 owner,
-                Observer { value: MutableList<AlbumID3?>? -> mostPlayedAlbumSample.postValue(value) })
+                Observer { value: MutableList<AlbumID3?>? -> mostPlayedAlbumSample.postValue(value) },
+            )
         }
 
         return mostPlayedAlbumSample
@@ -216,9 +232,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 owner,
                 Observer { value: MutableList<AlbumID3?>? ->
                     recentlyAddedAlbumSample.postValue(
-                        value
+                        value,
                     )
-                })
+                },
+            )
         }
 
         return recentlyAddedAlbumSample
@@ -230,43 +247,53 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
                 owner,
                 Observer { value: MutableList<AlbumID3?>? ->
                     recentlyPlayedAlbumSample.postValue(
-                        value
+                        value,
                     )
-                })
+                },
+            )
         }
 
         return recentlyPlayedAlbumSample
     }
 
-    fun getMediaInstantMix(owner: LifecycleOwner, media: Child): LiveData<MutableList<Child?>?> {
+    fun getMediaInstantMix(
+        owner: LifecycleOwner,
+        media: Child,
+    ): LiveData<MutableList<Child?>?> {
         mediaInstantMix.value = mutableListOf<Child?>()
 
         songRepository.getInstantMix(media.id, 20).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> mediaInstantMix.postValue(value) })
+            Observer { value: MutableList<Child?>? -> mediaInstantMix.postValue(value) },
+        )
 
         return mediaInstantMix
     }
 
     fun getArtistInstantMix(
         owner: LifecycleOwner,
-        artist: ArtistID3
+        artist: ArtistID3,
     ): LiveData<MutableList<Child?>?> {
         artistInstantMix.value = mutableListOf<Child?>()
 
         artistRepository.getTopSongs(artist.name, 10).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> artistInstantMix.postValue(value) })
+            Observer { value: MutableList<Child?>? -> artistInstantMix.postValue(value) },
+        )
 
         return artistInstantMix
     }
 
-    fun getArtistBestOf(owner: LifecycleOwner, artist: ArtistID3): LiveData<MutableList<Child?>?> {
+    fun getArtistBestOf(
+        owner: LifecycleOwner,
+        artist: ArtistID3,
+    ): LiveData<MutableList<Child?>?> {
         artistBestOf.value = mutableListOf<Child?>()
 
         artistRepository.getTopSongs(artist.name, 10).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> artistBestOf.postValue(value) })
+            Observer { value: MutableList<Child?>? -> artistBestOf.postValue(value) },
+        )
 
         return artistBestOf
     }
@@ -274,29 +301,40 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     fun getPinnedPlaylists(owner: LifecycleOwner): LiveData<MutableList<Playlist?>?> {
         pinnedPlaylists.value = mutableListOf<Playlist?>()
 
-        playlistRepository.getPlaylists(false, -1)
-            .observe(owner, Observer { remotes: MutableList<Playlist?>? ->
-                playlistRepository.getPinnedPlaylists()
-                    .observe(owner, Observer { locals: MutableList<Playlist?>? ->
-                        if (remotes != null && locals != null) {
-                            val toReturn = remotes.stream()
-                                .filter { remote: Playlist? ->
-                                    locals.stream()
-                                        .anyMatch { local: Playlist? -> local!!.id == remote!!.id }
-                                }
-                                .collect(Collectors.toList())
+        playlistRepository
+            .getPlaylists(false, -1)
+            .observe(
+                owner,
+                Observer { remotes: MutableList<Playlist?>? ->
+                    playlistRepository
+                        .getPinnedPlaylists()
+                        .observe(
+                            owner,
+                            Observer { locals: MutableList<Playlist?>? ->
+                                if (remotes != null && locals != null) {
+                                    val toReturn =
+                                        remotes
+                                            .stream()
+                                            .filter { remote: Playlist? ->
+                                                locals
+                                                    .stream()
+                                                    .anyMatch { local: Playlist? -> local!!.id == remote!!.id }
+                                            }.collect(Collectors.toList())
 
-                            pinnedPlaylists.value = toReturn
-                        }
-                    })
-            })
+                                    pinnedPlaylists.value = toReturn
+                                }
+                            },
+                        )
+                },
+            )
 
         return pinnedPlaylists
     }
 
     fun getShares(owner: LifecycleOwner): LiveData<MutableList<Share?>?> {
         if (shares.getValue() == null) {
-            sharingRepository.getShares()
+            sharingRepository
+                .getShares()
                 .observe(owner, Observer { value: MutableList<Share?>? -> shares.postValue(value) })
         }
 
@@ -306,7 +344,10 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
     val allStarredTracks: LiveData<MutableList<Child?>?>?
         get() = songRepository.getStarredSongs(false, -1)
 
-    fun changeChronologyPeriod(owner: LifecycleOwner, period: Int) {
+    fun changeChronologyPeriod(
+        owner: LifecycleOwner,
+        period: Int,
+    ) {
         val cal = Calendar.getInstance()
         val server = getServerId()
         val currentWeek = cal.get(Calendar.WEEK_OF_YEAR)
@@ -330,91 +371,104 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
         chronologyRepository.getChronology(server, start, end).observe(
             owner,
-            Observer { value: MutableList<Chronology?>? -> thisGridTopSong.postValue(value) })
+            Observer { value: MutableList<Chronology?>? -> thisGridTopSong.postValue(value) },
+        )
     }
 
     fun refreshDiscoverySongSample(owner: LifecycleOwner) {
         songRepository.getRandomSample(10, null, null).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> dicoverSongSample.postValue(value) })
+            Observer { value: MutableList<Child?>? -> dicoverSongSample.postValue(value) },
+        )
     }
 
     fun refreshSimilarSongSample(owner: LifecycleOwner) {
         songRepository.getStarredSongs(true, 10).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> starredTracksSample.postValue(value) })
+            Observer { value: MutableList<Child?>? -> starredTracksSample.postValue(value) },
+        )
     }
 
     fun refreshRadioArtistSample(owner: LifecycleOwner) {
         artistRepository.getStarredArtists(true, 10).observe(
             owner,
-            Observer { value: MutableList<ArtistID3?>? -> starredArtistsSample.postValue(value) })
+            Observer { value: MutableList<ArtistID3?>? -> starredArtistsSample.postValue(value) },
+        )
     }
 
     fun refreshBestOfArtist(owner: LifecycleOwner) {
         artistRepository.getStarredArtists(true, 20).observe(
             owner,
-            Observer { value: MutableList<ArtistID3?>? -> bestOfArtists.postValue(value) })
+            Observer { value: MutableList<ArtistID3?>? -> bestOfArtists.postValue(value) },
+        )
     }
 
     fun refreshStarredTracks(owner: LifecycleOwner) {
         songRepository.getStarredSongs(true, 20).observe(
             owner,
-            Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) })
+            Observer { value: MutableList<Child?>? -> starredTracks.postValue(value) },
+        )
     }
 
     fun refreshStarredAlbums(owner: LifecycleOwner) {
         albumRepository.getStarredAlbums(true, 20).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) },
+        )
     }
 
     fun refreshStarredArtists(owner: LifecycleOwner) {
         artistRepository.getStarredArtists(true, 20).observe(
             owner,
-            Observer { value: MutableList<ArtistID3?>? -> starredArtists.postValue(value) })
+            Observer { value: MutableList<ArtistID3?>? -> starredArtists.postValue(value) },
+        )
     }
 
     fun refreshMostPlayedAlbums(owner: LifecycleOwner) {
         albumRepository.getAlbums("frequent", 20, null, null).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> mostPlayedAlbumSample.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> mostPlayedAlbumSample.postValue(value) },
+        )
     }
 
     fun refreshMostRecentlyAddedAlbums(owner: LifecycleOwner) {
         albumRepository.getAlbums("newest", 20, null, null).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> recentlyAddedAlbumSample.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> recentlyAddedAlbumSample.postValue(value) },
+        )
     }
 
     fun refreshRecentlyPlayedAlbumList(owner: LifecycleOwner) {
         albumRepository.getAlbums("recent", 20, null, null).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> recentlyPlayedAlbumSample.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> recentlyPlayedAlbumSample.postValue(value) },
+        )
     }
 
     fun refreshShares(owner: LifecycleOwner) {
         sharingRepository.getShares().observe(
             owner,
-            Observer { value: MutableList<Share?>? -> this.shares.postValue(value) })
+            Observer { value: MutableList<Share?>? -> this.shares.postValue(value) },
+        )
     }
 
     private fun setHomeSectorList() {
         if (getHomeSectorList() != null && getHomeSectorList() != "null") {
-            this.homeSectorList = Gson().fromJson<MutableList<HomeSector?>?>(
-                getHomeSectorList(),
-                object : TypeToken<MutableList<HomeSector?>?>() {
-                }.type
-            )
+            this.homeSectorList =
+                Gson().fromJson<MutableList<HomeSector?>?>(
+                    getHomeSectorList(),
+                    object : TypeToken<MutableList<HomeSector?>?>() {
+                    }.type,
+                )
         }
     }
 
-    fun checkHomeSectorVisibility(sectorId: String?): Boolean {
-        return this.homeSectorList != null && homeSectorList!!.stream()
+    fun checkHomeSectorVisibility(sectorId: String?): Boolean =
+        this.homeSectorList != null && homeSectorList!!
+            .stream()
             .filter { sector: HomeSector? -> sector!!.id == sectorId }
             .findAny()
             .orElse(null) == null
-    }
 
     fun setOfflineFavorite() {
         val favorites = this.favorites
@@ -444,7 +498,7 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun getFavoritesToDelete(
         favorites: java.util.ArrayList<Favorite>,
-        favoritesToSave: java.util.ArrayList<Favorite>
+        favoritesToSave: java.util.ArrayList<Favorite>,
     ): java.util.ArrayList<Favorite?> {
         val favoritesToDelete = java.util.ArrayList<Favorite?>()
 
@@ -475,45 +529,75 @@ class HomeViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun favoriteToStar(favorite: Favorite) {
         if (favorite.songId != null) {
-            favoriteRepository.star(favorite.songId, null, null, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.star(
+                favorite.songId,
+                null,
+                null,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         } else if (favorite.albumId != null) {
-            favoriteRepository.star(null, favorite.albumId, null, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.star(
+                null,
+                favorite.albumId,
+                null,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         } else if (favorite.artistId != null) {
-            favoriteRepository.star(null, null, favorite.artistId, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.star(
+                null,
+                null,
+                favorite.artistId,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         }
     }
 
     private fun favoriteToUnstar(favorite: Favorite) {
         if (favorite.songId != null) {
-            favoriteRepository.unstar(favorite.songId, null, null, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.unstar(
+                favorite.songId,
+                null,
+                null,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         } else if (favorite.albumId != null) {
-            favoriteRepository.unstar(null, favorite.albumId, null, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.unstar(
+                null,
+                favorite.albumId,
+                null,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         } else if (favorite.artistId != null) {
-            favoriteRepository.unstar(null, null, favorite.artistId, object : StarCallback {
-                override fun onSuccess() {
-                    favoriteRepository.delete(favorite)
-                }
-            })
+            favoriteRepository.unstar(
+                null,
+                null,
+                favorite.artistId,
+                object : StarCallback {
+                    override fun onSuccess() {
+                        favoriteRepository.delete(favorite)
+                    }
+                },
+            )
         }
     }
 

@@ -34,7 +34,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @UnstableApi
-class ArtistListPageFragment : Fragment(), ClickCallback {
+class ArtistListPageFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentArtistListPageBinding? = null
 
     private var activity: MainActivity? = null
@@ -50,15 +52,16 @@ class ArtistListPageFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
         bind = FragmentArtistListPageBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
-        artistListPageViewModel = ViewModelProvider(requireActivity()).get<ArtistListPageViewModel>(
-            ArtistListPageViewModel::class.java
-        )
+        artistListPageViewModel =
+            ViewModelProvider(requireActivity()).get<ArtistListPageViewModel>(
+                ArtistListPageViewModel::class.java,
+            )
 
         init()
         initAppBar()
@@ -90,21 +93,28 @@ class ArtistListPageFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.artistInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.artist_list_page_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.artistInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.artist_list_page_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -114,44 +124,57 @@ class ArtistListPageFragment : Fragment(), ClickCallback {
 
         artistHorizontalAdapter = ArtistHorizontalAdapter(this)
         bind!!.artistListRecyclerView.setAdapter(artistHorizontalAdapter)
-        artistListPageViewModel!!.getArtistList(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { artists: MutableList<ArtistID3?>? ->
-                artistHorizontalAdapter!!.setItems(artists)
-                setArtistListPageSubtitle(artists!!)
-                setArtistListPageSorter()
-            })
-
-        bind!!.artistListRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
-
-        bind!!.artistListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_horizontal_artist_popup_menu
+        artistListPageViewModel!!
+            .getArtistList(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { artists: MutableList<ArtistID3?>? ->
+                    artistHorizontalAdapter!!.setItems(artists)
+                    setArtistListPageSubtitle(artists!!)
+                    setArtistListPageSorter()
+                },
             )
-        })
+
+        bind!!.artistListRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
+
+        bind!!.artistListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_horizontal_artist_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
 
         val searchView = searchItem.actionView as SearchView?
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                searchView.clearFocus()
-                return false
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    searchView.clearFocus()
+                    return false
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                artistHorizontalAdapter!!.filter.filter(newText)
-                return false
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    artistHorizontalAdapter!!.filter.filter(newText)
+                    return false
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -162,38 +185,45 @@ class ArtistListPageFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_horizontal_artist_sort_name) {
-                artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_NAME)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_horizontal_artist_sort_most_recently_starred) {
-                artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_MOST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_horizontal_artist_sort_least_recently_starred) {
-                artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_LEAST_RECENTLY_STARRED)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_horizontal_artist_sort_name) {
+                    artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_NAME)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_horizontal_artist_sort_most_recently_starred) {
+                    artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_MOST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_horizontal_artist_sort_least_recently_starred) {
+                    artistHorizontalAdapter!!.sort(Constants.ARTIST_ORDER_BY_LEAST_RECENTLY_STARRED)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }
 
     private fun setArtistListPageSubtitle(artists: MutableList<ArtistID3?>) {
         when (artistListPageViewModel!!.title) {
-            Constants.ARTIST_STARRED, Constants.ARTIST_DOWNLOADED -> bind!!.pageSubtitleLabel.text =
-                getString(R.string.generic_list_page_count, artists.size)
+            Constants.ARTIST_STARRED, Constants.ARTIST_DOWNLOADED ->
+                bind!!.pageSubtitleLabel.text =
+                    getString(R.string.generic_list_page_count, artists.size)
         }
     }
 
     private fun setArtistListPageSorter() {
         when (artistListPageViewModel!!.title) {
-            Constants.ARTIST_STARRED, Constants.ARTIST_DOWNLOADED -> bind!!.artistListSortImageView.visibility =
-                View.VISIBLE
+            Constants.ARTIST_STARRED, Constants.ARTIST_DOWNLOADED ->
+                bind!!.artistListSortImageView.visibility =
+                    View.VISIBLE
         }
     }
 

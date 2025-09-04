@@ -34,7 +34,10 @@ import com.google.common.util.concurrent.ListenableFuture
 import java.util.stream.Collectors
 
 @UnstableApi
-class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
+class HomeTabPodcastFragment :
+    Fragment(),
+    ClickCallback,
+    PodcastCallback {
     private var bind: FragmentHomeTabPodcastBinding? = null
     private var activity: MainActivity? = null
     private var podcastViewModel: PodcastViewModel? = null
@@ -47,7 +50,7 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
 
@@ -59,7 +62,10 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         init()
@@ -85,16 +91,20 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
     }
 
     private fun init() {
-        bind!!.podcastChannelsPreTextView.setOnClickListener(View.OnClickListener { v: View? ->
-            val dialog = PodcastChannelEditorDialog(this)
-            dialog.show(activity!!.supportFragmentManager, null)
-        })
+        bind!!.podcastChannelsPreTextView.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                val dialog = PodcastChannelEditorDialog(this)
+                dialog.show(activity!!.supportFragmentManager, null)
+            },
+        )
 
-        bind!!.podcastChannelsTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            activity!!.navController.navigate(
-                R.id.action_homeFragment_to_podcastChannelCatalogueFragment
-            )
-        })
+        bind!!.podcastChannelsTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                activity!!.navController.navigate(
+                    R.id.action_homeFragment_to_podcastChannelCatalogueFragment,
+                )
+            },
+        )
         bind!!.hideSectionButton.setOnClickListener(View.OnClickListener { v: View? -> setPodcastSectionHidden() })
     }
 
@@ -106,10 +116,15 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
                     if (bind != null) bind!!.homePodcastChannelsSector.visibility = View.GONE
                     if (bind != null) bind!!.emptyPodcastLayout.visibility = View.GONE
                 } else {
-                    if (bind != null) bind!!.homePodcastChannelsSector.visibility = if (!podcastChannels.isEmpty()) View.VISIBLE else View.GONE
+                    if (bind !=
+                        null
+                    ) {
+                        bind!!.homePodcastChannelsSector.visibility = if (!podcastChannels.isEmpty()) View.VISIBLE else View.GONE
+                    }
                     if (bind != null) bind!!.emptyPodcastLayout.visibility = if (podcastChannels.isEmpty()) View.VISIBLE else View.GONE
                 }
-            })
+            },
+        )
     }
 
     private fun initPodcastChannelsView() {
@@ -123,19 +138,24 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
                 if (podcastChannels == null) {
                     if (bind != null) bind!!.homePodcastChannelsSector.visibility = View.GONE
                 } else {
-                    if (bind != null) bind!!.homePodcastChannelsSector.visibility = if (!podcastChannels.isEmpty()) View.VISIBLE else View.GONE
+                    if (bind !=
+                        null
+                    ) {
+                        bind!!.homePodcastChannelsSector.visibility = if (!podcastChannels.isEmpty()) View.VISIBLE else View.GONE
+                    }
 
                     podcastChannelHorizontalAdapter!!.setItems(podcastChannels)
                 }
-            })
+            },
+        )
     }
 
     private fun initNewestPodcastsView() {
         bind!!.newestPodcastsRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
         bind!!.newestPodcastsRecyclerView.addItemDecoration(
             UIUtil.getDividerItemDecoration(
-                requireContext()
-            )
+                requireContext(),
+            ),
         )
 
         podcastEpisodeAdapter = PodcastEpisodeAdapter(this)
@@ -146,26 +166,35 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
                 if (podcastEpisodes == null) {
                     if (bind != null) bind!!.homeNewestPodcastsSector.visibility = View.GONE
                 } else {
-                    if (bind != null) bind!!.homeNewestPodcastsSector.visibility = if (!podcastEpisodes.isEmpty()) View.VISIBLE else View.GONE
+                    if (bind !=
+                        null
+                    ) {
+                        bind!!.homeNewestPodcastsSector.visibility = if (!podcastEpisodes.isEmpty()) View.VISIBLE else View.GONE
+                    }
 
                     podcastEpisodeAdapter!!.setItems(
-                        podcastEpisodes.stream()
+                        podcastEpisodes
+                            .stream()
                             .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
                             .collect(
-                                Collectors.toList()
-                            ))
+                                Collectors.toList(),
+                            ),
+                    )
                 }
-            })
+            },
+        )
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -174,9 +203,10 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
 
     override fun onPodcastEpisodeClick(bundle: Bundle) {
         MediaManager.startPodcast(
-            mediaBrowserListenableFuture, bundle.getParcelable<PodcastEpisode?>(
-                Constants.PODCAST_OBJECT
-            )
+            mediaBrowserListenableFuture,
+            bundle.getParcelable<PodcastEpisode?>(
+                Constants.PODCAST_OBJECT,
+            ),
         )
         activity!!.setBottomSheetInPeek(true)
     }
@@ -194,14 +224,21 @@ class HomeTabPodcastFragment : Fragment(), ClickCallback, PodcastCallback {
     }
 
     override fun onDismiss() {
-        Handler().postDelayed(Runnable {
-            if (podcastViewModel != null) podcastViewModel!!.refreshPodcastChannels(
-                getViewLifecycleOwner()
-            )
-            if (podcastViewModel != null) podcastViewModel!!.refreshNewestPodcastEpisodes(
-                getViewLifecycleOwner()
-            )
-        }, 1000)
+        Handler().postDelayed(
+            Runnable {
+                if (podcastViewModel != null) {
+                    podcastViewModel!!.refreshPodcastChannels(
+                        getViewLifecycleOwner(),
+                    )
+                }
+                if (podcastViewModel != null) {
+                    podcastViewModel!!.refreshNewestPodcastEpisodes(
+                        getViewLifecycleOwner(),
+                    )
+                }
+            },
+            1000,
+        )
     }
 
     companion object {

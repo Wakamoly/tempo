@@ -29,7 +29,10 @@ import com.cappielloantonio.tempo.viewmodel.RadioViewModel
 import com.google.common.util.concurrent.ListenableFuture
 
 @UnstableApi
-class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
+class HomeTabRadioFragment :
+    Fragment(),
+    ClickCallback,
+    RadioCallback {
     private var bind: FragmentHomeTabRadioBinding? = null
     private var activity: MainActivity? = null
     private var radioViewModel: RadioViewModel? = null
@@ -41,7 +44,7 @@ class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
 
@@ -53,7 +56,10 @@ class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         init()
@@ -77,15 +83,19 @@ class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
     }
 
     private fun init() {
-        bind!!.internetRadioStationPreTextView.setOnClickListener(View.OnClickListener { v: View? ->
-            val dialog = RadioEditorDialog(this)
-            dialog.show(activity!!.supportFragmentManager, null)
-        })
+        bind!!.internetRadioStationPreTextView.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                val dialog = RadioEditorDialog(this)
+                dialog.show(activity!!.supportFragmentManager, null)
+            },
+        )
 
-        bind!!.internetRadioStationTitleTextView.setOnLongClickListener(OnLongClickListener { v: View? ->
-            radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
-            true
-        })
+        bind!!.internetRadioStationTitleTextView.setOnLongClickListener(
+            OnLongClickListener { v: View? ->
+                radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
+                true
+            },
+        )
 
         bind!!.hideSectionButton.setOnClickListener(View.OnClickListener { v: View? -> setRadioSectionHidden() })
     }
@@ -103,22 +113,33 @@ class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
                     if (bind != null) bind!!.homeRadioStationSector.visibility = View.GONE
                     if (bind != null) bind!!.emptyRadioStationLayout.visibility = View.GONE
                 } else {
-                    if (bind != null) bind!!.homeRadioStationSector.visibility = if (!internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
-                    if (bind != null) bind!!.emptyRadioStationLayout.visibility = if (internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
+                    if (bind !=
+                        null
+                    ) {
+                        bind!!.homeRadioStationSector.visibility = if (!internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
+                    }
+                    if (bind !=
+                        null
+                    ) {
+                        bind!!.emptyRadioStationLayout.visibility = if (internetRadioStations.isEmpty()) View.VISIBLE else View.GONE
+                    }
 
                     internetRadioStationAdapter!!.setItems(internetRadioStations)
                 }
-            })
+            },
+        )
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -127,29 +148,38 @@ class HomeTabRadioFragment : Fragment(), ClickCallback, RadioCallback {
 
     override fun onInternetRadioStationClick(bundle: Bundle) {
         MediaManager.startRadio(
-            mediaBrowserListenableFuture, bundle.getParcelable<InternetRadioStation?>(
-                Constants.INTERNET_RADIO_STATION_OBJECT
-            )
+            mediaBrowserListenableFuture,
+            bundle.getParcelable<InternetRadioStation?>(
+                Constants.INTERNET_RADIO_STATION_OBJECT,
+            ),
         )
         activity!!.setBottomSheetInPeek(true)
     }
 
     override fun onInternetRadioStationLongClick(bundle: Bundle?) {
-        val dialog = RadioEditorDialog(object : RadioCallback {
-            override fun onDismiss() {
-                radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
-            }
-        })
+        val dialog =
+            RadioEditorDialog(
+                object : RadioCallback {
+                    override fun onDismiss() {
+                        radioViewModel!!.getInternetRadioStations(getViewLifecycleOwner())
+                    }
+                },
+            )
         dialog.setArguments(bundle)
         dialog.show(activity!!.supportFragmentManager, null)
     }
 
     override fun onDismiss() {
-        Handler().postDelayed(Runnable {
-            if (radioViewModel != null) radioViewModel!!.refreshInternetRadioStations(
-                getViewLifecycleOwner()
-            )
-        }, 1000)
+        Handler().postDelayed(
+            Runnable {
+                if (radioViewModel != null) {
+                    radioViewModel!!.refreshInternetRadioStations(
+                        getViewLifecycleOwner(),
+                    )
+                }
+            },
+            1000,
+        )
     }
 
     companion object {

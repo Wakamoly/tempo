@@ -12,7 +12,9 @@ import com.cappielloantonio.tempo.subsonic.models.AlbumID3
 import com.cappielloantonio.tempo.subsonic.models.Child
 import java.util.concurrent.CountDownLatch
 
-class StarredAlbumsSyncViewModel(application: Application) : AndroidViewModel(application) {
+class StarredAlbumsSyncViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val albumRepository: AlbumRepository
 
     private val starredAlbums = MutableLiveData<MutableList<AlbumID3?>?>(null)
@@ -25,67 +27,81 @@ class StarredAlbumsSyncViewModel(application: Application) : AndroidViewModel(ap
     fun getStarredAlbums(owner: LifecycleOwner): LiveData<MutableList<AlbumID3?>?> {
         albumRepository.getStarredAlbums(false, -1).observe(
             owner,
-            Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) })
+            Observer { value: MutableList<AlbumID3?>? -> starredAlbums.postValue(value) },
+        )
         return starredAlbums
     }
 
     val allStarredAlbumSongs: LiveData<MutableList<Child?>?>
         get() {
-            albumRepository.getStarredAlbums(false, -1).observeForever(object :
-                Observer<MutableList<AlbumID3?>?> {
-                override fun onChanged(albums: MutableList<AlbumID3>?) {
-                    if (albums != null && !albums.isEmpty()) {
-                        collectAllAlbumSongs(
-                            albums,
-                            AlbumSongsCallback { value: MutableList<Child?>? ->
-                                starredAlbumSongs.postValue(value)
-                            })
-                    } else {
-                        starredAlbumSongs.postValue(ArrayList<Child?>())
+            albumRepository.getStarredAlbums(false, -1).observeForever(
+                object :
+                    Observer<MutableList<AlbumID3?>?> {
+                    override fun onChanged(albums: MutableList<AlbumID3>?) {
+                        if (albums != null && !albums.isEmpty()) {
+                            collectAllAlbumSongs(
+                                albums,
+                                AlbumSongsCallback { value: MutableList<Child?>? ->
+                                    starredAlbumSongs.postValue(value)
+                                },
+                            )
+                        } else {
+                            starredAlbumSongs.postValue(ArrayList<Child?>())
+                        }
+                        albumRepository.getStarredAlbums(false, -1).removeObserver(this)
                     }
-                    albumRepository.getStarredAlbums(false, -1).removeObserver(this)
-                }
-            })
+                },
+            )
 
             return starredAlbumSongs
         }
 
     fun getStarredAlbumSongs(activity: Activity?): LiveData<MutableList<Child?>?> {
-        albumRepository.getStarredAlbums(false, -1)
-            .observe((activity as LifecycleOwner?)!!, Observer { albums: MutableList<AlbumID3>? ->
-                if (albums != null && !albums.isEmpty()) {
-                    collectAllAlbumSongs(
-                        albums,
-                        AlbumSongsCallback { value: MutableList<Child?>? ->
-                            starredAlbumSongs.postValue(value)
-                        })
-                } else {
-                    starredAlbumSongs.postValue(ArrayList<Child?>())
-                }
-            })
+        albumRepository
+            .getStarredAlbums(false, -1)
+            .observe(
+                (activity as LifecycleOwner?)!!,
+                Observer { albums: MutableList<AlbumID3>? ->
+                    if (albums != null && !albums.isEmpty()) {
+                        collectAllAlbumSongs(
+                            albums,
+                            AlbumSongsCallback { value: MutableList<Child?>? ->
+                                starredAlbumSongs.postValue(value)
+                            },
+                        )
+                    } else {
+                        starredAlbumSongs.postValue(ArrayList<Child?>())
+                    }
+                },
+            )
         return starredAlbumSongs
     }
 
-    private fun collectAllAlbumSongs(albums: MutableList<AlbumID3>, callback: AlbumSongsCallback) {
+    private fun collectAllAlbumSongs(
+        albums: MutableList<AlbumID3>,
+        callback: AlbumSongsCallback,
+    ) {
         val allSongs: MutableList<Child?> = ArrayList<Child?>()
         val latch = CountDownLatch(albums.size)
 
         for (album in albums) {
             val albumTracks: LiveData<MutableList<Child?>?> =
                 albumRepository.getAlbumTracks(album.id)
-            albumTracks.observeForever(object : Observer<MutableList<Child?>?> {
-                override fun onChanged(songs: MutableList<Child?>?) {
-                    if (songs != null) {
-                        allSongs.addAll(songs)
-                    }
-                    latch.countDown()
+            albumTracks.observeForever(
+                object : Observer<MutableList<Child?>?> {
+                    override fun onChanged(songs: MutableList<Child?>?) {
+                        if (songs != null) {
+                            allSongs.addAll(songs)
+                        }
+                        latch.countDown()
 
-                    if (latch.count == 0L) {
-                        callback.onSongsCollected(allSongs)
-                        albumTracks.removeObserver(this)
+                        if (latch.count == 0L) {
+                            callback.onSongsCollected(allSongs)
+                            albumTracks.removeObserver(this)
+                        }
                     }
-                }
-            })
+                },
+            )
         }
     }
 

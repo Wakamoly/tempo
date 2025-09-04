@@ -54,8 +54,10 @@ object DownloadUtil {
                 val cookieManager = CookieManager()
                 cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ORIGINAL_SERVER)
                 CookieHandler.setDefault(cookieManager)
-                field = DefaultHttpDataSource.Factory()
-                    .setAllowCrossProtocolRedirects(true)
+                field =
+                    DefaultHttpDataSource
+                        .Factory()
+                        .setAllowCrossProtocolRedirects(true)
             }
 
             return field
@@ -70,22 +72,21 @@ object DownloadUtil {
     private var downloaderManager: DownloaderManager? = null
     private var downloadNotificationHelper: DownloadNotificationHelper? = null
 
-    fun useExtensionRenderers(): Boolean {
-        return true
-    }
+    fun useExtensionRenderers(): Boolean = true
 
     fun buildRenderersFactory(
         context: Context,
-        preferExtensionRenderer: Boolean
+        preferExtensionRenderer: Boolean,
     ): RenderersFactory {
         val extensionRendererMode: @ExtensionRendererMode Int =
-            if (useExtensionRenderers())
+            if (useExtensionRenderers()) {
                 (if (preferExtensionRenderer) DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER else DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-            else
+            } else {
                 DefaultRenderersFactory.EXTENSION_RENDERER_MODE_OFF
+            }
 
         return DefaultRenderersFactory(context.applicationContext).setExtensionRendererMode(
-            extensionRendererMode
+            extensionRendererMode,
         )
     }
 
@@ -95,23 +96,27 @@ object DownloadUtil {
         if (dataSourceFactory == null) {
             context = context.applicationContext
 
-            val upstreamFactory = DefaultDataSource.Factory(
-                context,
-                httpDataSourceFactory!!
-            )
+            val upstreamFactory =
+                DefaultDataSource.Factory(
+                    context,
+                    httpDataSourceFactory!!,
+                )
 
             if (getStreamingCacheSize() > 0) {
-                val streamCacheFactory = CacheDataSource.Factory()
-                    .setCache(getStreamingCache(context))
-                    .setUpstreamDataSourceFactory(upstreamFactory)
+                val streamCacheFactory =
+                    CacheDataSource
+                        .Factory()
+                        .setCache(getStreamingCache(context))
+                        .setUpstreamDataSourceFactory(upstreamFactory)
 
-                val resolvingFactory = ResolvingDataSource.Factory(
-                    StreamingCacheDataSource.Factory(streamCacheFactory)
-                ) { dataSpec: DataSpec? ->
-                    val builder = dataSpec!!.buildUpon()
-                    builder.setFlags(dataSpec.flags and DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN.inv())
-                    builder.build()
-                }
+                val resolvingFactory =
+                    ResolvingDataSource.Factory(
+                        StreamingCacheDataSource.Factory(streamCacheFactory),
+                    ) { dataSpec: DataSpec? ->
+                        val builder = dataSpec!!.buildUpon()
+                        builder.setFlags(dataSpec.flags and DataSpec.FLAG_DONT_CACHE_IF_LENGTH_UNKNOWN.inv())
+                        builder.build()
+                    }
 
                 dataSourceFactory =
                     buildReadOnlyCacheDataSource(resolvingFactory, getDownloadCache(context))
@@ -151,11 +156,12 @@ object DownloadUtil {
         if (downloadCache == null) {
             val downloadContentDirectory =
                 File(getDownloadDirectory(context), DOWNLOAD_CONTENT_DIRECTORY)
-            downloadCache = SimpleCache(
-                downloadContentDirectory,
-                NoOpCacheEvictor(),
-                getDatabaseProvider(context)
-            )
+            downloadCache =
+                SimpleCache(
+                    downloadContentDirectory,
+                    NoOpCacheEvictor(),
+                    getDatabaseProvider(context),
+                )
         }
 
         return downloadCache!!
@@ -167,11 +173,12 @@ object DownloadUtil {
             val streamingCacheDirectory =
                 File(getStreamingCacheDirectory(context), STREAMING_CACHE_CONTENT_DIRECTORY)
 
-            streamingCache = SimpleCache(
-                streamingCacheDirectory,
-                LeastRecentlyUsedCacheEvictor(getStreamingCacheSize() * 1024 * 1024),
-                getDatabaseProvider(context)
-            )
+            streamingCache =
+                SimpleCache(
+                    streamingCacheDirectory,
+                    LeastRecentlyUsedCacheEvictor(getStreamingCacheSize() * 1024 * 1024),
+                    getDatabaseProvider(context),
+                )
         }
 
         return streamingCache!!
@@ -180,13 +187,14 @@ object DownloadUtil {
     @Synchronized
     private fun ensureDownloadManagerInitialized(context: Context) {
         if (downloadManager == null) {
-            downloadManager = DownloadManager(
-                context,
-                getDatabaseProvider(context),
-                getDownloadCache(context),
-                httpDataSourceFactory!!,
-                Executors.newFixedThreadPool(6)
-            )
+            downloadManager =
+                DownloadManager(
+                    context,
+                    getDatabaseProvider(context),
+                    getDownloadCache(context),
+                    httpDataSourceFactory!!,
+                    Executors.newFixedThreadPool(6),
+                )
 
             downloaderManager = DownloaderManager(context, httpDataSourceFactory, downloadManager)
         }
@@ -245,14 +253,14 @@ object DownloadUtil {
 
     private fun buildReadOnlyCacheDataSource(
         upstreamFactory: DataSource.Factory?,
-        cache: Cache
-    ): CacheDataSource.Factory {
-        return CacheDataSource.Factory()
+        cache: Cache,
+    ): CacheDataSource.Factory =
+        CacheDataSource
+            .Factory()
             .setCache(cache)
             .setUpstreamDataSourceFactory(upstreamFactory)
             .setCacheWriteDataSinkFactory(null)
             .setFlags(CacheDataSource.FLAG_IGNORE_CACHE_ON_ERROR)
-    }
 
     @Synchronized
     fun eraseDownloadFolder(context: Context) {
@@ -266,13 +274,19 @@ object DownloadUtil {
     }
 
     @Synchronized
-    private fun listFiles(directory: File, files: ArrayList<File>): ArrayList<File> {
+    private fun listFiles(
+        directory: File,
+        files: ArrayList<File>,
+    ): ArrayList<File> {
         if (directory.isDirectory()) {
             val list = directory.listFiles()
 
             if (list != null) {
                 for (file in list) {
-                    if (file.isFile() && file.getName().lowercase(Locale.getDefault())
+                    if (file.isFile() &&
+                        file
+                            .getName()
+                            .lowercase(Locale.getDefault())
                             .endsWith(".exo")
                     ) {
                         files.add(file)
@@ -287,22 +301,20 @@ object DownloadUtil {
     }
 
     @Synchronized
-    fun getStreamingCacheSize(context: Context): Long {
-        return getStreamingCache(context).getCacheSpace()
-    }
+    fun getStreamingCacheSize(context: Context): Long = getStreamingCache(context).getCacheSpace()
 
     fun buildGroupSummaryNotification(
         context: Context,
         channelId: String,
         groupId: String?,
         icon: Int,
-        title: String?
-    ): Notification {
-        return NotificationCompat.Builder(context, channelId)
+        title: String?,
+    ): Notification =
+        NotificationCompat
+            .Builder(context, channelId)
             .setContentTitle(title)
             .setSmallIcon(icon)
             .setGroup(groupId)
             .setGroupSummary(true)
             .build()
-    }
 }

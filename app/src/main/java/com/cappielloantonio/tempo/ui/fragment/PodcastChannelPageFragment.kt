@@ -32,7 +32,9 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.common.util.concurrent.ListenableFuture
 
 @UnstableApi
-class PodcastChannelPageFragment : Fragment(), ClickCallback {
+class PodcastChannelPageFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentPodcastChannelPageBinding? = null
     private var activity: MainActivity? = null
     private var podcastChannelPageViewModel: PodcastChannelPageViewModel? = null
@@ -44,7 +46,7 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -52,7 +54,7 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
         val view: View = bind!!.getRoot()
         podcastChannelPageViewModel =
             ViewModelProvider(requireActivity()).get<PodcastChannelPageViewModel>(
-                PodcastChannelPageViewModel::class.java
+                PodcastChannelPageViewModel::class.java,
             )
 
         init()
@@ -82,8 +84,8 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
     private fun init() {
         podcastChannelPageViewModel!!.setPodcastChannel(
             requireArguments().getParcelable<PodcastChannel?>(
-                Constants.PODCAST_CHANNEL_OBJECT
-            )
+                Constants.PODCAST_CHANNEL_OBJECT,
+            ),
         )
     }
 
@@ -101,20 +103,30 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
     }
 
     private fun initPodcastChannelInfo() {
-        val normalizePodcastChannelDescription = MusicUtil.forceReadableString(
-            podcastChannelPageViewModel!!.getPodcastChannel().description
-        )
+        val normalizePodcastChannelDescription =
+            MusicUtil.forceReadableString(
+                podcastChannelPageViewModel!!.getPodcastChannel().description,
+            )
 
         if (bind != null) {
-            bind!!.podcastChannelDescriptionTextView.visibility = if (!normalizePodcastChannelDescription.trim { it <= ' ' }
-                    .isEmpty()) View.VISIBLE else View.GONE
+            bind!!.podcastChannelDescriptionTextView.visibility =
+                if (!normalizePodcastChannelDescription
+                        .trim { it <= ' ' }
+                        .isEmpty()
+                ) {
+                    View.VISIBLE
+                } else {
+                    View.GONE
+                }
             bind!!.podcastChannelDescriptionTextView.text = normalizePodcastChannelDescription
-            bind!!.podcastEpisodesFilterImageView.setOnClickListener(View.OnClickListener { view: View? ->
-                showPopupMenu(
-                    view,
-                    R.menu.filter_podcast_episode_popup_menu
-                )
-            })
+            bind!!.podcastEpisodesFilterImageView.setOnClickListener(
+                View.OnClickListener { view: View? ->
+                    showPopupMenu(
+                        view,
+                        R.menu.filter_podcast_episode_popup_menu,
+                    )
+                },
+            )
         }
     }
 
@@ -122,73 +134,85 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
         bind!!.podcastEpisodesRecyclerView.setLayoutManager(LinearLayoutManager(requireContext()))
         bind!!.podcastEpisodesRecyclerView.addItemDecoration(
             UIUtil.getDividerItemDecoration(
-                requireContext()
-            )
+                requireContext(),
+            ),
         )
 
         podcastEpisodeAdapter = PodcastEpisodeAdapter(this)
         bind!!.podcastEpisodesRecyclerView.setAdapter(podcastEpisodeAdapter)
-        podcastChannelPageViewModel!!.getPodcastChannelEpisodes()
-            .observe(getViewLifecycleOwner(), Observer { channels: MutableList<PodcastChannel?>? ->
-                if (channels == null) {
-                    if (bind != null) {
-                        bind!!.podcastEpisodesRecyclerView.visibility = View.GONE
-                    }
-                } else {
-                    if (bind != null) {
-                        bind!!.podcastEpisodesRecyclerView.visibility = View.VISIBLE
-                    }
+        podcastChannelPageViewModel!!
+            .getPodcastChannelEpisodes()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { channels: MutableList<PodcastChannel?>? ->
+                    if (channels == null) {
+                        if (bind != null) {
+                            bind!!.podcastEpisodesRecyclerView.visibility = View.GONE
+                        }
+                    } else {
+                        if (bind != null) {
+                            bind!!.podcastEpisodesRecyclerView.visibility = View.VISIBLE
+                        }
 
-                    if (!channels.isEmpty() && channels.get(0) != null && channels.get(0)!!.episodes != null) {
-                        val availableEpisode: MutableList<PodcastEpisode?>? =
-                            channels.get(0)!!.episodes
+                        if (!channels.isEmpty() && channels.get(0) != null && channels.get(0)!!.episodes != null) {
+                            val availableEpisode: MutableList<PodcastEpisode?>? =
+                                channels.get(0)!!.episodes
 
-                        if (bind != null && availableEpisode != null) {
-                            bind!!.podcastEpisodesRecyclerView.visibility = if (availableEpisode.isEmpty()) View.GONE else View.VISIBLE
-                            podcastEpisodeAdapter!!.setItems(availableEpisode)
+                            if (bind != null && availableEpisode != null) {
+                                bind!!.podcastEpisodesRecyclerView.visibility = if (availableEpisode.isEmpty()) View.GONE else View.VISIBLE
+                                podcastEpisodeAdapter!!.setItems(availableEpisode)
+                            }
                         }
                     }
-                }
-            })
+                },
+            )
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
         MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_podcast_filter_download) {
-                podcastEpisodeAdapter!!.sort(Constants.PODCAST_FILTER_BY_DOWNLOAD)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_podcast_filter_all) {
-                podcastEpisodeAdapter!!.sort(Constants.PODCAST_FILTER_BY_ALL)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_podcast_filter_download) {
+                    podcastEpisodeAdapter!!.sort(Constants.PODCAST_FILTER_BY_DOWNLOAD)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_podcast_filter_all) {
+                    podcastEpisodeAdapter!!.sort(Constants.PODCAST_FILTER_BY_ALL)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }
 
     override fun onPodcastEpisodeClick(bundle: Bundle) {
         MediaManager.startPodcast(
-            mediaBrowserListenableFuture, bundle.getParcelable<PodcastEpisode?>(
-                Constants.PODCAST_OBJECT
-            )
+            mediaBrowserListenableFuture,
+            bundle.getParcelable<PodcastEpisode?>(
+                Constants.PODCAST_OBJECT,
+            ),
         )
         activity!!.setBottomSheetInPeek(true)
     }
@@ -201,12 +225,12 @@ class PodcastChannelPageFragment : Fragment(), ClickCallback {
         val episode = bundle.getParcelable<PodcastEpisode?>(Constants.PODCAST_OBJECT)
         podcastChannelPageViewModel!!.requestPodcastEpisodeDownload(episode)
 
-        Snackbar.make(
-            requireView(),
-            R.string.podcast_episode_download_request_snackbar,
-            Snackbar.LENGTH_SHORT
-        )
-            .setAnchorView(activity!!.bind.bottomNavigation)
+        Snackbar
+            .make(
+                requireView(),
+                R.string.podcast_episode_download_request_snackbar,
+                Snackbar.LENGTH_SHORT,
+            ).setAnchorView(activity!!.bind.bottomNavigation)
             .show()
     }
 }

@@ -11,35 +11,43 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class ArtistCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class ArtistCatalogueViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val artistList = MutableLiveData<MutableList<ArtistID3?>?>(ArrayList<ArtistID3?>())
 
-    fun getArtistList(): LiveData<MutableList<ArtistID3?>?> {
-        return artistList
-    }
+    fun getArtistList(): LiveData<MutableList<ArtistID3?>?> = artistList
 
     fun loadArtists() {
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getArtists()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artists != null) {
-                        val artists: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artists != null) {
+                            val artists: MutableList<ArtistID3?> = ArrayList<ArtistID3?>()
 
-                        for (index in response.body()!!.subsonicResponse.artists!!.indices!!) {
-                            artists.addAll(index.artists!!)
+                            for (index in response
+                                .body()!!
+                                .subsonicResponse.artists!!
+                                .indices!!) {
+                                artists.addAll(index.artists!!)
+                            }
+
+                            artistList.value = artists
                         }
-
-                        artistList.value = artists
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 }

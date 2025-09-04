@@ -11,14 +11,18 @@ import kotlin.math.pow
 
 @OptIn(markerClass = UnstableApi::class)
 object ReplayGainUtil {
-    private val tags = arrayOf<String?>(
-        "REPLAYGAIN_TRACK_GAIN",
-        "REPLAYGAIN_ALBUM_GAIN",
-        "R128_TRACK_GAIN",
-        "R128_ALBUM_GAIN"
-    )
+    private val tags =
+        arrayOf<String?>(
+            "REPLAYGAIN_TRACK_GAIN",
+            "REPLAYGAIN_ALBUM_GAIN",
+            "R128_TRACK_GAIN",
+            "R128_ALBUM_GAIN",
+        )
 
-    fun setReplayGain(player: ExoPlayer, tracks: Tracks?) {
+    fun setReplayGain(
+        player: ExoPlayer,
+        tracks: Tracks?,
+    ) {
         val metadata = getMetadata(tracks)
         val gains = getReplayGains(metadata)
 
@@ -109,7 +113,10 @@ object ReplayGainUtil {
         }
     }
 
-    private fun applyReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>?) {
+    private fun applyReplayGain(
+        player: ExoPlayer,
+        gains: MutableList<ReplayGain?>?,
+    ) {
         if (getReplayGainMode() == "disabled" || gains == null || gains.isEmpty()) {
             setNoReplayGain(player)
             return
@@ -142,21 +149,30 @@ object ReplayGainUtil {
         setReplayGain(player, 0f)
     }
 
-    private fun setTrackReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+    private fun setTrackReplayGain(
+        player: ExoPlayer,
+        gains: MutableList<ReplayGain?>,
+    ) {
         val trackGain =
             if (gains.get(0)!!.trackGain != 0f) gains.get(0)!!.trackGain else gains.get(1)!!.trackGain
 
         setReplayGain(player, if (trackGain != 0f) trackGain else 0f)
     }
 
-    private fun setAlbumReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+    private fun setAlbumReplayGain(
+        player: ExoPlayer,
+        gains: MutableList<ReplayGain?>,
+    ) {
         val albumGain =
             if (gains.get(0)!!.albumGain != 0f) gains.get(0)!!.albumGain else gains.get(1)!!.albumGain
 
         setReplayGain(player, if (albumGain != 0f) albumGain else 0f)
     }
 
-    private fun setAutoReplayGain(player: ExoPlayer, gains: MutableList<ReplayGain?>) {
+    private fun setAutoReplayGain(
+        player: ExoPlayer,
+        gains: MutableList<ReplayGain?>,
+    ) {
         val albumGain =
             if (gains.get(0)!!.albumGain != 0f) gains.get(0)!!.albumGain else gains.get(1)!!.albumGain
         val trackGain =
@@ -171,11 +187,15 @@ object ReplayGainUtil {
         val pastMediaItem =
             if (currentMediaItemIndex > 0) player.getMediaItemAt(currentMediaItemIndex - 1) else null
 
-        return currentMediaItem != null && pastMediaItem != null && pastMediaItem.mediaMetadata.albumTitle != null && currentMediaItem.mediaMetadata.albumTitle != null &&
-                pastMediaItem.mediaMetadata.albumTitle.toString() == currentMediaItem.mediaMetadata.albumTitle.toString()
+        return currentMediaItem != null && pastMediaItem != null && pastMediaItem.mediaMetadata.albumTitle != null &&
+            currentMediaItem.mediaMetadata.albumTitle != null &&
+            pastMediaItem.mediaMetadata.albumTitle.toString() == currentMediaItem.mediaMetadata.albumTitle.toString()
     }
 
-    private fun setReplayGain(player: ExoPlayer, gain: Float) {
+    private fun setReplayGain(
+        player: ExoPlayer,
+        gain: Float,
+    ) {
         player.volume = 10.0.pow((gain / 20f).toDouble()).toFloat()
     }
 }

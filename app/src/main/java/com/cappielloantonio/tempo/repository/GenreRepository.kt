@@ -12,45 +12,60 @@ import java.util.stream.Collectors
 import kotlin.math.min
 
 class GenreRepository {
-    fun getGenres(random: Boolean, size: Int): MutableLiveData<MutableList<Genre?>?> {
+    fun getGenres(
+        random: Boolean,
+        size: Int,
+    ): MutableLiveData<MutableList<Genre?>?> {
         val genres = MutableLiveData<MutableList<Genre?>?>()
 
         getSubsonicClientInstance(false)
             .getBrowsingClient()
             .getGenres()
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                    if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null && response.body()!!.subsonicResponse.genres != null) {
-                        val genreList: MutableList<Genre?>? =
-                            response.body()!!.subsonicResponse.genres!!.genres
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null &&
+                            response.body()!!.subsonicResponse.genres != null
+                        ) {
+                            val genreList: MutableList<Genre?>? =
+                                response
+                                    .body()!!
+                                    .subsonicResponse.genres!!
+                                    .genres
 
-                        if (genreList == null || genreList.isEmpty()) {
-                            genres.value = mutableListOf<Genre?>()
-                            return
-                        }
+                            if (genreList == null || genreList.isEmpty()) {
+                                genres.value = mutableListOf<Genre?>()
+                                return
+                            }
 
-                        if (random) {
-                            Collections.shuffle(genreList)
-                        }
+                            if (random) {
+                                Collections.shuffle(genreList)
+                            }
 
-                        if (size != -1) {
-                            genres.value = genreList.subList(0, min(size, genreList.size))
-                        } else {
-                            genres.value = genreList.stream()
-                                .sorted(Comparator.comparing<Genre?, String?>(Genre::genre))
-                                .collect(
-                                    Collectors.toList()
-                                )
+                            if (size != -1) {
+                                genres.value = genreList.subList(0, min(size, genreList.size))
+                            } else {
+                                genres.value =
+                                    genreList
+                                        .stream()
+                                        .sorted(Comparator.comparing<Genre?, String?>(Genre::genre))
+                                        .collect(
+                                            Collectors.toList(),
+                                        )
+                            }
                         }
                     }
-                }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
 
         return genres
     }

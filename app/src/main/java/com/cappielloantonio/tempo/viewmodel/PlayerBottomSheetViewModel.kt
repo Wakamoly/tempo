@@ -32,7 +32,9 @@ import java.util.Date
 import java.util.stream.Collectors
 
 @OptIn(markerClass = UnstableApi::class)
-class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+class PlayerBottomSheetViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val songRepository: SongRepository
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
@@ -49,7 +51,6 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     var syncLyricsState: Boolean = true
         private set
 
-
     init {
         songRepository = SongRepository()
         albumRepository = AlbumRepository()
@@ -62,7 +63,10 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     val queueSong: LiveData<MutableList<Queue?>?>?
         get() = queueRepository.getLiveQueue()
 
-    fun setFavorite(context: Context?, media: Child?) {
+    fun setFavorite(
+        context: Context?,
+        media: Child?,
+    ) {
         if (media != null) {
             if (media.starred != null) {
                 if (NetworkUtil.isOffline()) {
@@ -86,12 +90,17 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     }
 
     private fun removeFavoriteOnline(media: Child) {
-        favoriteRepository.unstar(media.id, null, null, object : StarCallback {
-            override fun onError() {
-                // media.setStarred(new Date());
-                favoriteRepository.starLater(media.id, null, null, false)
-            }
-        })
+        favoriteRepository.unstar(
+            media.id,
+            null,
+            null,
+            object : StarCallback {
+                override fun onError() {
+                    // media.setStarred(new Date());
+                    favoriteRepository.starLater(media.id, null, null, false)
+                }
+            },
+        )
         media.starred = null
     }
 
@@ -100,20 +109,28 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
         media.starred = Date()
     }
 
-    private fun setFavoriteOnline(context: Context?, media: Child) {
-        favoriteRepository.star(media.id, null, null, object : StarCallback {
-            override fun onError() {
-                // media.setStarred(null);
-                favoriteRepository.starLater(media.id, null, null, true)
-            }
-        })
+    private fun setFavoriteOnline(
+        context: Context?,
+        media: Child,
+    ) {
+        favoriteRepository.star(
+            media.id,
+            null,
+            null,
+            object : StarCallback {
+                override fun onError() {
+                    // media.setStarred(null);
+                    favoriteRepository.starLater(media.id, null, null, true)
+                }
+            },
+        )
 
         media.starred = Date()
 
         if (isStarredSyncEnabled()) {
             DownloadUtil.getDownloadTracker(context).download(
                 MappingUtil.mapDownload(media),
-                Download(media)
+                Download(media),
             )
         }
     }
@@ -124,28 +141,36 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     val liveLyricsList: LiveData<LyricsList?>
         get() = lyricsListLiveData
 
-    fun refreshMediaInfo(owner: LifecycleOwner, media: Child) {
+    fun refreshMediaInfo(
+        owner: LifecycleOwner,
+        media: Child,
+    ) {
         if (OpenSubsonicExtensionsUtil.isSongLyricsExtensionAvailable()) {
             openRepository.getLyricsBySongId(media.id).observe(
                 owner,
-                Observer { value: LyricsList? -> lyricsListLiveData.postValue(value) })
+                Observer { value: LyricsList? -> lyricsListLiveData.postValue(value) },
+            )
             lyricsLiveData.postValue(null)
         } else {
-            songRepository.getSongLyrics(media)
+            songRepository
+                .getSongLyrics(media)
                 .observe(owner, Observer { value: String? -> lyricsLiveData.postValue(value) })
             lyricsListLiveData.postValue(null)
         }
     }
 
-    fun getLiveMedia(): LiveData<Child?> {
-        return liveMedia
-    }
+    fun getLiveMedia(): LiveData<Child?> = liveMedia
 
-    fun setLiveMedia(owner: LifecycleOwner, mediaType: String?, mediaId: String?) {
+    fun setLiveMedia(
+        owner: LifecycleOwner,
+        mediaType: String?,
+        mediaId: String?,
+    ) {
         if (mediaType != null) {
             when (mediaType) {
                 Constants.MEDIA_TYPE_MUSIC -> {
-                    songRepository.getSong(mediaId)
+                    songRepository
+                        .getSong(mediaId)
                         .observe(owner, Observer { value: Child? -> liveMedia.postValue(value) })
                     descriptionLiveData.postValue(null)
                 }
@@ -155,30 +180,38 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
         }
     }
 
-    fun getLiveAlbum(): LiveData<AlbumID3?> {
-        return liveAlbum
-    }
+    fun getLiveAlbum(): LiveData<AlbumID3?> = liveAlbum
 
-    fun setLiveAlbum(owner: LifecycleOwner, mediaType: String?, AlbumId: String?) {
+    fun setLiveAlbum(
+        owner: LifecycleOwner,
+        mediaType: String?,
+        AlbumId: String?,
+    ) {
         if (mediaType != null) {
             when (mediaType) {
-                Constants.MEDIA_TYPE_MUSIC -> albumRepository.getAlbum(AlbumId)
-                    .observe(owner, Observer { value: AlbumID3? -> liveAlbum.postValue(value) })
+                Constants.MEDIA_TYPE_MUSIC ->
+                    albumRepository
+                        .getAlbum(AlbumId)
+                        .observe(owner, Observer { value: AlbumID3? -> liveAlbum.postValue(value) })
 
                 Constants.MEDIA_TYPE_PODCAST -> liveAlbum.postValue(null)
             }
         }
     }
 
-    fun getLiveArtist(): LiveData<ArtistID3?> {
-        return liveArtist
-    }
+    fun getLiveArtist(): LiveData<ArtistID3?> = liveArtist
 
-    fun setLiveArtist(owner: LifecycleOwner, mediaType: String?, ArtistId: String?) {
+    fun setLiveArtist(
+        owner: LifecycleOwner,
+        mediaType: String?,
+        ArtistId: String?,
+    ) {
         if (mediaType != null) {
             when (mediaType) {
-                Constants.MEDIA_TYPE_MUSIC -> artistRepository.getArtist(ArtistId)
-                    .observe(owner, Observer { value: ArtistID3? -> liveArtist.postValue(value) })
+                Constants.MEDIA_TYPE_MUSIC ->
+                    artistRepository
+                        .getArtist(ArtistId)
+                        .observe(owner, Observer { value: ArtistID3? -> liveArtist.postValue(value) })
 
                 Constants.MEDIA_TYPE_PODCAST -> liveArtist.postValue(null)
             }
@@ -192,10 +225,14 @@ class PlayerBottomSheetViewModel(application: Application) : AndroidViewModel(ap
     val liveDescription: LiveData<String?>
         get() = descriptionLiveData
 
-    fun getMediaInstantMix(owner: LifecycleOwner, media: Child): LiveData<MutableList<Child?>?> {
+    fun getMediaInstantMix(
+        owner: LifecycleOwner,
+        media: Child,
+    ): LiveData<MutableList<Child?>?> {
         instantMix.value = mutableListOf<Child?>()
 
-        songRepository.getInstantMix(media.id, 20)
+        songRepository
+            .getInstantMix(media.id, 20)
             .observe(owner, Observer { value: MutableList<Child?>? -> instantMix.postValue(value) })
 
         return instantMix

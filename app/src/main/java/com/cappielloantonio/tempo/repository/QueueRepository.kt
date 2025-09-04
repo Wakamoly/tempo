@@ -31,13 +31,15 @@ class QueueRepository {
 
             try {
                 thread.join()
-                media = getMedia.getMedia().stream()
-                    .map<Child?> { obj: Queue? ->
-                        Child::class.java.cast(
-                            obj
-                        )
-                    }
-                    .collect(Collectors.toList())
+                media =
+                    getMedia
+                        .getMedia()
+                        .stream()
+                        .map<Child?> { obj: Queue? ->
+                            Child::class.java.cast(
+                                obj,
+                            )
+                        }.collect(Collectors.toList())
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
@@ -52,44 +54,59 @@ class QueueRepository {
             getSubsonicClientInstance(false)
                 .getBookmarksClient()
                 .getPlayQueue()
-                .enqueue(object : Callback<ApiResponse?> {
-                    override fun onResponse(
-                        call: Call<ApiResponse?>,
-                        response: Response<ApiResponse?>
-                    ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playQueue != null) {
-                            playQueue.value = response.body()!!.subsonicResponse.playQueue
+                .enqueue(
+                    object : Callback<ApiResponse?> {
+                        override fun onResponse(
+                            call: Call<ApiResponse?>,
+                            response: Response<ApiResponse?>,
+                        ) {
+                            if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playQueue != null) {
+                                playQueue.value = response.body()!!.subsonicResponse.playQueue
+                            }
                         }
-                    }
 
-                    override fun onFailure(
-                        call: Call<ApiResponse?>,
-                        t: Throwable
-                    ) {
-                        playQueue.value = null
-                    }
-                })
+                        override fun onFailure(
+                            call: Call<ApiResponse?>,
+                            t: Throwable,
+                        ) {
+                            playQueue.value = null
+                        }
+                    },
+                )
 
             return playQueue
         }
 
-    fun savePlayQueue(ids: MutableList<String?>?, current: String?, position: Long) {
+    fun savePlayQueue(
+        ids: MutableList<String?>?,
+        current: String?,
+        position: Long,
+    ) {
         getSubsonicClientInstance(false)
             .getBookmarksClient()
             .savePlayQueue(ids, current, position)
-            .enqueue(object : Callback<ApiResponse?> {
-                override fun onResponse(
-                    call: Call<ApiResponse?>,
-                    response: Response<ApiResponse?>
-                ) {
-                }
+            .enqueue(
+                object : Callback<ApiResponse?> {
+                    override fun onResponse(
+                        call: Call<ApiResponse?>,
+                        response: Response<ApiResponse?>,
+                    ) {
+                    }
 
-                override fun onFailure(call: Call<ApiResponse?>, t: Throwable) {
-                }
-            })
+                    override fun onFailure(
+                        call: Call<ApiResponse?>,
+                        t: Throwable,
+                    ) {
+                    }
+                },
+            )
     }
 
-    fun insert(media: Child, reset: Boolean, afterIndex: Int) {
+    fun insert(
+        media: Child,
+        reset: Boolean,
+        afterIndex: Int,
+    ) {
         try {
             var mediaList: MutableList<Queue?> = ArrayList<Queue?>()
 
@@ -121,7 +138,11 @@ class QueueRepository {
         }
     }
 
-    fun insertAll(toAdd: MutableList<Child?>, reset: Boolean, afterIndex: Int) {
+    fun insertAll(
+        toAdd: MutableList<Child?>,
+        reset: Boolean,
+        afterIndex: Int,
+    ) {
         try {
             var media: MutableList<Queue?> = ArrayList<Queue?>()
 
@@ -190,7 +211,10 @@ class QueueRepository {
         thread.start()
     }
 
-    fun setPlayingPausedTimestamp(id: String?, ms: Long) {
+    fun setPlayingPausedTimestamp(
+        id: String?,
+        ms: Long,
+    ) {
         val timestamp = SetPlayingPausedTimestampThreadSafe(queueDao, id, ms)
         val thread = Thread(timestamp)
         thread.start()
@@ -238,41 +262,47 @@ class QueueRepository {
             return timestamp
         }
 
-    private class GetMediaThreadSafe(private val queueDao: QueueDao) : Runnable {
+    private class GetMediaThreadSafe(
+        private val queueDao: QueueDao,
+    ) : Runnable {
         private var media: MutableList<Queue?>? = null
 
         override fun run() {
             media = queueDao.getAllSimple()
         }
 
-        fun getMedia(): MutableList<Queue?> {
-            return media!!
-        }
+        fun getMedia(): MutableList<Queue?> = media!!
     }
 
     private class InsertAllThreadSafe(
         private val queueDao: QueueDao,
-        private val media: MutableList<Queue?>?
+        private val media: MutableList<Queue?>?,
     ) : Runnable {
         override fun run() {
             queueDao.insertAll(media)
         }
     }
 
-    private class DeleteThreadSafe(private val queueDao: QueueDao, private val position: Int) :
-        Runnable {
+    private class DeleteThreadSafe(
+        private val queueDao: QueueDao,
+        private val position: Int,
+    ) : Runnable {
         override fun run() {
             queueDao.delete(position)
         }
     }
 
-    private class DeleteAllThreadSafe(private val queueDao: QueueDao) : Runnable {
+    private class DeleteAllThreadSafe(
+        private val queueDao: QueueDao,
+    ) : Runnable {
         override fun run() {
             queueDao.deleteAll()
         }
     }
 
-    private class CountThreadSafe(private val queueDao: QueueDao) : Runnable {
+    private class CountThreadSafe(
+        private val queueDao: QueueDao,
+    ) : Runnable {
         var count: Int = 0
             private set
 
@@ -283,7 +313,7 @@ class QueueRepository {
 
     private class SetLastPlayedTimestampThreadSafe(
         private val queueDao: QueueDao,
-        private val mediaId: String?
+        private val mediaId: String?,
     ) : Runnable {
         override fun run() {
             queueDao.setLastPlay(mediaId, System.currentTimeMillis())
@@ -293,14 +323,16 @@ class QueueRepository {
     private class SetPlayingPausedTimestampThreadSafe(
         private val queueDao: QueueDao,
         private val mediaId: String?,
-        private val ms: Long
+        private val ms: Long,
     ) : Runnable {
         override fun run() {
             queueDao.setPlayingChanged(mediaId, ms)
         }
     }
 
-    private class GetLastPlayedMediaThreadSafe(private val queueDao: QueueDao) : Runnable {
+    private class GetLastPlayedMediaThreadSafe(
+        private val queueDao: QueueDao,
+    ) : Runnable {
         private var lastMediaPlayed: Queue? = null
 
         override fun run() {

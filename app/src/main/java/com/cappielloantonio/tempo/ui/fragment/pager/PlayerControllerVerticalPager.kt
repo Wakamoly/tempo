@@ -8,7 +8,9 @@ import com.cappielloantonio.tempo.ui.fragment.PlayerControllerFragment
 import com.cappielloantonio.tempo.ui.fragment.PlayerQueueFragment
 
 @OptIn(markerClass = UnstableApi::class)
-class PlayerControllerVerticalPager(fragment: Fragment) : FragmentStateAdapter(fragment) {
+class PlayerControllerVerticalPager(
+    fragment: Fragment,
+) : FragmentStateAdapter(fragment) {
     private val maps: HashMap<Int?, Fragment?>
 
     init {
@@ -35,11 +37,7 @@ class PlayerControllerVerticalPager(fragment: Fragment) : FragmentStateAdapter(f
         return playerControllerFragment
     }
 
-    override fun getItemCount(): Int {
-        return 2
-    }
+    override fun getItemCount(): Int = 2
 
-    fun getRegisteredFragment(position: Int): Fragment? {
-        return maps.get(position)
-    }
+    fun getRegisteredFragment(position: Int): Fragment? = maps.get(position)
 }

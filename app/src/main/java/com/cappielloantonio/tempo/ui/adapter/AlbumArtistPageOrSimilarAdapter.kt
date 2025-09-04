@@ -15,54 +15,59 @@ import com.cappielloantonio.tempo.util.Constants
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class AlbumArtistPageOrSimilarAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<AlbumArtistPageOrSimilarAdapter.ViewHolder?>() {
+class AlbumArtistPageOrSimilarAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<AlbumArtistPageOrSimilarAdapter.ViewHolder?>() {
     private var albums: MutableList<AlbumID3>
 
     init {
         this.albums = mutableListOf<AlbumID3?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemLibraryArtistPageOrSimilarAlbumBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemLibraryArtistPageOrSimilarAlbumBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return AlbumArtistPageOrSimilarAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val album = albums.get(position)
 
         holder.item.albumNameLabel.text = album.name
         holder.item.artistNameLabel.text = album.artist
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            album.coverArtId,
-            CustomGlideRequest.ResourceType.Album
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                album.coverArtId,
+                CustomGlideRequest.ResourceType.Album,
+            ).build()
             .into(holder.item.artistPageAlbumCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return albums.size
-    }
+    override fun getItemCount(): Int = albums.size
 
-    fun getItem(position: Int): AlbumID3? {
-        return albums.get(position)
-    }
+    fun getItem(position: Int): AlbumID3? = albums.get(position)
 
     fun setItems(albums: MutableList<AlbumID3>) {
         this.albums = albums
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryArtistPageOrSimilarAlbumBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryArtistPageOrSimilarAlbumBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.albumNameLabel.setSelected(true)

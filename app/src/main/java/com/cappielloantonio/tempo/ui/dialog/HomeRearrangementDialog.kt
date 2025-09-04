@@ -28,7 +28,7 @@ class HomeRearrangementDialog : DialogFragment() {
 
         homeRearrangementViewModel =
             ViewModelProvider(requireActivity()).get<HomeRearrangementViewModel>(
-                HomeRearrangementViewModel::class.java
+                HomeRearrangementViewModel::class.java,
             )
 
         return MaterialAlertDialogBuilder(requireContext())
@@ -36,14 +36,14 @@ class HomeRearrangementDialog : DialogFragment() {
             .setTitle(R.string.home_rearrangement_dialog_title)
             .setPositiveButton(
                 R.string.home_rearrangement_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNeutralButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            ).setNeutralButton(
                 R.string.home_rearrangement_dialog_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNegativeButton(
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            ).setNegativeButton(
                 R.string.home_rearrangement_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .create()
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+            ).create()
     }
 
     override fun onStart() {
@@ -62,17 +62,23 @@ class HomeRearrangementDialog : DialogFragment() {
     private fun setButtonAction() {
         val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                homeRearrangementViewModel!!.saveHomeSectorList(homeSectorHorizontalAdapter!!.getItems())
-                dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    homeRearrangementViewModel!!.saveHomeSectorList(homeSectorHorizontalAdapter!!.getItems())
+                    dismiss()
+                },
+            )
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                homeRearrangementViewModel!!.resetHomeSectorList()
-                dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    homeRearrangementViewModel!!.resetHomeSectorList()
+                    dismiss()
+                },
+            )
     }
 
     private fun initSectorView() {
@@ -83,48 +89,55 @@ class HomeRearrangementDialog : DialogFragment() {
         bind!!.homeSectorItemRecyclerView.setAdapter(homeSectorHorizontalAdapter)
         homeSectorHorizontalAdapter!!.setItems(homeRearrangementViewModel!!.getHomeSectorList())
 
-        ItemTouchHelper(object :
-            ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
-            var originalPosition: Int = -1
-            var fromPosition: Int = -1
-            var toPosition: Int = -1
+        ItemTouchHelper(
+            object :
+                ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP or ItemTouchHelper.DOWN, 0) {
+                var originalPosition: Int = -1
+                var fromPosition: Int = -1
+                var toPosition: Int = -1
 
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                if (originalPosition == -1) originalPosition =
-                    viewHolder.getBindingAdapterPosition()
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder,
+                ): Boolean {
+                    if (originalPosition == -1) {
+                        originalPosition =
+                            viewHolder.getBindingAdapterPosition()
+                    }
 
-                fromPosition = viewHolder.getBindingAdapterPosition()
-                toPosition = target.getBindingAdapterPosition()
+                    fromPosition = viewHolder.getBindingAdapterPosition()
+                    toPosition = target.getBindingAdapterPosition()
 
-                Collections.swap(homeSectorHorizontalAdapter!!.getItems(), fromPosition, toPosition)
-                Objects.requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
-                    .notifyItemMoved(fromPosition, toPosition)
+                    Collections.swap(homeSectorHorizontalAdapter!!.getItems(), fromPosition, toPosition)
+                    Objects
+                        .requireNonNull<RecyclerView.Adapter<*>?>(recyclerView.adapter)
+                        .notifyItemMoved(fromPosition, toPosition)
 
-                return false
-            }
+                    return false
+                }
 
-            override fun clearView(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
-            ) {
-                super.clearView(recyclerView, viewHolder)
+                override fun clearView(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ) {
+                    super.clearView(recyclerView, viewHolder)
 
-                homeRearrangementViewModel!!.orderSectorLiveListAfterSwap(
-                    homeSectorHorizontalAdapter!!.getItems()
-                )
+                    homeRearrangementViewModel!!.orderSectorLiveListAfterSwap(
+                        homeSectorHorizontalAdapter!!.getItems(),
+                    )
 
-                originalPosition = -1
-                fromPosition = -1
-                toPosition = -1
-            }
+                    originalPosition = -1
+                    fromPosition = -1
+                    toPosition = -1
+                }
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-            }
-        }
+                override fun onSwiped(
+                    viewHolder: RecyclerView.ViewHolder,
+                    direction: Int,
+                ) {
+                }
+            },
         ).attachToRecyclerView(bind!!.homeSectorItemRecyclerView)
     }
 }

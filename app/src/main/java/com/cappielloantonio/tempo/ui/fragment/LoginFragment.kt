@@ -38,7 +38,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @UnstableApi
-class LoginFragment : Fragment(), ClickCallback {
+class LoginFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentLoginBinding? = null
     private var activity: MainActivity? = null
     private var loginViewModel: LoginViewModel? = null
@@ -50,7 +52,10 @@ class LoginFragment : Fragment(), ClickCallback {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.login_page_menu, menu)
     }
@@ -58,7 +63,7 @@ class LoginFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
 
@@ -81,16 +86,21 @@ class LoginFragment : Fragment(), ClickCallback {
     private fun initAppBar() {
         activity!!.setSupportActionBar(bind!!.toolbar)
 
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.serverInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.login_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.serverInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.login_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     private fun initServerListView() {
@@ -99,17 +109,21 @@ class LoginFragment : Fragment(), ClickCallback {
 
         serverAdapter = ServerAdapter(this)
         bind!!.serverListRecyclerView.setAdapter(serverAdapter)
-        loginViewModel!!.getServerList()
-            .observe(getViewLifecycleOwner(), Observer { servers: MutableList<Server?>? ->
-                if (!servers!!.isEmpty()) {
-                    if (bind != null) bind!!.noServerAddedTextView.visibility = View.GONE
-                    if (bind != null) bind!!.serverListRecyclerView.visibility = View.VISIBLE
-                    serverAdapter!!.setItems(servers)
-                } else {
-                    if (bind != null) bind!!.noServerAddedTextView.visibility = View.VISIBLE
-                    if (bind != null) bind!!.serverListRecyclerView.visibility = View.GONE
-                }
-            })
+        loginViewModel!!
+            .getServerList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { servers: MutableList<Server?>? ->
+                    if (!servers!!.isEmpty()) {
+                        if (bind != null) bind!!.noServerAddedTextView.visibility = View.GONE
+                        if (bind != null) bind!!.serverListRecyclerView.visibility = View.VISIBLE
+                        serverAdapter!!.setItems(servers)
+                    } else {
+                        if (bind != null) bind!!.noServerAddedTextView.visibility = View.VISIBLE
+                        if (bind != null) bind!!.serverListRecyclerView.visibility = View.GONE
+                    }
+                },
+            )
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -130,21 +144,27 @@ class LoginFragment : Fragment(), ClickCallback {
             server.localAddress,
             server.username,
             server.password,
-            server.isLowSecurity
+            server.isLowSecurity,
         )
 
         val systemRepository = SystemRepository()
-        systemRepository.checkUserCredential(object : SystemCallback {
-            override fun onError(exception: Exception) {
-                switchInUseServerAddress()
-                resetServerPreference()
-                Toast.makeText(requireContext(), exception.message, Toast.LENGTH_SHORT).show()
-            }
+        systemRepository.checkUserCredential(
+            object : SystemCallback {
+                override fun onError(exception: Exception) {
+                    switchInUseServerAddress()
+                    resetServerPreference()
+                    Toast.makeText(requireContext(), exception.message, Toast.LENGTH_SHORT).show()
+                }
 
-            override fun onSuccess(password: String?, token: String?, salt: String?) {
-                activity!!.goFromLogin()
-            }
-        })
+                override fun onSuccess(
+                    password: String?,
+                    token: String?,
+                    salt: String?,
+                ) {
+                    activity!!.goFromLogin()
+                }
+            },
+        )
     }
 
     override fun onServerLongClick(bundle: Bundle?) {
@@ -159,7 +179,7 @@ class LoginFragment : Fragment(), ClickCallback {
         localAddress: String?,
         user: String?,
         password: String?,
-        isLowSecurity: Boolean
+        isLowSecurity: Boolean,
     ) {
         setServerId(serverId)
         setServer(server)

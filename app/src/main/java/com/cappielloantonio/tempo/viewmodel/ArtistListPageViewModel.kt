@@ -16,7 +16,9 @@ import java.util.function.Function
 import java.util.function.Supplier
 import java.util.stream.Collectors
 
-class ArtistListPageViewModel(application: Application) : AndroidViewModel(application) {
+class ArtistListPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val artistRepository: ArtistRepository
     private val downloadRepository: DownloadRepository
 
@@ -34,21 +36,30 @@ class ArtistListPageViewModel(application: Application) : AndroidViewModel(appli
 
         when (title) {
             Constants.ARTIST_STARRED -> artistList = artistRepository.getStarredArtists(false, -1)
-            Constants.ARTIST_DOWNLOADED -> downloadRepository.getLiveDownload()
-                .observe(owner, Observer { downloads: MutableList<Download?>? ->
-                    downloads!!
-                        .stream()
-                        .collect(
-                            Collectors.collectingAndThen(
-                                Collectors.toCollection(Supplier {
-                                    TreeSet<Download?>(
-                                        Comparator.comparing<Download?, String?>(
-                                            Download::artist
-                                        )
-                                    )
-                                }), Function { c: TreeSet<Download?>? -> ArrayList(c) })
-                        )
-                })
+            Constants.ARTIST_DOWNLOADED ->
+                downloadRepository
+                    .getLiveDownload()
+                    .observe(
+                        owner,
+                        Observer { downloads: MutableList<Download?>? ->
+                            downloads!!
+                                .stream()
+                                .collect(
+                                    Collectors.collectingAndThen(
+                                        Collectors.toCollection(
+                                            Supplier {
+                                                TreeSet<Download?>(
+                                                    Comparator.comparing<Download?, String?>(
+                                                        Download::artist,
+                                                    ),
+                                                )
+                                            },
+                                        ),
+                                        Function { c: TreeSet<Download?>? -> ArrayList(c) },
+                                    ),
+                                )
+                        },
+                    )
         }
 
         return artistList

@@ -28,11 +28,10 @@ class FilterFragment : Fragment() {
     private var bind: FragmentFilterBinding? = null
     private var filterViewModel: FilterViewModel? = null
 
-
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
         bind = FragmentFilterBinding.inflate(inflater, container, false)
@@ -56,17 +55,23 @@ class FilterFragment : Fragment() {
         bundle.putString(Constants.MEDIA_BY_GENRES, Constants.MEDIA_BY_GENRES)
         bundle.putStringArrayList("filters_list", filterViewModel!!.getFilters())
         bundle.putStringArrayList("filter_name_list", filterViewModel!!.getFilterNames())
-        bind!!.finishFilteringTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            if (filterViewModel!!.getFilters().size > 1) activity!!.navController.navigate(
-                R.id.action_filterFragment_to_songListPageFragment,
-                bundle
-            )
-            else Toast.makeText(
-                requireContext(),
-                getString(R.string.filter_info_selection),
-                Toast.LENGTH_SHORT
-            ).show()
-        })
+        bind!!.finishFilteringTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                if (filterViewModel!!.getFilters().size > 1) {
+                    activity!!.navController.navigate(
+                        R.id.action_filterFragment_to_songListPageFragment,
+                        bundle,
+                    )
+                } else {
+                    Toast
+                        .makeText(
+                            requireContext(),
+                            getString(R.string.filter_info_selection),
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                }
+            },
+        )
     }
 
     private fun initAppBar() {
@@ -79,42 +84,57 @@ class FilterFragment : Fragment() {
 
         bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? -> activity!!.navController.navigateUp() })
 
-
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.genreFilterInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.filter_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.genreFilterInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.filter_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     private fun setFilterChips() {
-        filterViewModel!!.getGenreList()
-            .observe(getViewLifecycleOwner(), Observer { genres: MutableList<Genre>? ->
-                bind!!.loadingProgressBar.visibility = View.GONE
-                bind!!.filterContainer.visibility = View.VISIBLE
-                for (genre in genres!!) {
-                    val chip = requireActivity().layoutInflater
-                        .inflate(R.layout.chip_search_filter_genre, null, false) as Chip
-                    chip.text = genre.genre
-                    chip.isChecked = filterViewModel!!.getFilters().contains(genre.genre)
-                    chip.setOnCheckedChangeListener(CompoundButton.OnCheckedChangeListener { buttonView: CompoundButton?, isChecked: Boolean ->
-                        if (isChecked) filterViewModel!!.addFilter(
-                            genre.genre,
-                            buttonView!!.getText().toString()
+        filterViewModel!!
+            .getGenreList()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { genres: MutableList<Genre>? ->
+                    bind!!.loadingProgressBar.visibility = View.GONE
+                    bind!!.filterContainer.visibility = View.VISIBLE
+                    for (genre in genres!!) {
+                        val chip =
+                            requireActivity()
+                                .layoutInflater
+                                .inflate(R.layout.chip_search_filter_genre, null, false) as Chip
+                        chip.text = genre.genre
+                        chip.isChecked = filterViewModel!!.getFilters().contains(genre.genre)
+                        chip.setOnCheckedChangeListener(
+                            CompoundButton.OnCheckedChangeListener { buttonView: CompoundButton?, isChecked: Boolean ->
+                                if (isChecked) {
+                                    filterViewModel!!.addFilter(
+                                        genre.genre,
+                                        buttonView!!.getText().toString(),
+                                    )
+                                } else {
+                                    filterViewModel!!.removeFilter(
+                                        genre.genre,
+                                        buttonView!!.getText().toString(),
+                                    )
+                                }
+                            },
                         )
-                        else filterViewModel!!.removeFilter(
-                            genre.genre,
-                            buttonView!!.getText().toString()
-                        )
-                    })
-                    bind!!.filtersChipsGroup.addView(chip)
-                }
-            })
+                        bind!!.filtersChipsGroup.addView(chip)
+                    }
+                },
+            )
     }
 
     companion object {

@@ -5,7 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import com.cappielloantonio.tempo.repository.PodcastRepository
 import com.cappielloantonio.tempo.subsonic.models.PodcastChannel
 
-class PodcastChannelBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+class PodcastChannelBottomSheetViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val podcastRepository: PodcastRepository
 
     var podcastChannel: PodcastChannel? = null

@@ -9,7 +9,9 @@ import androidx.lifecycle.Observer
 import com.cappielloantonio.tempo.repository.PlaylistRepository
 import com.cappielloantonio.tempo.subsonic.models.Playlist
 
-class PlaylistCatalogueViewModel(application: Application) : AndroidViewModel(application) {
+class PlaylistCatalogueViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val playlistRepository: PlaylistRepository
 
     var type: String? = null
@@ -24,7 +26,8 @@ class PlaylistCatalogueViewModel(application: Application) : AndroidViewModel(ap
         if (playlistList.getValue() == null) {
             playlistRepository.getPlaylists(false, -1).observe(
                 owner,
-                Observer { value: MutableList<Playlist?>? -> playlistList.postValue(value) })
+                Observer { value: MutableList<Playlist?>? -> playlistList.postValue(value) },
+            )
         }
 
         return playlistList

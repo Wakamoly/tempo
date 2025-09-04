@@ -38,7 +38,9 @@ import com.google.android.material.appbar.MaterialToolbar
 import java.util.Objects
 
 @UnstableApi
-class LibraryFragment : Fragment(), ClickCallback {
+class LibraryFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentLibraryBinding? = null
     private var activity: MainActivity? = null
     private var libraryViewModel: LibraryViewModel? = null
@@ -54,7 +56,7 @@ class LibraryFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         activity = activity as MainActivity?
 
@@ -68,7 +70,10 @@ class LibraryFragment : Fragment(), ClickCallback {
         return view
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+    override fun onViewCreated(
+        view: View,
+        savedInstanceState: Bundle?,
+    ) {
         super.onViewCreated(view, savedInstanceState)
 
         initAppBar()
@@ -95,53 +100,70 @@ class LibraryFragment : Fragment(), ClickCallback {
     }
 
     private fun init() {
-        bind!!.albumCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            activity!!.navController.navigate(
-                R.id.action_libraryFragment_to_albumCatalogueFragment
-            )
-        })
-        bind!!.artistCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            activity!!.navController.navigate(
-                R.id.action_libraryFragment_to_artistCatalogueFragment
-            )
-        })
-        bind!!.genreCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            activity!!.navController.navigate(
-                R.id.action_libraryFragment_to_genreCatalogueFragment
-            )
-        })
-        bind!!.playlistCatalogueTextViewClickable.setOnClickListener(View.OnClickListener { v: View? ->
-            val bundle = Bundle()
-            bundle.putString(Constants.PLAYLIST_ALL, Constants.PLAYLIST_ALL)
-            activity!!.navController.navigate(
-                R.id.action_libraryFragment_to_playlistCatalogueFragment,
-                bundle
-            )
-        })
+        bind!!.albumCatalogueTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                activity!!.navController.navigate(
+                    R.id.action_libraryFragment_to_albumCatalogueFragment,
+                )
+            },
+        )
+        bind!!.artistCatalogueTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                activity!!.navController.navigate(
+                    R.id.action_libraryFragment_to_artistCatalogueFragment,
+                )
+            },
+        )
+        bind!!.genreCatalogueTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                activity!!.navController.navigate(
+                    R.id.action_libraryFragment_to_genreCatalogueFragment,
+                )
+            },
+        )
+        bind!!.playlistCatalogueTextViewClickable.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                val bundle = Bundle()
+                bundle.putString(Constants.PLAYLIST_ALL, Constants.PLAYLIST_ALL)
+                activity!!.navController.navigate(
+                    R.id.action_libraryFragment_to_playlistCatalogueFragment,
+                    bundle,
+                )
+            },
+        )
 
-        bind!!.albumCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
-            libraryViewModel!!.refreshAlbumSample(getViewLifecycleOwner())
-            true
-        })
-        bind!!.artistCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
-            libraryViewModel!!.refreshArtistSample(getViewLifecycleOwner())
-            true
-        })
-        bind!!.genreCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
-            libraryViewModel!!.refreshGenreSample(getViewLifecycleOwner())
-            true
-        })
-        bind!!.playlistCatalogueSampleTextViewRefreshable.setOnLongClickListener(OnLongClickListener { view: View? ->
-            libraryViewModel!!.refreshPlaylistSample(getViewLifecycleOwner())
-            true
-        })
+        bind!!.albumCatalogueSampleTextViewRefreshable.setOnLongClickListener(
+            OnLongClickListener { view: View? ->
+                libraryViewModel!!.refreshAlbumSample(getViewLifecycleOwner())
+                true
+            },
+        )
+        bind!!.artistCatalogueSampleTextViewRefreshable.setOnLongClickListener(
+            OnLongClickListener { view: View? ->
+                libraryViewModel!!.refreshArtistSample(getViewLifecycleOwner())
+                true
+            },
+        )
+        bind!!.genreCatalogueSampleTextViewRefreshable.setOnLongClickListener(
+            OnLongClickListener { view: View? ->
+                libraryViewModel!!.refreshGenreSample(getViewLifecycleOwner())
+                true
+            },
+        )
+        bind!!.playlistCatalogueSampleTextViewRefreshable.setOnLongClickListener(
+            OnLongClickListener { view: View? ->
+                libraryViewModel!!.refreshPlaylistSample(getViewLifecycleOwner())
+                true
+            },
+        )
     }
 
     private fun initAppBar() {
         materialToolbar = bind!!.getRoot().findViewById<MaterialToolbar>(R.id.toolbar)
 
         activity!!.setSupportActionBar(materialToolbar)
-        Objects.requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
+        Objects
+            .requireNonNull<Drawable?>(materialToolbar!!.getOverflowIcon())
             .setTint(requireContext().resources.getColor(R.color.titleTextColor, null))
     }
 
@@ -156,16 +178,24 @@ class LibraryFragment : Fragment(), ClickCallback {
 
         musicFolderAdapter = MusicFolderAdapter(this)
         bind!!.musicFolderRecyclerView.setAdapter(musicFolderAdapter)
-        libraryViewModel!!.getMusicFolders(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { musicFolders: MutableList<MusicFolder?>? ->
-                if (musicFolders == null) {
-                    if (bind != null) bind!!.libraryMusicFolderSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.libraryMusicFolderSector.visibility = if (!musicFolders.isEmpty()) View.VISIBLE else View.GONE
+        libraryViewModel!!
+            .getMusicFolders(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { musicFolders: MutableList<MusicFolder?>? ->
+                    if (musicFolders == null) {
+                        if (bind != null) bind!!.libraryMusicFolderSector.visibility = View.GONE
+                    } else {
+                        if (bind !=
+                            null
+                        ) {
+                            bind!!.libraryMusicFolderSector.visibility = if (!musicFolders.isEmpty()) View.VISIBLE else View.GONE
+                        }
 
-                    musicFolderAdapter!!.setItems(musicFolders)
-                }
-            })
+                        musicFolderAdapter!!.setItems(musicFolders)
+                    }
+                },
+            )
     }
 
     private fun initAlbumView() {
@@ -173,23 +203,27 @@ class LibraryFragment : Fragment(), ClickCallback {
             LinearLayoutManager(
                 requireContext(),
                 LinearLayoutManager.HORIZONTAL,
-                false
-            )
+                false,
+            ),
         )
         bind!!.albumRecyclerView.setHasFixedSize(true)
 
         albumAdapter = AlbumAdapter(this)
         bind!!.albumRecyclerView.setAdapter(albumAdapter)
-        libraryViewModel!!.getAlbumSample(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { albums: MutableList<AlbumID3?>? ->
-                if (albums == null) {
-                    if (bind != null) bind!!.libraryAlbumSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.libraryAlbumSector.visibility = if (!albums.isEmpty()) View.VISIBLE else View.GONE
+        libraryViewModel!!
+            .getAlbumSample(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { albums: MutableList<AlbumID3?>? ->
+                    if (albums == null) {
+                        if (bind != null) bind!!.libraryAlbumSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.libraryAlbumSector.visibility = if (!albums.isEmpty()) View.VISIBLE else View.GONE
 
-                    albumAdapter!!.setItems(albums)
-                }
-            })
+                        albumAdapter!!.setItems(albums)
+                    }
+                },
+            )
 
         val albumSnapHelper = CustomLinearSnapHelper()
         albumSnapHelper.attachToRecyclerView(bind!!.albumRecyclerView)
@@ -200,23 +234,27 @@ class LibraryFragment : Fragment(), ClickCallback {
             LinearLayoutManager(
                 requireContext(),
                 LinearLayoutManager.HORIZONTAL,
-                false
-            )
+                false,
+            ),
         )
         bind!!.artistRecyclerView.setHasFixedSize(true)
 
         artistAdapter = ArtistAdapter(this, false, false)
         bind!!.artistRecyclerView.setAdapter(artistAdapter)
-        libraryViewModel!!.getArtistSample(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { artists: MutableList<ArtistID3?>? ->
-                if (artists == null) {
-                    if (bind != null) bind!!.libraryArtistSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.libraryArtistSector.visibility = if (!artists.isEmpty()) View.VISIBLE else View.GONE
+        libraryViewModel!!
+            .getArtistSample(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { artists: MutableList<ArtistID3?>? ->
+                    if (artists == null) {
+                        if (bind != null) bind!!.libraryArtistSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.libraryArtistSector.visibility = if (!artists.isEmpty()) View.VISIBLE else View.GONE
 
-                    artistAdapter!!.setItems(artists)
-                }
-            })
+                        artistAdapter!!.setItems(artists)
+                    }
+                },
+            )
 
         val artistSnapHelper = CustomLinearSnapHelper()
         artistSnapHelper.attachToRecyclerView(bind!!.artistRecyclerView)
@@ -228,24 +266,28 @@ class LibraryFragment : Fragment(), ClickCallback {
                 requireContext(),
                 3,
                 GridLayoutManager.HORIZONTAL,
-                false
-            )
+                false,
+            ),
         )
         bind!!.genreRecyclerView.setHasFixedSize(true)
 
         genreAdapter = GenreAdapter(this)
         bind!!.genreRecyclerView.setAdapter(genreAdapter)
 
-        libraryViewModel!!.getGenreSample(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { genres: MutableList<Genre?>? ->
-                if (genres == null) {
-                    if (bind != null) bind!!.libraryGenresSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.libraryGenresSector.visibility = if (!genres.isEmpty()) View.VISIBLE else View.GONE
+        libraryViewModel!!
+            .getGenreSample(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { genres: MutableList<Genre?>? ->
+                    if (genres == null) {
+                        if (bind != null) bind!!.libraryGenresSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.libraryGenresSector.visibility = if (!genres.isEmpty()) View.VISIBLE else View.GONE
 
-                    genreAdapter!!.setItems(genres)
-                }
-            })
+                        genreAdapter!!.setItems(genres)
+                    }
+                },
+            )
 
         val genreSnapHelper = CustomLinearSnapHelper()
         genreSnapHelper.attachToRecyclerView(bind!!.genreRecyclerView)
@@ -257,26 +299,33 @@ class LibraryFragment : Fragment(), ClickCallback {
 
         playlistHorizontalAdapter = PlaylistHorizontalAdapter(this)
         bind!!.playlistRecyclerView.setAdapter(playlistHorizontalAdapter)
-        libraryViewModel!!.getPlaylistSample(getViewLifecycleOwner())
-            .observe(getViewLifecycleOwner(), Observer { playlists: MutableList<Playlist?>? ->
-                if (playlists == null) {
-                    if (bind != null) bind!!.libraryPlaylistSector.visibility = View.GONE
-                } else {
-                    if (bind != null) bind!!.libraryPlaylistSector.visibility = if (!playlists.isEmpty()) View.VISIBLE else View.GONE
+        libraryViewModel!!
+            .getPlaylistSample(getViewLifecycleOwner())
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { playlists: MutableList<Playlist?>? ->
+                    if (playlists == null) {
+                        if (bind != null) bind!!.libraryPlaylistSector.visibility = View.GONE
+                    } else {
+                        if (bind != null) bind!!.libraryPlaylistSector.visibility = if (!playlists.isEmpty()) View.VISIBLE else View.GONE
 
-                    playlistHorizontalAdapter!!.setItems(playlists)
-                }
-            })
+                        playlistHorizontalAdapter!!.setItems(playlists)
+                    }
+                },
+            )
     }
 
     private fun refreshPlaylistView() {
         val handler = Handler()
 
-        val runnable = Runnable {
-            if (view != null && bind != null && libraryViewModel != null) libraryViewModel!!.refreshPlaylistSample(
-                getViewLifecycleOwner()
-            )
-        }
+        val runnable =
+            Runnable {
+                if (view != null && bind != null && libraryViewModel != null) {
+                    libraryViewModel!!.refreshPlaylistSample(
+                        getViewLifecycleOwner(),
+                    )
+                }
+            }
 
         handler.postDelayed(runnable, 100)
     }
@@ -306,11 +355,14 @@ class LibraryFragment : Fragment(), ClickCallback {
     }
 
     override fun onPlaylistLongClick(bundle: Bundle?) {
-        val dialog = PlaylistEditorDialog(object : PlaylistCallback {
-            override fun onDismiss() {
-                refreshPlaylistView()
-            }
-        })
+        val dialog =
+            PlaylistEditorDialog(
+                object : PlaylistCallback {
+                    override fun onDismiss() {
+                        refreshPlaylistView()
+                    }
+                },
+            )
 
         dialog.setArguments(bundle)
         dialog.show(activity!!.supportFragmentManager, null)

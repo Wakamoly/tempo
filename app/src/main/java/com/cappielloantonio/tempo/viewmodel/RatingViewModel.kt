@@ -10,7 +10,9 @@ import com.cappielloantonio.tempo.subsonic.models.AlbumID3
 import com.cappielloantonio.tempo.subsonic.models.ArtistID3
 import com.cappielloantonio.tempo.subsonic.models.Child
 
-class RatingViewModel(application: Application) : AndroidViewModel(application) {
+class RatingViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val songRepository: SongRepository
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
@@ -25,9 +27,7 @@ class RatingViewModel(application: Application) : AndroidViewModel(application) 
         artistRepository = ArtistRepository()
     }
 
-    fun getSong(): Child? {
-        return song
-    }
+    fun getSong(): Child? = song
 
     val liveSong: LiveData<Child?>?
         get() = songRepository.getSong(song!!.id)
@@ -38,9 +38,7 @@ class RatingViewModel(application: Application) : AndroidViewModel(application) 
         this.artist = null
     }
 
-    fun getAlbum(): AlbumID3? {
-        return album
-    }
+    fun getAlbum(): AlbumID3? = album
 
     val liveAlbum: LiveData<AlbumID3?>?
         get() = albumRepository.getAlbum(album!!.id)
@@ -51,9 +49,7 @@ class RatingViewModel(application: Application) : AndroidViewModel(application) 
         this.artist = null
     }
 
-    fun getArtist(): ArtistID3? {
-        return artist
-    }
+    fun getArtist(): ArtistID3? = artist
 
     val liveArtist: LiveData<ArtistID3?>?
         get() = artistRepository.getArtist(artist!!.id)

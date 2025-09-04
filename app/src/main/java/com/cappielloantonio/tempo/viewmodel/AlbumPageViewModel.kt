@@ -12,7 +12,9 @@ import com.cappielloantonio.tempo.subsonic.models.AlbumID3
 import com.cappielloantonio.tempo.subsonic.models.AlbumInfo
 import com.cappielloantonio.tempo.subsonic.models.ArtistID3
 
-class AlbumPageViewModel(application: Application) : AndroidViewModel(application) {
+class AlbumPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
     private var albumId: String? = null
@@ -27,14 +29,20 @@ class AlbumPageViewModel(application: Application) : AndroidViewModel(applicatio
     val albumSongLiveList: LiveData<MutableList<Child?>?>?
         get() = albumRepository.getAlbumTracks(albumId)
 
-    fun setAlbum(owner: LifecycleOwner, album: AlbumID3) {
+    fun setAlbum(
+        owner: LifecycleOwner,
+        album: AlbumID3,
+    ) {
         this.albumId = album.id
         this.album.postValue(album)
         this.artistId = album.artistId
 
-        albumRepository.getAlbum(album.id).observe(owner, Observer { albums: AlbumID3? ->
-            if (albums != null) this.album.value = albums
-        })
+        albumRepository.getAlbum(album.id).observe(
+            owner,
+            Observer { albums: AlbumID3? ->
+                if (albums != null) this.album.value = albums
+            },
+        )
     }
 
     val artist: LiveData<ArtistID3?>?

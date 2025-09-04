@@ -26,7 +26,9 @@ import com.cappielloantonio.tempo.util.Preferences.isStarredSyncEnabled
 import java.util.Date
 
 @UnstableApi
-class SongBottomSheetViewModel(application: Application) : AndroidViewModel(application) {
+class SongBottomSheetViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val songRepository: SongRepository
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
@@ -45,9 +47,7 @@ class SongBottomSheetViewModel(application: Application) : AndroidViewModel(appl
         sharingRepository = SharingRepository()
     }
 
-    fun getSong(): Child {
-        return song!!
-    }
+    fun getSong(): Child = song!!
 
     fun setSong(song: Child) {
         this.song = song
@@ -75,12 +75,17 @@ class SongBottomSheetViewModel(application: Application) : AndroidViewModel(appl
     }
 
     private fun removeFavoriteOnline(media: Child) {
-        favoriteRepository.unstar(media.id, null, null, object : StarCallback {
-            override fun onError() {
-                // media.setStarred(new Date());
-                favoriteRepository.starLater(media.id, null, null, false)
-            }
-        })
+        favoriteRepository.unstar(
+            media.id,
+            null,
+            null,
+            object : StarCallback {
+                override fun onError() {
+                    // media.setStarred(new Date());
+                    favoriteRepository.starLater(media.id, null, null, false)
+                }
+            },
+        )
 
         media.starred = null
     }
@@ -90,20 +95,28 @@ class SongBottomSheetViewModel(application: Application) : AndroidViewModel(appl
         media.starred = Date()
     }
 
-    private fun setFavoriteOnline(context: Context?, media: Child) {
-        favoriteRepository.star(media.id, null, null, object : StarCallback {
-            override fun onError() {
-                // media.setStarred(null);
-                favoriteRepository.starLater(media.id, null, null, true)
-            }
-        })
+    private fun setFavoriteOnline(
+        context: Context?,
+        media: Child,
+    ) {
+        favoriteRepository.star(
+            media.id,
+            null,
+            null,
+            object : StarCallback {
+                override fun onError() {
+                    // media.setStarred(null);
+                    favoriteRepository.starLater(media.id, null, null, true)
+                }
+            },
+        )
 
         media.starred = Date()
 
         if (isStarredSyncEnabled()) {
             DownloadUtil.getDownloadTracker(context).download(
                 MappingUtil.mapDownload(media),
-                Download(media)
+                Download(media),
             )
         }
     }
@@ -114,16 +127,18 @@ class SongBottomSheetViewModel(application: Application) : AndroidViewModel(appl
     val artist: LiveData<ArtistID3?>?
         get() = artistRepository.getArtist(song!!.artistId)
 
-    fun getInstantMix(owner: LifecycleOwner, media: Child): LiveData<MutableList<Child?>?> {
+    fun getInstantMix(
+        owner: LifecycleOwner,
+        media: Child,
+    ): LiveData<MutableList<Child?>?> {
         instantMix.value = mutableListOf<Child?>()
 
-        songRepository.getInstantMix(media.id, 20)
+        songRepository
+            .getInstantMix(media.id, 20)
             .observe(owner, Observer { value: MutableList<Child?>? -> instantMix.postValue(value) })
 
         return instantMix
     }
 
-    fun shareTrack(): MutableLiveData<Share?>? {
-        return sharingRepository.createShare(song!!.id, song!!.title, null)
-    }
+    fun shareTrack(): MutableLiveData<Share?>? = sharingRepository.createShare(song!!.id, song!!.title, null)
 }

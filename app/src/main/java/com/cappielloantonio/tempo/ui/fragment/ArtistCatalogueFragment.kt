@@ -38,7 +38,9 @@ import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 import java.util.Locale
 
 @UnstableApi
-class ArtistCatalogueFragment : Fragment(), ClickCallback {
+class ArtistCatalogueFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentArtistCatalogueBinding? = null
     private var activity: MainActivity? = null
     private var artistCatalogueViewModel: ArtistCatalogueViewModel? = null
@@ -55,7 +57,7 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -76,7 +78,7 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
     private fun initData() {
         artistCatalogueViewModel =
             ViewModelProvider(requireActivity()).get<ArtistCatalogueViewModel>(
-                ArtistCatalogueViewModel::class.java
+                ArtistCatalogueViewModel::class.java,
             )
         artistCatalogueViewModel!!.loadArtists()
     }
@@ -89,22 +91,28 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? ->
-            hideKeyboard(v!!)
-            activity!!.navController.navigateUp()
-        })
+        bind!!.toolbar.setNavigationOnClickListener(
+            View.OnClickListener { v: View? ->
+                hideKeyboard(v!!)
+                activity!!.navController.navigateUp()
+            },
+        )
 
-
-        bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.artistInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(R.string.artist_catalogue_title)
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        bind!!.appBarLayout.addOnOffsetChangedListener(
+            OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                if ((bind!!.artistInfoSector.height + verticalOffset) < (
+                        2 *
+                            ViewCompat.getMinimumHeight(
+                                bind!!.toolbar,
+                            )
+                    )
+                ) {
+                    bind!!.toolbar.setTitle(R.string.artist_catalogue_title)
+                } else {
+                    bind!!.toolbar.setTitle(R.string.empty_string)
+                }
+            },
+        )
     }
 
     @SuppressLint("ClickableViewAccessibility")
@@ -118,22 +126,30 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
         bind!!.artistCatalogueRecyclerView.setAdapter(artistAdapter)
         artistCatalogueViewModel!!.getArtistList().observe(
             getViewLifecycleOwner(),
-            Observer { artistList: MutableList<ArtistID3>? -> artistAdapter!!.setItems(artistList) })
+            Observer { artistList: MutableList<ArtistID3>? -> artistAdapter!!.setItems(artistList) },
+        )
 
-        bind!!.artistCatalogueRecyclerView.setOnTouchListener(OnTouchListener { v: View?, event: MotionEvent? ->
-            hideKeyboard(v!!)
-            false
-        })
+        bind!!.artistCatalogueRecyclerView.setOnTouchListener(
+            OnTouchListener { v: View?, event: MotionEvent? ->
+                hideKeyboard(v!!)
+                false
+            },
+        )
 
-        bind!!.artistListSortImageView.setOnClickListener(View.OnClickListener { view: View? ->
-            showPopupMenu(
-                view,
-                R.menu.sort_artist_popup_menu
-            )
-        })
+        bind!!.artistListSortImageView.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                showPopupMenu(
+                    view,
+                    R.menu.sort_artist_popup_menu,
+                )
+            },
+        )
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         inflater.inflate(R.menu.toolbar_menu, menu)
 
         val searchItem = menu.findItem(R.id.action_search)
@@ -142,19 +158,21 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
         searchView!!.imeOptions = EditorInfo.IME_ACTION_DONE
 
         searchView.setQueryHint(getString(R.string.filter_artist))
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                // this toast may be overkill...
-                Toast.makeText(requireContext(), "Search: " + query, Toast.LENGTH_SHORT).show()
-                filterArtists(query)
-                return true
-            }
+        searchView.setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    // this toast may be overkill...
+                    Toast.makeText(requireContext(), "Search: " + query, Toast.LENGTH_SHORT).show()
+                    filterArtists(query)
+                    return true
+                }
 
-            override fun onQueryTextChange(newText: String?): Boolean {
-                filterArtists(newText)
-                return true
-            }
-        })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    filterArtists(newText)
+                    return true
+                }
+            },
+        )
 
         searchView.setPadding(-32, 0, 0, 0)
     }
@@ -188,20 +206,25 @@ class ArtistCatalogueFragment : Fragment(), ClickCallback {
         imm.hideSoftInputFromWindow(view.windowToken, 0)
     }
 
-    private fun showPopupMenu(view: View?, menuResource: Int) {
+    private fun showPopupMenu(
+        view: View?,
+        menuResource: Int,
+    ) {
         val popup = PopupMenu(requireContext(), view)
         popup.menuInflater.inflate(menuResource, popup.menu)
 
-        popup.setOnMenuItemClickListener(PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
-            if (menuItem!!.itemId == R.id.menu_artist_sort_name) {
-                artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_NAME)
-                return@setOnMenuItemClickListener true
-            } else if (menuItem.itemId == R.id.menu_artist_sort_random) {
-                artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_RANDOM)
-                return@setOnMenuItemClickListener true
-            }
-            false
-        })
+        popup.setOnMenuItemClickListener(
+            PopupMenu.OnMenuItemClickListener { menuItem: MenuItem? ->
+                if (menuItem!!.itemId == R.id.menu_artist_sort_name) {
+                    artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_NAME)
+                    return@setOnMenuItemClickListener true
+                } else if (menuItem.itemId == R.id.menu_artist_sort_random) {
+                    artistAdapter!!.sort(Constants.ARTIST_ORDER_BY_RANDOM)
+                    return@setOnMenuItemClickListener true
+                }
+                false
+            },
+        )
 
         popup.show()
     }

@@ -26,7 +26,9 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickListener {
+class PodcastEpisodeBottomSheetDialog :
+    BottomSheetDialogFragment(),
+    View.OnClickListener {
     private var podcastEpisodeBottomSheetViewModel: PodcastEpisodeBottomSheetViewModel? = null
     private var podcastEpisode: PodcastEpisode? = null
 
@@ -35,7 +37,7 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.bottom_sheet_podcast_episode_dialog, container, false)
 
@@ -43,7 +45,7 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
 
         podcastEpisodeBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PodcastEpisodeBottomSheetViewModel>(
-                PodcastEpisodeBottomSheetViewModel::class.java
+                PodcastEpisodeBottomSheetViewModel::class.java,
             )
         podcastEpisodeBottomSheetViewModel!!.setPodcastEpisode(podcastEpisode)
 
@@ -66,12 +68,12 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     private fun init(view: View) {
         val coverPodcast = view.findViewById<ImageView>(R.id.podcast_cover_image_view)
 
-        CustomGlideRequest.Builder.Companion.from(
-            requireContext(),
-            podcastEpisodeBottomSheetViewModel!!.getPodcastEpisode().coverArtId,
-            CustomGlideRequest.ResourceType.Podcast
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                requireContext(),
+                podcastEpisodeBottomSheetViewModel!!.getPodcastEpisode().coverArtId,
+                CustomGlideRequest.ResourceType.Podcast,
+            ).build()
             .into(coverPodcast)
 
         val titlePodcast = view.findViewById<TextView>(R.id.podcast_title_text_view)
@@ -80,54 +82,66 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
         titlePodcast.setSelected(true)
 
         val playNext = view.findViewById<TextView>(R.id.play_next_text_view)
-        playNext.setOnClickListener(View.OnClickListener { v: View? ->
-            // TODO
-            // MediaManager.enqueue(mediaBrowserListenableFuture, podcast, true);
-            (requireActivity() as MainActivity).setBottomSheetInPeek(true)
-            dismissBottomSheet()
-        })
+        playNext.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                // TODO
+                // MediaManager.enqueue(mediaBrowserListenableFuture, podcast, true);
+                (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                dismissBottomSheet()
+            },
+        )
 
         val addToQueue = view.findViewById<TextView>(R.id.add_to_queue_text_view)
-        addToQueue.setOnClickListener(View.OnClickListener { v: View? ->
-            // TODO
-            // MediaManager.enqueue(mediaBrowserListenableFuture, podcast, false);
-            (requireActivity() as MainActivity).setBottomSheetInPeek(true)
-            dismissBottomSheet()
-        })
+        addToQueue.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                // TODO
+                // MediaManager.enqueue(mediaBrowserListenableFuture, podcast, false);
+                (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                dismissBottomSheet()
+            },
+        )
 
         val download = view.findViewById<TextView>(R.id.download_text_view)
-        download.setOnClickListener(View.OnClickListener { v: View? ->
-            // TODO
+        download.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                // TODO
             /* DownloadUtil.getDownloadTracker(requireContext()).download(
                     MappingUtil.mapMediaItem(podcast, false),
                     MappingUtil.mapDownload(podcast, null, null)
             ); */
-            dismissBottomSheet()
-        })
+                dismissBottomSheet()
+            },
+        )
 
         val remove = view.findViewById<TextView>(R.id.remove_text_view)
-        remove.setOnClickListener(View.OnClickListener { v: View? ->
-            // TODO
+        remove.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                // TODO
             /* DownloadUtil.getDownloadTracker(requireContext()).remove(
                     MappingUtil.mapMediaItem(podcast, false),
                     MappingUtil.mapDownload(podcast, null, null)
             ); */
-            dismissBottomSheet()
-        })
+                dismissBottomSheet()
+            },
+        )
 
         initDownloadUI(download, remove)
 
         val delete = view.findViewById<TextView>(R.id.delete_text_view)
-        delete.setOnClickListener(View.OnClickListener { v: View? ->
-            podcastEpisodeBottomSheetViewModel!!.deletePodcastEpisode()
-            dismissBottomSheet()
-        })
+        delete.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                podcastEpisodeBottomSheetViewModel!!.deletePodcastEpisode()
+                dismissBottomSheet()
+            },
+        )
 
         val goToChannel = view.findViewById<TextView>(R.id.go_to_channel_text_view)
-        goToChannel.setOnClickListener(View.OnClickListener { v: View? ->
-            Toast.makeText(requireContext(), "Open the channel", Toast.LENGTH_SHORT).show()
-            dismissBottomSheet()
-        })
+        goToChannel.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                Toast.makeText(requireContext(), "Open the channel", Toast.LENGTH_SHORT).show()
+                dismissBottomSheet()
+            },
+        )
     }
 
     override fun onClick(v: View?) {
@@ -138,7 +152,10 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
         dismiss()
     }
 
-    private fun initDownloadUI(download: TextView?, remove: TextView?) {
+    private fun initDownloadUI(
+        download: TextView?,
+        remove: TextView?,
+    ) {
         // TODO
         /* if (DownloadUtil.getDownloadTracker(requireContext()).isDownloaded(MappingUtil.mapMediaItem(podcast, false))) {
             download.setVisibility(View.GONE);
@@ -150,13 +167,15 @@ class PodcastEpisodeBottomSheetDialog : BottomSheetDialogFragment(), View.OnClic
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {

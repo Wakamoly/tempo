@@ -6,7 +6,9 @@ import androidx.lifecycle.LiveData
 import com.cappielloantonio.tempo.model.Server
 import com.cappielloantonio.tempo.repository.ServerRepository
 
-class LoginViewModel(application: Application) : AndroidViewModel(application) {
+class LoginViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val serverRepository: ServerRepository
 
     var serverToEdit: Server? = null

@@ -74,6 +74,7 @@ class MainActivity : BaseActivity() {
     private var fragmentManager: FragmentManager? = null
     private var navHostFragment: NavHostFragment? = null
     private var bottomNavigationView: BottomNavigationView? = null
+
     @JvmField
     var navController: NavController? = null
     private var bottomSheetBehavior: BottomSheetBehavior<*>? = null
@@ -118,8 +119,11 @@ class MainActivity : BaseActivity() {
     }
 
     override fun onBackPressed() {
-        if (bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_EXPANDED) collapseBottomSheetDelayed()
-        else super.onBackPressed()
+        if (bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_EXPANDED) {
+            collapseBottomSheetDelayed()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     fun init() {
@@ -140,7 +144,8 @@ class MainActivity : BaseActivity() {
         bottomSheetBehavior =
             BottomSheetBehavior.from<View?>(findViewById<View?>(R.id.player_bottom_sheet))
         bottomSheetBehavior!!.addBottomSheetCallback(bottomSheetCallback)
-        fragmentManager!!.beginTransaction()
+        fragmentManager!!
+            .beginTransaction()
             .replace(R.id.player_bottom_sheet, PlayerBottomSheetFragment(), "PlayerBottomSheet")
             .commit()
 
@@ -184,25 +189,38 @@ class MainActivity : BaseActivity() {
         bottomSheetBehavior!!.isDraggable = isDraggable
     }
 
-    private val bottomSheetCallback: BottomSheetCallback = object : BottomSheetCallback() {
-        var navigationHeight: Int = 0
+    private val bottomSheetCallback: BottomSheetCallback =
+        object : BottomSheetCallback() {
+            var navigationHeight: Int = 0
 
-        override fun onStateChanged(view: View, state: Int) {
-            val playerBottomSheetFragment =
-                supportFragmentManager.findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
+            override fun onStateChanged(
+                view: View,
+                state: Int,
+            ) {
+                val playerBottomSheetFragment =
+                    supportFragmentManager.findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
 
-            when (state) {
-                BottomSheetBehavior.STATE_HIDDEN -> resetMusicSession()
-                BottomSheetBehavior.STATE_COLLAPSED -> if (playerBottomSheetFragment != null) playerBottomSheetFragment.goBackToFirstPage()
-                BottomSheetBehavior.STATE_SETTLING, BottomSheetBehavior.STATE_EXPANDED, BottomSheetBehavior.STATE_DRAGGING, BottomSheetBehavior.STATE_HALF_EXPANDED -> {}
+                when (state) {
+                    BottomSheetBehavior.STATE_HIDDEN -> resetMusicSession()
+                    BottomSheetBehavior.STATE_COLLAPSED ->
+                        if (playerBottomSheetFragment !=
+                            null
+                        ) {
+                            playerBottomSheetFragment.goBackToFirstPage()
+                        }
+                    BottomSheetBehavior.STATE_SETTLING, BottomSheetBehavior.STATE_EXPANDED, BottomSheetBehavior.STATE_DRAGGING, BottomSheetBehavior.STATE_HALF_EXPANDED -> {
+                    }
+                }
+            }
+
+            override fun onSlide(
+                view: View,
+                slideOffset: Float,
+            ) {
+                animateBottomSheet(slideOffset)
+                animateBottomNavigation(slideOffset, navigationHeight)
             }
         }
-
-        override fun onSlide(view: View, slideOffset: Float) {
-            animateBottomSheet(slideOffset)
-            animateBottomNavigation(slideOffset, navigationHeight)
-        }
-    }
 
     private fun animateBottomSheet(slideOffset: Float) {
         val playerBottomSheetFragment =
@@ -210,12 +228,16 @@ class MainActivity : BaseActivity() {
         if (playerBottomSheetFragment != null) {
             val condensedSlideOffset = max(0.0f, min(0.2f, slideOffset - 0.2f)) / 0.2f
             playerBottomSheetFragment.getPlayerHeader().setAlpha(1 - condensedSlideOffset)
-            playerBottomSheetFragment.getPlayerHeader()
+            playerBottomSheetFragment
+                .getPlayerHeader()
                 .setVisibility(if (condensedSlideOffset > 0.99) View.GONE else View.VISIBLE)
         }
     }
 
-    private fun animateBottomNavigation(slideOffset: Float, navigationHeight: Int) {
+    private fun animateBottomNavigation(
+        slideOffset: Float,
+        navigationHeight: Int,
+    ) {
         var navigationHeight = navigationHeight
         if (slideOffset < 0) return
 
@@ -238,12 +260,18 @@ class MainActivity : BaseActivity() {
          * In questo modo intercetto il cambio schermata tramite navbar e se il bottom sheet è aperto,
          * lo chiudo
          */
-        navController!!.addOnDestinationChangedListener(OnDestinationChangedListener { controller: NavController?, destination: NavDestination?, arguments: Bundle? ->
-            if (bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_EXPANDED && (destination!!.id == R.id.homeFragment || destination.id == R.id.libraryFragment || destination.id == R.id.downloadFragment)
-            ) {
-                bottomSheetBehavior!!.setState(BottomSheetBehavior.STATE_COLLAPSED)
-            }
-        })
+        navController!!.addOnDestinationChangedListener(
+            OnDestinationChangedListener { controller: NavController?, destination: NavDestination?, arguments: Bundle? ->
+                if (bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_EXPANDED &&
+                    (
+                        destination!!.id == R.id.homeFragment || destination.id == R.id.libraryFragment ||
+                            destination.id == R.id.downloadFragment
+                    )
+                ) {
+                    bottomSheetBehavior!!.setState(BottomSheetBehavior.STATE_COLLAPSED)
+                }
+            },
+        )
 
         setupWithNavController(bottomNavigationView!!, navController!!)
     }
@@ -259,21 +287,26 @@ class MainActivity : BaseActivity() {
     private fun initService() {
         MediaManager.check(getMediaBrowserListenableFuture())
 
-        getMediaBrowserListenableFuture().addListener(Runnable {
-            try {
-                getMediaBrowserListenableFuture().get().addListener(object : Player.Listener {
-                    override fun onIsPlayingChanged(isPlaying: Boolean) {
-                        if (isPlaying && bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_HIDDEN) {
-                            setBottomSheetInPeek(true)
-                        }
-                    }
-                })
-            } catch (e: ExecutionException) {
-                e.printStackTrace()
-            } catch (e: InterruptedException) {
-                e.printStackTrace()
-            }
-        }, MoreExecutors.directExecutor())
+        getMediaBrowserListenableFuture().addListener(
+            Runnable {
+                try {
+                    getMediaBrowserListenableFuture().get().addListener(
+                        object : Player.Listener {
+                            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                                if (isPlaying && bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_HIDDEN) {
+                                    setBottomSheetInPeek(true)
+                                }
+                            }
+                        },
+                    )
+                } catch (e: ExecutionException) {
+                    e.printStackTrace()
+                } catch (e: InterruptedException) {
+                    e.printStackTrace()
+                }
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     private fun goToLogin() {
@@ -356,16 +389,19 @@ class MainActivity : BaseActivity() {
         if (getToken() == null) return
 
         if (isInUseServerAddressLocal()) {
-            mainViewModel!!.ping().observe(this, Observer { subsonicResponse: SubsonicResponse? ->
-                if (subsonicResponse == null) {
-                    setServerSwitchableTimer()
-                    switchInUseServerAddress()
-                    refreshSubsonicClient()
-                    pingServer()
-                } else {
-                    setOpenSubsonic(subsonicResponse.openSubsonic != null && subsonicResponse.openSubsonic)
-                }
-            })
+            mainViewModel!!.ping().observe(
+                this,
+                Observer { subsonicResponse: SubsonicResponse? ->
+                    if (subsonicResponse == null) {
+                        setServerSwitchableTimer()
+                        switchInUseServerAddress()
+                        refreshSubsonicClient()
+                        pingServer()
+                    } else {
+                        setOpenSubsonic(subsonicResponse.openSubsonic != null && subsonicResponse.openSubsonic)
+                    }
+                },
+            )
         } else {
             if (isServerSwitchable()) {
                 setServerSwitchableTimer()
@@ -373,17 +409,21 @@ class MainActivity : BaseActivity() {
                 refreshSubsonicClient()
                 pingServer()
             } else {
-                mainViewModel!!.ping()
-                    .observe(this, Observer { subsonicResponse: SubsonicResponse? ->
-                        if (subsonicResponse == null) {
-                            if (showServerUnreachableDialog()) {
-                                val dialog = ServerUnreachableDialog()
-                                dialog.show(supportFragmentManager, null)
+                mainViewModel!!
+                    .ping()
+                    .observe(
+                        this,
+                        Observer { subsonicResponse: SubsonicResponse? ->
+                            if (subsonicResponse == null) {
+                                if (showServerUnreachableDialog()) {
+                                    val dialog = ServerUnreachableDialog()
+                                    dialog.show(supportFragmentManager, null)
+                                }
+                            } else {
+                                setOpenSubsonic(subsonicResponse.openSubsonic != null && subsonicResponse.openSubsonic)
                             }
-                        } else {
-                            setOpenSubsonic(subsonicResponse.openSubsonic != null && subsonicResponse.openSubsonic)
-                        }
-                    })
+                        },
+                    )
             }
         }
     }
@@ -396,22 +436,27 @@ class MainActivity : BaseActivity() {
                     Observer { openSubsonicExtensions: MutableList<OpenSubsonicExtension?>? ->
                         if (openSubsonicExtensions != null) {
                             Preferences.setOpenSubsonicExtensions(
-                                openSubsonicExtensions
+                                openSubsonicExtensions,
                             )
                         }
-                    })
+                    },
+                )
             }
         }
 
     private fun checkTempoUpdate() {
         if (BuildConfig.FLAVOR == "tempo" && showTempoUpdateDialog()) {
-            mainViewModel!!.checkTempoUpdate()
-                .observe(this, Observer { latestRelease: LatestRelease? ->
-                    if (latestRelease != null && UpdateUtil.showUpdateDialog(latestRelease)) {
-                        val dialog = GithubTempoUpdateDialog(latestRelease)
-                        dialog.show(supportFragmentManager, null)
-                    }
-                })
+            mainViewModel!!
+                .checkTempoUpdate()
+                .observe(
+                    this,
+                    Observer { latestRelease: LatestRelease? ->
+                        if (latestRelease != null && UpdateUtil.showUpdateDialog(latestRelease)) {
+                            val dialog = GithubTempoUpdateDialog(latestRelease)
+                            dialog.show(supportFragmentManager, null)
+                        }
+                    },
+                )
         }
     }
 

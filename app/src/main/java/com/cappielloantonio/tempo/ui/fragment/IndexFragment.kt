@@ -25,7 +25,9 @@ import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.AppBarLayout.OnOffsetChangedListener
 
 @UnstableApi
-class IndexFragment : Fragment(), ClickCallback {
+class IndexFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentIndexBinding? = null
     private var activity: MainActivity? = null
     private var indexViewModel: IndexViewModel? = null
@@ -35,7 +37,7 @@ class IndexFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -74,18 +76,31 @@ class IndexFragment : Fragment(), ClickCallback {
             activity!!.supportActionBar!!.setDisplayShowHomeEnabled(true)
         }
 
-        if (bind != null) bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? -> activity!!.navController.navigateUp() })
+        if (bind !=
+            null
+        ) {
+            bind!!.toolbar.setNavigationOnClickListener(View.OnClickListener { v: View? -> activity!!.navController.navigateUp() })
+        }
 
-        if (bind != null) bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-            if ((bind!!.indexInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                    bind!!.toolbar
-                ))
-            ) {
-                bind!!.toolbar.setTitle(indexViewModel!!.getMusicFolderName())
-            } else {
-                bind!!.toolbar.setTitle(R.string.empty_string)
-            }
-        })
+        if (bind !=
+            null
+        ) {
+            bind!!.appBarLayout.addOnOffsetChangedListener(
+                OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                    if ((bind!!.indexInfoSector.height + verticalOffset) < (
+                            2 *
+                                ViewCompat.getMinimumHeight(
+                                    bind!!.toolbar,
+                                )
+                        )
+                    ) {
+                        bind!!.toolbar.setTitle(indexViewModel!!.getMusicFolderName())
+                    } else {
+                        bind!!.toolbar.setTitle(R.string.empty_string)
+                    }
+                },
+            )
+        }
     }
 
     private fun initDirectoryListView() {
@@ -98,18 +113,22 @@ class IndexFragment : Fragment(), ClickCallback {
         musicIndexAdapter = MusicIndexAdapter(this)
         bind!!.indexRecyclerView.setAdapter(musicIndexAdapter)
 
-        indexViewModel!!.getIndexes(if (musicFolder != null) musicFolder.id else null)
-            .observe(getViewLifecycleOwner(), Observer { indexes: Indexes? ->
-                if (indexes != null) {
-                    musicIndexAdapter!!.setItems(IndexUtil.getArtist(indexes))
-                }
-            })
+        indexViewModel!!
+            .getIndexes(if (musicFolder != null) musicFolder.id else null)
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { indexes: Indexes? ->
+                    if (indexes != null) {
+                        musicIndexAdapter!!.setItems(IndexUtil.getArtist(indexes))
+                    }
+                },
+            )
 
         bind!!.fastScrollbar.setRecyclerView(bind!!.indexRecyclerView)
         bind!!.fastScrollbar.setViewsToUse(
             R.layout.layout_fast_scrollbar,
             R.id.fastscroller_bubble,
-            R.id.fastscroller_handle
+            R.id.fastscroller_handle,
         )
     }
 

@@ -39,7 +39,9 @@ import com.google.common.util.concurrent.ListenableFuture
 import java.util.stream.Collectors
 
 @UnstableApi
-class DirectoryFragment : Fragment(), ClickCallback {
+class DirectoryFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: FragmentDirectoryBinding? = null
     private var activity: MainActivity? = null
     private var directoryViewModel: DirectoryViewModel? = null
@@ -55,7 +57,10 @@ class DirectoryFragment : Fragment(), ClickCallback {
         setHasOptionsMenu(true)
     }
 
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    override fun onCreateOptionsMenu(
+        menu: Menu,
+        inflater: MenuInflater,
+    ) {
         super.onCreateOptionsMenu(menu, inflater)
         inflater.inflate(R.menu.directory_page_menu, menu)
 
@@ -65,7 +70,7 @@ class DirectoryFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         activity = activity as MainActivity?
 
@@ -97,27 +102,39 @@ class DirectoryFragment : Fragment(), ClickCallback {
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         if (item.itemId == R.id.action_download_directory) {
-            val dialog = DownloadDirectoryDialog(object : DialogClickCallback {
-                override fun onPositiveClick() {
-                    directoryViewModel!!.loadMusicDirectory(arguments!!.getString(Constants.MUSIC_DIRECTORY_ID))
-                        .observe(getViewLifecycleOwner(), Observer { directory: Directory? ->
-                            if (isVisible && activity != null) {
-                                val songs = directory!!.children!!.stream()
-                                    .filter { child: Child? -> !child!!.isDir }.collect(
-                                        Collectors.toList()
-                                    )
-                                DownloadUtil.getDownloadTracker(requireContext()).download(
-                                    MappingUtil.mapDownloads(songs),
-                                    songs.stream()
-                                        .map<Download?> { child: Child? -> Download(child) }
-                                        .collect(
-                                            Collectors.toList()
-                                        )
+            val dialog =
+                DownloadDirectoryDialog(
+                    object : DialogClickCallback {
+                        override fun onPositiveClick() {
+                            directoryViewModel!!
+                                .loadMusicDirectory(arguments!!.getString(Constants.MUSIC_DIRECTORY_ID))
+                                .observe(
+                                    getViewLifecycleOwner(),
+                                    Observer { directory: Directory? ->
+                                        if (isVisible && activity != null) {
+                                            val songs =
+                                                directory!!
+                                                    .children!!
+                                                    .stream()
+                                                    .filter { child: Child? -> !child!!.isDir }
+                                                    .collect(
+                                                        Collectors.toList(),
+                                                    )
+                                            DownloadUtil.getDownloadTracker(requireContext()).download(
+                                                MappingUtil.mapDownloads(songs),
+                                                songs
+                                                    .stream()
+                                                    .map<Download?> { child: Child? -> Download(child) }
+                                                    .collect(
+                                                        Collectors.toList(),
+                                                    ),
+                                            )
+                                        }
+                                    },
                                 )
-                            }
-                        })
-                }
-            })
+                        }
+                    },
+                )
 
             dialog.show(activity!!.supportFragmentManager, null)
 
@@ -147,37 +164,48 @@ class DirectoryFragment : Fragment(), ClickCallback {
 
         musicDirectoryAdapter = MusicDirectoryAdapter(this)
         bind!!.directoryRecyclerView.setAdapter(musicDirectoryAdapter)
-        directoryViewModel!!.loadMusicDirectory(arguments!!.getString(Constants.MUSIC_DIRECTORY_ID))
-            .observe(getViewLifecycleOwner(), Observer { directory: Directory? ->
-                bind!!.appBarLayout.addOnOffsetChangedListener(OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
-                    if ((bind!!.directoryInfoSector.height + verticalOffset) < (2 * ViewCompat.getMinimumHeight(
-                            bind!!.toolbar
-                        ))
-                    ) {
-                        bind!!.toolbar.setTitle(directory!!.name)
-                    } else {
-                        bind!!.toolbar.setTitle(R.string.empty_string)
-                    }
-                })
-                bind!!.directoryTitleLabel.text = directory!!.name
+        directoryViewModel!!
+            .loadMusicDirectory(arguments!!.getString(Constants.MUSIC_DIRECTORY_ID))
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { directory: Directory? ->
+                    bind!!.appBarLayout.addOnOffsetChangedListener(
+                        OnOffsetChangedListener { appBarLayout: AppBarLayout?, verticalOffset: Int ->
+                            if ((bind!!.directoryInfoSector.height + verticalOffset) < (
+                                    2 *
+                                        ViewCompat.getMinimumHeight(
+                                            bind!!.toolbar,
+                                        )
+                                )
+                            ) {
+                                bind!!.toolbar.setTitle(directory!!.name)
+                            } else {
+                                bind!!.toolbar.setTitle(R.string.empty_string)
+                            }
+                        },
+                    )
+                    bind!!.directoryTitleLabel.text = directory!!.name
 
-                musicDirectoryAdapter!!.setItems(directory.children)
-                menuItem!!.isVisible = directory.children != null && directory.children!!
-                    .stream()
-                    .filter { child: Child? -> !child!!.isDir }
-                    .findFirst()
-                    .orElse(null) != null
-            })
+                    musicDirectoryAdapter!!.setItems(directory.children)
+                    menuItem!!.isVisible = directory.children != null && directory.children!!
+                        .stream()
+                        .filter { child: Child? -> !child!!.isDir }
+                        .findFirst()
+                        .orElse(null) != null
+                },
+            )
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {
@@ -186,9 +214,11 @@ class DirectoryFragment : Fragment(), ClickCallback {
 
     override fun onMediaClick(bundle: Bundle) {
         MediaManager.startQueue(
-            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
-                Constants.TRACKS_OBJECT
-            ), bundle.getInt(Constants.ITEM_POSITION)
+            mediaBrowserListenableFuture,
+            bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT,
+            ),
+            bundle.getInt(Constants.ITEM_POSITION),
         )
     }
 

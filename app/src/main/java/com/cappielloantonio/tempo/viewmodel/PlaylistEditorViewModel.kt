@@ -12,7 +12,9 @@ import com.cappielloantonio.tempo.subsonic.models.Share
 import com.google.common.collect.Lists
 import java.util.Objects
 
-class PlaylistEditorViewModel(application: Application) : AndroidViewModel(application) {
+class PlaylistEditorViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val playlistRepository: PlaylistRepository
     private val sharingRepository: SharingRepository
 
@@ -30,7 +32,7 @@ class PlaylistEditorViewModel(application: Application) : AndroidViewModel(appli
         playlistRepository.createPlaylist(
             null,
             name,
-            java.util.ArrayList<Any?>(Lists.transform<Child?, String?>(toAdd, Child::id))
+            java.util.ArrayList<Any?>(Lists.transform<Child?, String?>(toAdd, Child::id)),
         )
     }
 
@@ -89,9 +91,7 @@ class PlaylistEditorViewModel(application: Application) : AndroidViewModel(appli
             return ids
         }
 
-    fun sharePlaylist(): MutableLiveData<Share?>? {
-        return sharingRepository.createShare(toEdit!!.id, toEdit!!.name, null)
-    }
+    fun sharePlaylist(): MutableLiveData<Share?>? = sharingRepository.createShare(toEdit!!.id, toEdit!!.name, null)
 
     companion object {
         private const val TAG = "PlaylistEditorViewModel"

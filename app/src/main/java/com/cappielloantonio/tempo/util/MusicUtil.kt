@@ -59,25 +59,47 @@ object MusicUtil {
         uri.append(getSubsonicClientInstance(false).getUrl())
         uri.append("stream")
 
-        if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
-            .append(Util.encode(params.get("u")))
-        if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
-            .append(params.get("p"))
-        if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
-            .append(params.get("s"))
-        if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
-            .append(params.get("t"))
-        if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
-            .append(params.get("v"))
-        if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
-            .append(params.get("c"))
+        if (params.containsKey("u") && params.get("u") != null) {
+            uri
+                .append("?u=")
+                .append(Util.encode(params.get("u")))
+        }
+        if (params.containsKey("p") && params.get("p") != null) {
+            uri
+                .append("&p=")
+                .append(params.get("p"))
+        }
+        if (params.containsKey("s") && params.get("s") != null) {
+            uri
+                .append("&s=")
+                .append(params.get("s"))
+        }
+        if (params.containsKey("t") && params.get("t") != null) {
+            uri
+                .append("&t=")
+                .append(params.get("t"))
+        }
+        if (params.containsKey("v") && params.get("v") != null) {
+            uri
+                .append("&v=")
+                .append(params.get("v"))
+        }
+        if (params.containsKey("c") && params.get("c") != null) {
+            uri
+                .append("&c=")
+                .append(params.get("c"))
+        }
 
-        if (!isServerPrioritized()) uri.append("&maxBitRate=").append(
-            bitratePreference
-        )
-        if (!isServerPrioritized()) uri.append("&format=").append(
-            transcodingFormatPreference
-        )
+        if (!isServerPrioritized()) {
+            uri.append("&maxBitRate=").append(
+                bitratePreference,
+            )
+        }
+        if (!isServerPrioritized()) {
+            uri.append("&format=").append(
+                transcodingFormatPreference,
+            )
+        }
         if (askForEstimateContentLength()) uri.append("&estimateContentLength=true")
 
         uri.append("&id=").append(id)
@@ -98,18 +120,36 @@ object MusicUtil {
             uri.append(getSubsonicClientInstance(false).getUrl())
             uri.append("download")
 
-            if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
-                .append(Util.encode(params.get("u")))
-            if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
-                .append(params.get("p"))
-            if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
-                .append(params.get("s"))
-            if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
-                .append(params.get("t"))
-            if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
-                .append(params.get("v"))
-            if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
-                .append(params.get("c"))
+            if (params.containsKey("u") && params.get("u") != null) {
+                uri
+                    .append("?u=")
+                    .append(Util.encode(params.get("u")))
+            }
+            if (params.containsKey("p") && params.get("p") != null) {
+                uri
+                    .append("&p=")
+                    .append(params.get("p"))
+            }
+            if (params.containsKey("s") && params.get("s") != null) {
+                uri
+                    .append("&s=")
+                    .append(params.get("s"))
+            }
+            if (params.containsKey("t") && params.get("t") != null) {
+                uri
+                    .append("&t=")
+                    .append(params.get("t"))
+            }
+            if (params.containsKey("v") && params.get("v") != null) {
+                uri
+                    .append("&v=")
+                    .append(params.get("v"))
+            }
+            if (params.containsKey("c") && params.get("c") != null) {
+                uri
+                    .append("&c=")
+                    .append(params.get("c"))
+            }
 
             uri.append("&id=").append(id)
         } else {
@@ -129,25 +169,47 @@ object MusicUtil {
         uri.append(getSubsonicClientInstance(false).getUrl())
         uri.append("stream")
 
-        if (params.containsKey("u") && params.get("u") != null) uri.append("?u=")
-            .append(Util.encode(params.get("u")))
-        if (params.containsKey("p") && params.get("p") != null) uri.append("&p=")
-            .append(params.get("p"))
-        if (params.containsKey("s") && params.get("s") != null) uri.append("&s=")
-            .append(params.get("s"))
-        if (params.containsKey("t") && params.get("t") != null) uri.append("&t=")
-            .append(params.get("t"))
-        if (params.containsKey("v") && params.get("v") != null) uri.append("&v=")
-            .append(params.get("v"))
-        if (params.containsKey("c") && params.get("c") != null) uri.append("&c=")
-            .append(params.get("c"))
+        if (params.containsKey("u") && params.get("u") != null) {
+            uri
+                .append("?u=")
+                .append(Util.encode(params.get("u")))
+        }
+        if (params.containsKey("p") && params.get("p") != null) {
+            uri
+                .append("&p=")
+                .append(params.get("p"))
+        }
+        if (params.containsKey("s") && params.get("s") != null) {
+            uri
+                .append("&s=")
+                .append(params.get("s"))
+        }
+        if (params.containsKey("t") && params.get("t") != null) {
+            uri
+                .append("&t=")
+                .append(params.get("t"))
+        }
+        if (params.containsKey("v") && params.get("v") != null) {
+            uri
+                .append("&v=")
+                .append(params.get("v"))
+        }
+        if (params.containsKey("c") && params.get("c") != null) {
+            uri
+                .append("&c=")
+                .append(params.get("c"))
+        }
 
-        if (!isServerPrioritizedInTranscodedDownload()) uri.append("&maxBitRate=").append(
-            bitratePreferenceForDownload
-        )
-        if (!isServerPrioritizedInTranscodedDownload()) uri.append("&format=").append(
-            transcodingFormatPreferenceForDownload
-        )
+        if (!isServerPrioritizedInTranscodedDownload()) {
+            uri.append("&maxBitRate=").append(
+                bitratePreferenceForDownload,
+            )
+        }
+        if (!isServerPrioritizedInTranscodedDownload()) {
+            uri.append("&format=").append(
+                transcodingFormatPreferenceForDownload,
+            )
+        }
 
         uri.append("&id=").append(id)
 
@@ -156,8 +218,10 @@ object MusicUtil {
         return Uri.parse(uri.toString())
     }
 
-
-    fun getReadableDurationString(duration: Long?, millis: Boolean): String {
+    fun getReadableDurationString(
+        duration: Long?,
+        millis: Boolean,
+    ): String {
         val lenght = if (duration != null) duration else 0
 
         var minutes: Long
@@ -180,7 +244,10 @@ object MusicUtil {
         }
     }
 
-    fun getReadableDurationString(duration: Int?, millis: Boolean): String {
+    fun getReadableDurationString(
+        duration: Int?,
+        millis: Boolean,
+    ): String {
         val lenght = (if (duration != null) duration else 0).toLong()
         return getReadableDurationString(lenght, millis)
     }
@@ -189,19 +256,25 @@ object MusicUtil {
         if (!showAudioQuality() || child.bitrate == null) return ""
 
         return "•" +
-                " " +
-                child.bitrate +
-                "kbps" +
-                " • " +
-                (if (child.bitDepth != null && child.bitDepth != 0)
+            " " +
+            child.bitrate +
+            "kbps" +
+            " • " +
+            (
+                if (child.bitDepth != null && child.bitDepth != 0) {
                     child.bitDepth.toString() + "/" + (if (child.samplingRate != null) child.samplingRate!! / 1000 else "")
-                else
-                    (if (child.samplingRate != null)
-                        DecimalFormat("0.#").format(child.samplingRate!! / 1000.0) + "kHz"
-                    else
-                        "")) +
-                " " +
-                child.suffix
+                } else {
+                    (
+                        if (child.samplingRate != null) {
+                            DecimalFormat("0.#").format(child.samplingRate!! / 1000.0) + "kHz"
+                        } else {
+                            ""
+                        }
+                    )
+                }
+            ) +
+            " " +
+            child.suffix
     }
 
     fun getReadablePodcastDurationString(duration: Long): String {
@@ -216,7 +289,10 @@ object MusicUtil {
         }
     }
 
-    fun getReadableTrackNumber(context: Context, trackNumber: Int?): String {
+    fun getReadableTrackNumber(
+        context: Context,
+        trackNumber: Int?,
+    ): String {
         if (trackNumber != null) {
             return trackNumber.toString()
         }
@@ -279,11 +355,12 @@ object MusicUtil {
         return String.format("%.1f %ciB", value / 1024.0, ci.current())
     }
 
-    fun passwordHexEncoding(plainPassword: String): String {
-        return "enc:" + plainPassword.chars()
-            .mapToObj<String?>(IntFunction { i: Int -> Integer.toHexString(i) })
-            .collect(Collectors.joining())
-    }
+    fun passwordHexEncoding(plainPassword: String): String =
+        "enc:" +
+            plainPassword
+                .chars()
+                .mapToObj<String?>(IntFunction { i: Int -> Integer.toHexString(i) })
+                .collect(Collectors.joining())
 
     val bitratePreference: String
         get() {
@@ -333,7 +410,10 @@ object MusicUtil {
     val transcodingFormatPreferenceForDownload: String
         get() = getAudioTranscodeFormatTranscodedDownload()
 
-    fun limitPlayableMedia(toLimit: MutableList<Child?>, position: Int): MutableList<Child?> {
+    fun limitPlayableMedia(
+        toLimit: MutableList<Child?>,
+        position: Int,
+    ): MutableList<Child?> {
         if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
             val from =
                 if (position < Constants.PRE_PLAYABLE_MEDIA) 0 else position - Constants.PRE_PLAYABLE_MEDIA
@@ -345,7 +425,10 @@ object MusicUtil {
         return toLimit
     }
 
-    fun getPlayableMediaPosition(toLimit: MutableList<Child?>, position: Int): Int {
+    fun getPlayableMediaPosition(
+        toLimit: MutableList<Child?>,
+        position: Int,
+    ): Int {
         if (!toLimit.isEmpty() && toLimit.size > Constants.PLAYABLE_MEDIA_LIMIT) {
             return min(position, Constants.PRE_PLAYABLE_MEDIA)
         }
@@ -354,16 +437,20 @@ object MusicUtil {
     }
 
     private val connectivityManager: ConnectivityManager?
-        get() = getContext()
-            .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
+        get() =
+            getContext()
+                .getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager?
 
     fun ratingFilter(toFilter: MutableList<Child?>?) {
         if (toFilter == null || toFilter.isEmpty()) return
 
-        val filtered = toFilter
-            .stream()
-            .filter { child: Child? -> (child!!.userRating != null && child.userRating!! >= getMinStarRatingAccepted()) || (child.userRating == null) }
-            .collect(Collectors.toList())
+        val filtered =
+            toFilter
+                .stream()
+                .filter { child: Child? ->
+                    (child!!.userRating != null && child.userRating!! >= getMinStarRatingAccepted()) ||
+                        (child.userRating == null)
+                }.collect(Collectors.toList())
 
         toFilter.clear()
 

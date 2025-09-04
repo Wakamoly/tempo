@@ -57,7 +57,7 @@ object MappingUtil {
         bundle.putInt("userRating", (if (media.userRating != null) media.userRating else 0)!!)
         bundle.putDouble(
             "averageRating",
-            (if (media.averageRating != null) media.averageRating else 0.0)!!
+            (if (media.averageRating != null) media.averageRating else 0.0)!!,
         )
         bundle.putLong("playCount", (if (media.playCount != null) media.playCount else 0)!!)
         bundle.putInt("discNumber", (if (media.discNumber != null) media.discNumber else 0)!!)
@@ -68,22 +68,24 @@ object MappingUtil {
         bundle.putString("type", Constants.MEDIA_TYPE_MUSIC)
         bundle.putLong(
             "bookmarkPosition",
-            (if (media.bookmarkPosition != null) media.bookmarkPosition else 0)!!
+            (if (media.bookmarkPosition != null) media.bookmarkPosition else 0)!!,
         )
         bundle.putInt(
             "originalWidth",
-            (if (media.originalWidth != null) media.originalWidth else 0)!!
+            (if (media.originalWidth != null) media.originalWidth else 0)!!,
         )
         bundle.putInt(
             "originalHeight",
-            (if (media.originalHeight != null) media.originalHeight else 0)!!
+            (if (media.originalHeight != null) media.originalHeight else 0)!!,
         )
         bundle.putString("uri", uri.toString())
 
-        return MediaItem.Builder()
+        return MediaItem
+            .Builder()
             .setMediaId(media.id)
             .setMediaMetadata(
-                MediaMetadata.Builder()
+                MediaMetadata
+                    .Builder()
                     .setTitle(media.title)
                     .setTrackNumber(if (media.track != null) media.track else 0)
                     .setDiscNumber(if (media.discNumber != null) media.discNumber else 0)
@@ -94,15 +96,14 @@ object MappingUtil {
                     .setExtras(bundle)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
-                    .build()
-            )
-            .setRequestMetadata(
-                MediaItem.RequestMetadata.Builder()
+                    .build(),
+            ).setRequestMetadata(
+                MediaItem.RequestMetadata
+                    .Builder()
                     .setMediaUri(uri)
                     .setExtras(bundle)
-                    .build()
-            )
-            .setMimeType(MimeTypes.BASE_TYPE_AUDIO)
+                    .build(),
+            ).setMimeType(MimeTypes.BASE_TYPE_AUDIO)
             .setUri(uri)
             .build()
     }
@@ -117,11 +118,13 @@ object MappingUtil {
         return downloads
     }
 
-    fun mapDownload(media: Child): MediaItem {
-        return MediaItem.Builder()
+    fun mapDownload(media: Child): MediaItem =
+        MediaItem
+            .Builder()
             .setMediaId(media.id)
             .setMediaMetadata(
-                MediaMetadata.Builder()
+                MediaMetadata
+                    .Builder()
                     .setTitle(media.title)
                     .setTrackNumber(if (media.track != null) media.track else 0)
                     .setDiscNumber(if (media.discNumber != null) media.discNumber else 0)
@@ -130,25 +133,29 @@ object MappingUtil {
                     .setArtist(media.artist)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
-                    .build()
-            )
-            .setRequestMetadata(
-                MediaItem.RequestMetadata.Builder()
+                    .build(),
+            ).setRequestMetadata(
+                MediaItem.RequestMetadata
+                    .Builder()
                     .setMediaUri(
-                        if (preferTranscodedDownload()) MusicUtil.getTranscodedDownloadUri(
-                            media.id
-                        ) else MusicUtil.getDownloadUri(media.id)
-                    )
-                    .build()
-            )
-            .setMimeType(MimeTypes.BASE_TYPE_AUDIO)
+                        if (preferTranscodedDownload()) {
+                            MusicUtil.getTranscodedDownloadUri(
+                                media.id,
+                            )
+                        } else {
+                            MusicUtil.getDownloadUri(media.id)
+                        },
+                    ).build(),
+            ).setMimeType(MimeTypes.BASE_TYPE_AUDIO)
             .setUri(
-                if (preferTranscodedDownload()) MusicUtil.getTranscodedDownloadUri(media.id) else MusicUtil.getDownloadUri(
-                    media.id
-                )
-            )
-            .build()
-    }
+                if (preferTranscodedDownload()) {
+                    MusicUtil.getTranscodedDownloadUri(media.id)
+                } else {
+                    MusicUtil.getDownloadUri(
+                        media.id,
+                    )
+                },
+            ).build()
 
     fun mapInternetRadioStation(internetRadioStation: InternetRadioStation): MediaItem {
         val uri = Uri.parse(internetRadioStation.streamUrl)
@@ -159,21 +166,23 @@ object MappingUtil {
         bundle.putString("uri", uri.toString())
         bundle.putString("type", Constants.MEDIA_TYPE_RADIO)
 
-        return MediaItem.Builder()
+        return MediaItem
+            .Builder()
             .setMediaId(internetRadioStation.id!!)
             .setMediaMetadata(
-                MediaMetadata.Builder()
+                MediaMetadata
+                    .Builder()
                     .setTitle(internetRadioStation.name)
                     .setExtras(bundle)
                     .setIsBrowsable(false)
                     .setIsPlayable(true)
-                    .build()
-            )
-            .setRequestMetadata(
-                MediaItem.RequestMetadata.Builder()
+                    .build(),
+            ).setRequestMetadata(
+                MediaItem.RequestMetadata
+                    .Builder()
                     .setMediaUri(uri)
                     .setExtras(bundle)
-                    .build()
+                    .build(),
             ) // .setMimeType(MimeTypes.BASE_TYPE_AUDIO)
             .setUri(uri)
             .build()
@@ -198,69 +207,76 @@ object MappingUtil {
         bundle.putString("suffix", podcastEpisode.suffix)
         bundle.putInt(
             "duration",
-            (if (podcastEpisode.duration != null) podcastEpisode.duration else 0)!!
+            (if (podcastEpisode.duration != null) podcastEpisode.duration else 0)!!,
         )
         bundle.putInt(
             "bitrate",
-            (if (podcastEpisode.bitrate != null) podcastEpisode.bitrate else 0)!!
+            (if (podcastEpisode.bitrate != null) podcastEpisode.bitrate else 0)!!,
         )
         bundle.putBoolean("isVideo", podcastEpisode.isVideo)
         bundle.putLong(
             "created",
-            if (podcastEpisode.created != null) podcastEpisode.created!!.time else 0
+            if (podcastEpisode.created != null) podcastEpisode.created!!.time else 0,
         )
         bundle.putString("artistId", podcastEpisode.artistId)
         bundle.putString("description", podcastEpisode.description)
         bundle.putString("type", Constants.MEDIA_TYPE_PODCAST)
         bundle.putString("uri", uri.toString())
 
-        val item = MediaItem.Builder()
-            .setMediaId(podcastEpisode.id!!)
-            .setMediaMetadata(
-                MediaMetadata.Builder()
-                    .setTitle(podcastEpisode.title)
-                    .setReleaseYear(if (podcastEpisode.year != null) podcastEpisode.year else 0)
-                    .setAlbumTitle(podcastEpisode.album)
-                    .setArtist(podcastEpisode.artist)
-                    .setArtworkUri(artworkUri)
-                    .setExtras(bundle)
-                    .setIsBrowsable(false)
-                    .setIsPlayable(true)
-                    .build()
-            )
-            .setRequestMetadata(
-                MediaItem.RequestMetadata.Builder()
-                    .setMediaUri(uri)
-                    .setExtras(bundle)
-                    .build()
-            )
-            .setMimeType(MimeTypes.BASE_TYPE_AUDIO)
-            .setUri(uri)
-            .build()
+        val item =
+            MediaItem
+                .Builder()
+                .setMediaId(podcastEpisode.id!!)
+                .setMediaMetadata(
+                    MediaMetadata
+                        .Builder()
+                        .setTitle(podcastEpisode.title)
+                        .setReleaseYear(if (podcastEpisode.year != null) podcastEpisode.year else 0)
+                        .setAlbumTitle(podcastEpisode.album)
+                        .setArtist(podcastEpisode.artist)
+                        .setArtworkUri(artworkUri)
+                        .setExtras(bundle)
+                        .setIsBrowsable(false)
+                        .setIsPlayable(true)
+                        .build(),
+                ).setRequestMetadata(
+                    MediaItem.RequestMetadata
+                        .Builder()
+                        .setMediaUri(uri)
+                        .setExtras(bundle)
+                        .build(),
+                ).setMimeType(MimeTypes.BASE_TYPE_AUDIO)
+                .setUri(uri)
+                .build()
 
         return item
     }
 
-    private fun getUri(media: Child): Uri {
-        return if (DownloadUtil.getDownloadTracker(getContext()).isDownloaded(media.id))
+    private fun getUri(media: Child): Uri =
+        if (DownloadUtil.getDownloadTracker(getContext()).isDownloaded(media.id)) {
             getDownloadUri(media.id)
-        else
+        } else {
             MusicUtil.getStreamUri(media.id)
-    }
+        }
 
-    private fun getUri(podcastEpisode: PodcastEpisode): Uri {
-        return if (DownloadUtil.getDownloadTracker(getContext())
+    private fun getUri(podcastEpisode: PodcastEpisode): Uri =
+        if (DownloadUtil
+                .getDownloadTracker(getContext())
                 .isDownloaded(podcastEpisode.streamId)
-        )
+        ) {
             getDownloadUri(podcastEpisode.streamId)
-        else
+        } else {
             MusicUtil.getStreamUri(podcastEpisode.streamId)
-    }
+        }
 
     private fun getDownloadUri(id: String?): Uri {
         val download = DownloadRepository().getDownload(id)
-        return if (download != null && !download.downloadUri!!.isEmpty()) Uri.parse(download.downloadUri) else MusicUtil.getDownloadUri(
-            id
-        )
+        return if (download != null && !download.downloadUri!!.isEmpty()) {
+            Uri.parse(download.downloadUri)
+        } else {
+            MusicUtil.getDownloadUri(
+                id,
+            )
+        }
     }
 }

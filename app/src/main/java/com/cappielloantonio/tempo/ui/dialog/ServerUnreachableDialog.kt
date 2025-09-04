@@ -20,21 +20,22 @@ class ServerUnreachableDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogServerUnreachableBinding.inflate(getLayoutInflater())
 
-        val popup = MaterialAlertDialogBuilder(activity!!).setView(bind.getRoot())
-            .setTitle(R.string.server_unreachable_dialog_title)
-            .setPositiveButton(R.string.server_unreachable_dialog_positive_button, null)
-            .setNeutralButton(R.string.server_unreachable_dialog_neutral_button, null)
-            .setNegativeButton(
-                R.string.server_unreachable_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .create()
+        val popup =
+            MaterialAlertDialogBuilder(activity!!)
+                .setView(bind.getRoot())
+                .setTitle(R.string.server_unreachable_dialog_title)
+                .setPositiveButton(R.string.server_unreachable_dialog_positive_button, null)
+                .setNeutralButton(R.string.server_unreachable_dialog_neutral_button, null)
+                .setNegativeButton(
+                    R.string.server_unreachable_dialog_negative_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+                ).create()
 
         popup.setCanceledOnTouchOutside(false)
         popup.setCancelable(false)
 
         return popup
     }
-
 
     override fun onStart() {
         super.onStart()
@@ -45,17 +46,23 @@ class ServerUnreachableDialog : DialogFragment() {
     private fun setButtonAction() {
         val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                val activity = activity as MainActivity?
-                if (activity != null) activity.quit()
-                alertDialog.dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    val activity = activity as MainActivity?
+                    if (activity != null) activity.quit()
+                    alertDialog.dismiss()
+                },
+            )
 
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                setServerUnreachableDatetime()
-                alertDialog.dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setServerUnreachableDatetime()
+                    alertDialog.dismiss()
+                },
+            )
     }
 }

@@ -22,7 +22,9 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.stream.Collectors
 
 @OptIn(markerClass = UnstableApi::class)
-class StarredSyncDialog(private val onCancel: Runnable?) : DialogFragment() {
+class StarredSyncDialog(
+    private val onCancel: Runnable?,
+) : DialogFragment() {
     private var starredSyncViewModel: StarredSyncViewModel? = null
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
@@ -50,34 +52,46 @@ class StarredSyncDialog(private val onCancel: Runnable?) : DialogFragment() {
 
         if (dialog != null) {
             val positiveButton = dialog.getButton(Dialog.BUTTON_POSITIVE)
-            positiveButton.setOnClickListener(View.OnClickListener { v: View? ->
-                starredSyncViewModel!!.getStarredTracks(requireActivity())
-                    .observe(requireActivity(), Observer { songs: MutableList<Child?>? ->
-                        if (songs != null) {
-                            DownloadUtil.getDownloadTracker(context).download(
-                                MappingUtil.mapDownloads(songs),
-                                songs.stream().map<Download?> { child: Child? -> Download(child) }
-                                    .collect(
-                                        Collectors.toList()
+            positiveButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    starredSyncViewModel!!
+                        .getStarredTracks(requireActivity())
+                        .observe(
+                            requireActivity(),
+                            Observer { songs: MutableList<Child?>? ->
+                                if (songs != null) {
+                                    DownloadUtil.getDownloadTracker(context).download(
+                                        MappingUtil.mapDownloads(songs),
+                                        songs
+                                            .stream()
+                                            .map<Download?> { child: Child? -> Download(child) }
+                                            .collect(
+                                                Collectors.toList(),
+                                            ),
                                     )
-                            )
-                        }
-                        dialog.dismiss()
-                    })
-            })
+                                }
+                                dialog.dismiss()
+                            },
+                        )
+                },
+            )
 
             val neutralButton = dialog.getButton(Dialog.BUTTON_NEUTRAL)
-            neutralButton.setOnClickListener(View.OnClickListener { v: View? ->
-                setStarredSyncEnabled(true)
-                dialog.dismiss()
-            })
+            neutralButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setStarredSyncEnabled(true)
+                    dialog.dismiss()
+                },
+            )
 
             val negativeButton = dialog.getButton(Dialog.BUTTON_NEGATIVE)
-            negativeButton.setOnClickListener(View.OnClickListener { v: View? ->
-                setStarredSyncEnabled(false)
-                if (onCancel != null) onCancel.run()
-                dialog.dismiss()
-            })
+            negativeButton.setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setStarredSyncEnabled(false)
+                    if (onCancel != null) onCancel.run()
+                    dialog.dismiss()
+                },
+            )
         }
     }
 }

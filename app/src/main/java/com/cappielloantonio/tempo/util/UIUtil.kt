@@ -19,7 +19,10 @@ import kotlin.Int
 import kotlin.intArrayOf
 
 object UIUtil {
-    fun getSpanCount(itemCount: Int, maxSpan: Int): Int {
+    fun getSpanCount(
+        itemCount: Int,
+        maxSpan: Int,
+    ): Int {
         val itemSize = if (itemCount == 0) 1 else itemCount
 
         if (itemSize / maxSpan > 0) {
@@ -30,9 +33,9 @@ object UIUtil {
     }
 
     fun getDividerItemDecoration(context: Context): DividerItemDecoration {
-        val ATTRS = intArrayOf(android.R.attr.listDivider)
+        val attrs = intArrayOf(android.R.attr.listDivider)
 
-        val a = context.obtainStyledAttributes(ATTRS)
+        val a = context.obtainStyledAttributes(attrs)
         val divider = a.getDrawable(0)
         val insetDivider = InsetDrawable(divider, 42, 0, 42, 42)
         a.recycle()
@@ -84,8 +87,8 @@ object UIUtil {
                 localeArrayList.add(
                     AbstractMap.SimpleEntry<kotlin.String?, kotlin.String?>(
                         Util.toPascalCase(locale.displayName),
-                        locale.toLanguageTag()
-                    )
+                        locale.toLanguageTag(),
+                    ),
                 )
             }
         }

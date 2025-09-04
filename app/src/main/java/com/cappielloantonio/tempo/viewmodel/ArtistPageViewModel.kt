@@ -9,7 +9,9 @@ import com.cappielloantonio.tempo.subsonic.models.AlbumID3
 import com.cappielloantonio.tempo.subsonic.models.ArtistID3
 import com.cappielloantonio.tempo.subsonic.models.ArtistInfo2
 
-class ArtistPageViewModel(application: Application) : AndroidViewModel(application) {
+class ArtistPageViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private val albumRepository: AlbumRepository
     private val artistRepository: ArtistRepository
 
@@ -23,9 +25,7 @@ class ArtistPageViewModel(application: Application) : AndroidViewModel(applicati
     val albumList: LiveData<MutableList<AlbumID3?>?>?
         get() = albumRepository.getArtistAlbums(artist!!.id)
 
-    fun getArtistInfo(id: String?): LiveData<ArtistInfo2?>? {
-        return artistRepository.getArtistFullInfo(id)
-    }
+    fun getArtistInfo(id: String?): LiveData<ArtistInfo2?>? = artistRepository.getArtistFullInfo(id)
 
     val artistTopSongList: LiveData<MutableList<Child?>?>?
         get() = artistRepository.getTopSongs(artist!!.name, 20)
@@ -36,9 +36,7 @@ class ArtistPageViewModel(application: Application) : AndroidViewModel(applicati
     val artistInstantMix: LiveData<MutableList<Child?>?>?
         get() = artistRepository.getInstantMix(artist, 20)
 
-    fun getArtist(): ArtistID3 {
-        return artist!!
-    }
+    fun getArtist(): ArtistID3 = artist!!
 
     fun setArtist(artist: ArtistID3) {
         this.artist = artist

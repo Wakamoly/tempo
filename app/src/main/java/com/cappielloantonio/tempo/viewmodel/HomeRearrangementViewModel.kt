@@ -11,7 +11,9 @@ import com.cappielloantonio.tempo.util.Preferences.setHomeSectorList
 import com.google.common.reflect.TypeToken
 import com.google.gson.Gson
 
-class HomeRearrangementViewModel(application: Application) : AndroidViewModel(application) {
+class HomeRearrangementViewModel(
+    application: Application,
+) : AndroidViewModel(application) {
     private var sectors: MutableList<HomeSector?>? = ArrayList<HomeSector?>()
 
     val homeSectorList: MutableList<HomeSector?>?
@@ -24,7 +26,7 @@ class HomeRearrangementViewModel(application: Application) : AndroidViewModel(ap
                         getHomeSectorList(),
                         object :
                             TypeToken<MutableList<HomeSector?>?>() {
-                        }.type
+                        }.type,
                     )
             } else {
                 sectors = fillStandardHomeSectorList()
@@ -57,120 +59,120 @@ class HomeRearrangementViewModel(application: Application) : AndroidViewModel(ap
                 Constants.HOME_SECTOR_DISCOVERY,
                 getApplication<Application?>()!!.getString(R.string.home_title_discovery),
                 true,
-                1
-            )
+                1,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_MADE_FOR_YOU,
                 getApplication<Application?>()!!.getString(R.string.home_title_made_for_you),
                 true,
-                2
-            )
+                2,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_BEST_OF,
                 getApplication<Application?>()!!.getString(R.string.home_title_best_of),
                 true,
-                3
-            )
+                3,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_RADIO_STATION,
                 getApplication<Application?>()!!.getString(R.string.home_title_radio_station),
                 true,
-                4
-            )
+                4,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_TOP_SONGS,
                 getApplication<Application?>()!!.getString(R.string.home_title_top_songs),
                 true,
-                5
-            )
+                5,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_STARRED_TRACKS,
                 getApplication<Application?>()!!.getString(R.string.home_title_starred_tracks),
                 true,
-                6
-            )
+                6,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_STARRED_ALBUMS,
                 getApplication<Application?>()!!.getString(R.string.home_title_starred_albums),
                 true,
-                7
-            )
+                7,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_STARRED_ARTISTS,
                 getApplication<Application?>()!!.getString(R.string.home_title_starred_artists),
                 true,
-                8
-            )
+                8,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_NEW_RELEASES,
                 getApplication<Application?>()!!.getString(R.string.home_title_new_releases),
                 true,
-                9
-            )
+                9,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_FLASHBACK,
                 getApplication<Application?>()!!.getString(R.string.home_title_flashback),
                 true,
-                10
-            )
+                10,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_MOST_PLAYED,
                 getApplication<Application?>()!!.getString(R.string.home_title_most_played),
                 true,
-                11
-            )
+                11,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_LAST_PLAYED,
                 getApplication<Application?>()!!.getString(R.string.home_title_last_played),
                 true,
-                12
-            )
+                12,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_RECENTLY_ADDED,
                 getApplication<Application?>()!!.getString(R.string.home_title_recently_added),
                 true,
-                13
-            )
+                13,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_PINNED_PLAYLISTS,
                 getApplication<Application?>()!!.getString(R.string.home_title_pinned_playlists),
                 true,
-                14
-            )
+                14,
+            ),
         )
         sectors.add(
             HomeSector(
                 Constants.HOME_SECTOR_SHARED,
                 getApplication<Application?>()!!.getString(R.string.home_title_shares),
                 true,
-                15
-            )
+                15,
+            ),
         )
 
         return sectors

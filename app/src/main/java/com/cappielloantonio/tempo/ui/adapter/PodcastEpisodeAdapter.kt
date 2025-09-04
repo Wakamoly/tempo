@@ -19,8 +19,9 @@ import okhttp3.Response.Builder.build
 import java.text.SimpleDateFormat
 import java.util.stream.Collectors
 
-class PodcastEpisodeAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<PodcastEpisodeAdapter.ViewHolder?>() {
+class PodcastEpisodeAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<PodcastEpisodeAdapter.ViewHolder?>() {
     private var podcastEpisodes: MutableList<PodcastEpisode>
     private var podcastEpisodesFull: MutableList<PodcastEpisode>? = null
 
@@ -28,36 +29,44 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
         this.podcastEpisodes = mutableListOf<PodcastEpisode?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomePodcastEpisodeBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomePodcastEpisodeBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return PodcastEpisodeAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val podcastEpisode = podcastEpisodes.get(position)
         val simpleDateFormat = SimpleDateFormat("MMM d")
 
         holder.item.podcastTitleLabel.text = podcastEpisode.title
         holder.item.podcastSubtitleLabel.text = podcastEpisode.artist
-        holder.item.podcastReleasesAndDurationLabel.text = holder.itemView.context.getString(
-            R.string.podcast_release_date_duration_formatter,
-            simpleDateFormat.format(podcastEpisode.publishDate),
-            MusicUtil.getReadablePodcastDurationString(
-                podcastEpisode.duration!!.toLong()
+        holder.item.podcastReleasesAndDurationLabel.text =
+            holder.itemView.context.getString(
+                R.string.podcast_release_date_duration_formatter,
+                simpleDateFormat.format(podcastEpisode.publishDate),
+                MusicUtil.getReadablePodcastDurationString(
+                    podcastEpisode.duration!!.toLong(),
+                ),
             )
-        )
         holder.item.podcastDescriptionText.text = MusicUtil.getReadableString(podcastEpisode.description)
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            podcastEpisode.coverArtId,
-            CustomGlideRequest.ResourceType.Podcast
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                podcastEpisode.coverArtId,
+                CustomGlideRequest.ResourceType.Podcast,
+            ).build()
             .into(holder.item.podcastCoverImageView)
 
         holder.item.podcastPlayButton.setEnabled(podcastEpisode.status == "completed")
@@ -65,31 +74,28 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
         holder.item.podcastDownloadRequestButton.visibility = if (podcastEpisode.status == "completed") View.GONE else View.VISIBLE
     }
 
-    override fun getItemCount(): Int {
-        return podcastEpisodes.size
-    }
+    override fun getItemCount(): Int = podcastEpisodes.size
 
     fun setItems(podcastEpisodes: MutableList<PodcastEpisode>) {
         this.podcastEpisodesFull = podcastEpisodes
-        this.podcastEpisodes = podcastEpisodesFull!!.stream()
-            .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
-            .collect(
-                Collectors.toList()
-            )
+        this.podcastEpisodes =
+            podcastEpisodesFull!!
+                .stream()
+                .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
+                .collect(
+                    Collectors.toList(),
+                )
         notifyDataSetChanged()
     }
 
-    override fun getItemViewType(position: Int): Int {
-        return position
-    }
+    override fun getItemViewType(position: Int): Int = position
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
-    inner class ViewHolder internal constructor(var item: ItemHomePodcastEpisodeBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomePodcastEpisodeBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             itemView.setOnClickListener(View.OnClickListener { v: View? -> onClick() })
@@ -107,7 +113,7 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
                 val bundle = Bundle()
                 bundle.putParcelable(
                     Constants.PODCAST_OBJECT,
-                    podcastEpisodes.get(getBindingAdapterPosition())
+                    podcastEpisodes.get(getBindingAdapterPosition()),
                 )
 
                 click.onPodcastEpisodeClick(bundle)
@@ -121,7 +127,7 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
                 val bundle = Bundle()
                 bundle.putParcelable(
                     Constants.PODCAST_OBJECT,
-                    podcastEpisodes.get(getBindingAdapterPosition())
+                    podcastEpisodes.get(getBindingAdapterPosition()),
                 )
 
                 click.onPodcastEpisodeLongClick(bundle)
@@ -139,7 +145,7 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
                 val bundle = Bundle()
                 bundle.putParcelable(
                     Constants.PODCAST_OBJECT,
-                    podcastEpisodes.get(getBindingAdapterPosition())
+                    podcastEpisodes.get(getBindingAdapterPosition()),
                 )
 
                 click.onPodcastEpisodeAltClick(bundle)
@@ -149,11 +155,14 @@ class PodcastEpisodeAdapter(private val click: ClickCallback) :
 
     fun sort(order: String) {
         when (order) {
-            Constants.PODCAST_FILTER_BY_DOWNLOAD -> podcastEpisodes = podcastEpisodesFull!!.stream()
-                .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
-                .collect(
-                    Collectors.toList()
-                )
+            Constants.PODCAST_FILTER_BY_DOWNLOAD ->
+                podcastEpisodes =
+                    podcastEpisodesFull!!
+                        .stream()
+                        .filter { podcastEpisode: PodcastEpisode? -> podcastEpisode!!.status == "completed" }
+                        .collect(
+                            Collectors.toList(),
+                        )
 
             Constants.PODCAST_FILTER_BY_ALL -> podcastEpisodes = podcastEpisodesFull!!
         }

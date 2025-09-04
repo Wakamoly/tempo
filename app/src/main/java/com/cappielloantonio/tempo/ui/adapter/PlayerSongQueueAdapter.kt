@@ -24,8 +24,9 @@ import com.google.common.util.concurrent.ListenableFuture
 import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
-class PlayerSongQueueAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<PlayerSongQueueAdapter.ViewHolder?>() {
+class PlayerSongQueueAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<PlayerSongQueueAdapter.ViewHolder?>() {
     private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
     private var songs: MutableList<Child>?
 
@@ -33,56 +34,68 @@ class PlayerSongQueueAdapter(private val click: ClickCallback) :
         this.songs = mutableListOf<Child?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemPlayerQueueSongBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemPlayerQueueSongBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return PlayerSongQueueAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val song = songs!!.get(holder.layoutPosition)
 
         holder.item.queueSongTitleTextView.text = song.title
-        holder.item.queueSongSubtitleTextView.text = holder.itemView.context.getString(
-            R.string.song_subtitle_formatter,
-            song.artist,
-            MusicUtil.getReadableDurationString(song.duration, false),
-            MusicUtil.getReadableAudioQualityString(song)
-        )
+        holder.item.queueSongSubtitleTextView.text =
+            holder.itemView.context.getString(
+                R.string.song_subtitle_formatter,
+                song.artist,
+                MusicUtil.getReadableDurationString(song.duration, false),
+                MusicUtil.getReadableAudioQualityString(song),
+            )
 
-        val thumbnail: RequestBuilder<Drawable?> = CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            song.coverArtId,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
-            .sizeMultiplier(0.1f)
+        val thumbnail: RequestBuilder<Drawable?> =
+            CustomGlideRequest.Builder.Companion
+                .from(
+                    holder.itemView.context,
+                    song.coverArtId,
+                    CustomGlideRequest.ResourceType.Song,
+                ).build()
+                .sizeMultiplier(0.1f)
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            song.coverArtId,
-            CustomGlideRequest.ResourceType.Song
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                song.coverArtId,
+                CustomGlideRequest.ResourceType.Song,
+            ).build()
             .thumbnail(thumbnail)
             .into(holder.item.queueSongCoverImageView)
 
-        MediaManager.getCurrentIndex(mediaBrowserListenableFuture, object : MediaIndexCallback {
-            override fun onRecovery(index: Int) {
-                if (holder.layoutPosition < index) {
-                    holder.item.queueSongTitleTextView.setAlpha(0.2f)
-                    holder.item.queueSongSubtitleTextView.setAlpha(0.2f)
-                    holder.item.ratingIndicatorImageView.setAlpha(0.2f)
-                } else {
-                    holder.item.queueSongTitleTextView.setAlpha(1.0f)
-                    holder.item.queueSongSubtitleTextView.setAlpha(1.0f)
-                    holder.item.ratingIndicatorImageView.setAlpha(1.0f)
+        MediaManager.getCurrentIndex(
+            mediaBrowserListenableFuture,
+            object : MediaIndexCallback {
+                override fun onRecovery(index: Int) {
+                    if (holder.layoutPosition < index) {
+                        holder.item.queueSongTitleTextView.setAlpha(0.2f)
+                        holder.item.queueSongSubtitleTextView.setAlpha(0.2f)
+                        holder.item.ratingIndicatorImageView.setAlpha(0.2f)
+                    } else {
+                        holder.item.queueSongTitleTextView.setAlpha(1.0f)
+                        holder.item.queueSongSubtitleTextView.setAlpha(1.0f)
+                        holder.item.ratingIndicatorImageView.setAlpha(1.0f)
+                    }
                 }
-            }
-        })
+            },
+        )
 
         if (showItemRating()) {
             if (song.starred == null && song.userRating == null) {
@@ -96,32 +109,32 @@ class PlayerSongQueueAdapter(private val click: ClickCallback) :
                 holder.item.oneStarIcon.setImageDrawable(
                     AppCompatResources.getDrawable(
                         holder.itemView.context,
-                        if (song.userRating!! >= 1) R.drawable.ic_star else R.drawable.ic_star_outlined
-                    )
+                        if (song.userRating!! >= 1) R.drawable.ic_star else R.drawable.ic_star_outlined,
+                    ),
                 )
                 holder.item.twoStarIcon.setImageDrawable(
                     AppCompatResources.getDrawable(
                         holder.itemView.context,
-                        if (song.userRating!! >= 2) R.drawable.ic_star else R.drawable.ic_star_outlined
-                    )
+                        if (song.userRating!! >= 2) R.drawable.ic_star else R.drawable.ic_star_outlined,
+                    ),
                 )
                 holder.item.threeStarIcon.setImageDrawable(
                     AppCompatResources.getDrawable(
                         holder.itemView.context,
-                        if (song.userRating!! >= 3) R.drawable.ic_star else R.drawable.ic_star_outlined
-                    )
+                        if (song.userRating!! >= 3) R.drawable.ic_star else R.drawable.ic_star_outlined,
+                    ),
                 )
                 holder.item.fourStarIcon.setImageDrawable(
                     AppCompatResources.getDrawable(
                         holder.itemView.context,
-                        if (song.userRating!! >= 4) R.drawable.ic_star else R.drawable.ic_star_outlined
-                    )
+                        if (song.userRating!! >= 4) R.drawable.ic_star else R.drawable.ic_star_outlined,
+                    ),
                 )
                 holder.item.fiveStarIcon.setImageDrawable(
                     AppCompatResources.getDrawable(
                         holder.itemView.context,
-                        if (song.userRating!! >= 5) R.drawable.ic_star else R.drawable.ic_star_outlined
-                    )
+                        if (song.userRating!! >= 5) R.drawable.ic_star else R.drawable.ic_star_outlined,
+                    ),
                 )
             }
         } else {
@@ -143,21 +156,18 @@ class PlayerSongQueueAdapter(private val click: ClickCallback) :
         return songs!!.size
     }
 
-    override fun getItemId(position: Int): Long {
-        return position.toLong()
-    }
+    override fun getItemId(position: Int): Long = position.toLong()
 
     fun setMediaBrowserListenableFuture(mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?) {
         this.mediaBrowserListenableFuture = mediaBrowserListenableFuture
     }
 
-    fun getItem(id: Int): Child? {
-        return songs!!.get(id)
-    }
+    fun getItem(id: Int): Child? = songs!!.get(id)
 
-    inner class ViewHolder internal constructor(var item: ItemPlayerQueueSongBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemPlayerQueueSongBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.queueSongTitleTextView.setSelected(true)

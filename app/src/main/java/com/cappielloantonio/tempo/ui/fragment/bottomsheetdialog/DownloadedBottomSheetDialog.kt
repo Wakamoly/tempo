@@ -30,7 +30,9 @@ import java.util.Random
 import java.util.stream.Collectors
 
 @UnstableApi
-class DownloadedBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickListener {
+class DownloadedBottomSheetDialog :
+    BottomSheetDialogFragment(),
+    View.OnClickListener {
     private var songs: MutableList<Child?>? = null
     private var groupTitle: String? = null
     private var groupSubtitle: String? = null
@@ -40,7 +42,7 @@ class DownloadedBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickLis
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View? {
         val view = inflater.inflate(R.layout.bottom_sheet_downloaded_dialog, container, false)
 
@@ -70,20 +72,31 @@ class DownloadedBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickLis
         playRandom.visibility = if (songs!!.size > 1) View.VISIBLE else View.GONE
 
         val remove = view.findViewById<TextView>(R.id.remove_all_text_view)
-        remove.text = if (songs!!.size > 1) getText(R.string.downloaded_bottom_sheet_remove_all) else getText(
-            R.string.downloaded_bottom_sheet_remove
-        )
+        remove.text =
+            if (songs!!.size > 1) {
+                getText(R.string.downloaded_bottom_sheet_remove_all)
+            } else {
+                getText(
+                    R.string.downloaded_bottom_sheet_remove,
+                )
+            }
     }
 
     private fun init(view: View) {
         val coverAlbum = view.findViewById<ImageView>(R.id.group_cover_image_view)
-        CustomGlideRequest.Builder.Companion.from(
-            requireContext(), songs!!.get(
-                Random().nextInt(
-                    songs!!.size
-                )
-            )!!.coverArtId, CustomGlideRequest.ResourceType.Unknown
-        ).build().into(coverAlbum)
+        CustomGlideRequest.Builder.Companion
+            .from(
+                requireContext(),
+                songs!!
+                    .get(
+                        Random().nextInt(
+                            songs!!.size,
+                        ),
+                    )!!
+                    .coverArtId,
+                CustomGlideRequest.ResourceType.Unknown,
+            ).build()
+            .into(coverAlbum)
 
         val groupTitleView = view.findViewById<TextView>(R.id.group_title_text_view)
         groupTitleView.text = this.groupTitle
@@ -94,38 +107,46 @@ class DownloadedBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickLis
         groupSubtitleView.setSelected(true)
 
         val playRandom = view.findViewById<TextView>(R.id.play_random_text_view)
-        playRandom.setOnClickListener(View.OnClickListener { v: View? ->
-            Collections.shuffle(songs)
-            MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
-            (requireActivity() as MainActivity).setBottomSheetInPeek(true)
-            dismissBottomSheet()
-        })
+        playRandom.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                Collections.shuffle(songs)
+                MediaManager.startQueue(mediaBrowserListenableFuture, songs, 0)
+                (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                dismissBottomSheet()
+            },
+        )
 
         val playNext = view.findViewById<TextView>(R.id.play_next_text_view)
-        playNext.setOnClickListener(View.OnClickListener { v: View? ->
-            MediaManager.enqueue(mediaBrowserListenableFuture, songs, true)
-            (requireActivity() as MainActivity).setBottomSheetInPeek(true)
-            dismissBottomSheet()
-        })
+        playNext.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                MediaManager.enqueue(mediaBrowserListenableFuture, songs, true)
+                (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                dismissBottomSheet()
+            },
+        )
 
         val addToQueue = view.findViewById<TextView>(R.id.add_to_queue_text_view)
-        addToQueue.setOnClickListener(View.OnClickListener { v: View? ->
-            MediaManager.enqueue(mediaBrowserListenableFuture, songs, false)
-            (requireActivity() as MainActivity).setBottomSheetInPeek(true)
-            dismissBottomSheet()
-        })
+        addToQueue.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                MediaManager.enqueue(mediaBrowserListenableFuture, songs, false)
+                (requireActivity() as MainActivity).setBottomSheetInPeek(true)
+                dismissBottomSheet()
+            },
+        )
 
         val removeAll = view.findViewById<TextView>(R.id.remove_all_text_view)
-        removeAll.setOnClickListener(View.OnClickListener { v: View? ->
-            val mediaItems = MappingUtil.mapDownloads(songs)
-            val downloads =
-                songs!!.stream().map<Download?> { child: Child? -> Download(child) }.collect(
-                    Collectors.toList()
-                )
+        removeAll.setOnClickListener(
+            View.OnClickListener { v: View? ->
+                val mediaItems = MappingUtil.mapDownloads(songs)
+                val downloads =
+                    songs!!.stream().map<Download?> { child: Child? -> Download(child) }.collect(
+                        Collectors.toList(),
+                    )
 
-            DownloadUtil.getDownloadTracker(requireContext()).remove(mediaItems, downloads)
-            dismissBottomSheet()
-        })
+                DownloadUtil.getDownloadTracker(requireContext()).remove(mediaItems, downloads)
+                dismissBottomSheet()
+            },
+        )
     }
 
     override fun onClick(v: View?) {
@@ -137,13 +158,15 @@ class DownloadedBottomSheetDialog : BottomSheetDialogFragment(), View.OnClickLis
     }
 
     private fun initializeMediaBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseMediaBrowser() {

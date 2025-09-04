@@ -29,7 +29,9 @@ import java.util.Collections
 import java.util.stream.Collectors
 
 @UnstableApi
-class PlayerQueueFragment : Fragment(), ClickCallback {
+class PlayerQueueFragment :
+    Fragment(),
+    ClickCallback {
     private var bind: InnerFragmentPlayerQueueBinding? = null
 
     private var playerBottomSheetViewModel: PlayerBottomSheetViewModel? = null
@@ -40,14 +42,14 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
-        savedInstanceState: Bundle?
+        savedInstanceState: Bundle?,
     ): View {
         bind = InnerFragmentPlayerQueueBinding.inflate(inflater, container, false)
         val view: View = bind!!.getRoot()
 
         playerBottomSheetViewModel =
             ViewModelProvider(requireActivity()).get<PlayerBottomSheetViewModel>(
-                PlayerBottomSheetViewModel::class.java
+                PlayerBottomSheetViewModel::class.java,
             )
 
         initQueueRecyclerView()
@@ -78,13 +80,15 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
     }
 
     private fun initializeBrowser() {
-        mediaBrowserListenableFuture = MediaBrowser.Builder(
-            requireContext(),
-            SessionToken(
-                requireContext(),
-                ComponentName(requireContext(), MediaService::class.java)
-            )
-        ).buildAsync()
+        mediaBrowserListenableFuture =
+            MediaBrowser
+                .Builder(
+                    requireContext(),
+                    SessionToken(
+                        requireContext(),
+                        ComponentName(requireContext(), MediaService::class.java),
+                    ),
+                ).buildAsync()
     }
 
     private fun releaseBrowser() {
@@ -92,15 +96,18 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
     }
 
     private fun bindMediaController() {
-        mediaBrowserListenableFuture!!.addListener(Runnable {
-            try {
-                val mediaBrowser = mediaBrowserListenableFuture!!.get()
-                initShuffleButton(mediaBrowser)
-                initCleanButton(mediaBrowser)
-            } catch (exception: Exception) {
-                exception.printStackTrace()
-            }
-        }, MoreExecutors.directExecutor())
+        mediaBrowserListenableFuture!!.addListener(
+            Runnable {
+                try {
+                    val mediaBrowser = mediaBrowserListenableFuture!!.get()
+                    initShuffleButton(mediaBrowser)
+                    initCleanButton(mediaBrowser)
+                } catch (exception: Exception) {
+                    exception.printStackTrace()
+                }
+            },
+            MoreExecutors.directExecutor(),
+        )
     }
 
     private fun setMediaBrowserListenableFuture() {
@@ -113,36 +120,41 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
 
         playerSongQueueAdapter = PlayerSongQueueAdapter(this)
         bind!!.playerQueueRecyclerView.setAdapter(playerSongQueueAdapter)
-        playerBottomSheetViewModel!!.getQueueSong()
-            .observe(getViewLifecycleOwner(), Observer { queue: MutableList<Queue?>? ->
-                if (queue != null) {
-                    playerSongQueueAdapter!!.setItems(
-                        queue.stream().map<Child?> { item: Queue? -> item as Child? }.collect(
-                            Collectors.toList()
+        playerBottomSheetViewModel!!
+            .getQueueSong()
+            .observe(
+                getViewLifecycleOwner(),
+                Observer { queue: MutableList<Queue?>? ->
+                    if (queue != null) {
+                        playerSongQueueAdapter!!.setItems(
+                            queue.stream().map<Child?> { item: Queue? -> item as Child? }.collect(
+                                Collectors.toList(),
+                            ),
                         )
-                    )
-                }
-            })
+                    }
+                },
+            )
 
-        ItemTouchHelper(object : ItemTouchHelper.SimpleCallback(
-            ItemTouchHelper.UP or ItemTouchHelper.DOWN,
-            ItemTouchHelper.LEFT
-        ) {
-            var originalPosition: Int = -1
-            var fromPosition: Int = -1
-            var toPosition: Int = -1
+        ItemTouchHelper(
+            object : ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP or ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT,
+            ) {
+                var originalPosition: Int = -1
+                var fromPosition: Int = -1
+                var toPosition: Int = -1
 
-            override fun onMove(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder,
-                target: RecyclerView.ViewHolder
-            ): Boolean {
-                if (originalPosition == -1) {
-                    originalPosition = viewHolder.getBindingAdapterPosition()
-                }
+                override fun onMove(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                    target: RecyclerView.ViewHolder,
+                ): Boolean {
+                    if (originalPosition == -1) {
+                        originalPosition = viewHolder.getBindingAdapterPosition()
+                    }
 
-                fromPosition = viewHolder.getBindingAdapterPosition()
-                toPosition = target.getBindingAdapterPosition()
+                    fromPosition = viewHolder.getBindingAdapterPosition()
+                    toPosition = target.getBindingAdapterPosition()
 
                 /*
                  * Per spostare un elemento nella coda devo:
@@ -154,92 +166,102 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
                  * In questo modo evito che ad ogni cambio di posizione vada a riscrivere nel db
                  * Al rilascio dell'elemento chiamo il metodo clearView()
                  */
-                Collections.swap(playerSongQueueAdapter!!.getItems(), fromPosition, toPosition)
-                recyclerView.adapter!!.notifyItemMoved(fromPosition, toPosition)
+                    Collections.swap(playerSongQueueAdapter!!.getItems(), fromPosition, toPosition)
+                    recyclerView.adapter!!.notifyItemMoved(fromPosition, toPosition)
 
-                return false
-            }
-
-            override fun clearView(
-                recyclerView: RecyclerView,
-                viewHolder: RecyclerView.ViewHolder
-            ) {
-                super.clearView(recyclerView, viewHolder)
-
-                if (originalPosition != -1 && fromPosition != -1 && toPosition != -1) {
-                    MediaManager.swap(
-                        mediaBrowserListenableFuture,
-                        playerSongQueueAdapter!!.getItems(),
-                        originalPosition,
-                        toPosition
-                    )
+                    return false
                 }
 
-                originalPosition = -1
-                fromPosition = -1
-                toPosition = -1
-            }
+                override fun clearView(
+                    recyclerView: RecyclerView,
+                    viewHolder: RecyclerView.ViewHolder,
+                ) {
+                    super.clearView(recyclerView, viewHolder)
 
-            override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
-                MediaManager.remove(
-                    mediaBrowserListenableFuture,
-                    playerSongQueueAdapter!!.getItems(),
-                    viewHolder.getBindingAdapterPosition()
-                )
-                viewHolder.bindingAdapter!!.notifyDataSetChanged()
-            }
-        }).attachToRecyclerView(bind!!.playerQueueRecyclerView)
+                    if (originalPosition != -1 && fromPosition != -1 && toPosition != -1) {
+                        MediaManager.swap(
+                            mediaBrowserListenableFuture,
+                            playerSongQueueAdapter!!.getItems(),
+                            originalPosition,
+                            toPosition,
+                        )
+                    }
+
+                    originalPosition = -1
+                    fromPosition = -1
+                    toPosition = -1
+                }
+
+                override fun onSwiped(
+                    viewHolder: RecyclerView.ViewHolder,
+                    direction: Int,
+                ) {
+                    MediaManager.remove(
+                        mediaBrowserListenableFuture,
+                        playerSongQueueAdapter!!.getItems(),
+                        viewHolder.getBindingAdapterPosition(),
+                    )
+                    viewHolder.bindingAdapter!!.notifyDataSetChanged()
+                }
+            },
+        ).attachToRecyclerView(bind!!.playerQueueRecyclerView)
     }
 
     private fun initShuffleButton(mediaBrowser: MediaBrowser) {
-        bind!!.playerShuffleQueueFab.setOnClickListener(View.OnClickListener { view: View? ->
-            val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
-            val endPosition = playerSongQueueAdapter!!.getItems().size - 1
-            if (startPosition < endPosition) {
-                val pool = ArrayList<Int?>()
+        bind!!.playerShuffleQueueFab.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
+                val endPosition = playerSongQueueAdapter!!.getItems().size - 1
+                if (startPosition < endPosition) {
+                    val pool = ArrayList<Int?>()
 
-                for (i in startPosition..endPosition) {
-                    pool.add(i)
+                    for (i in startPosition..endPosition) {
+                        pool.add(i)
+                    }
+
+                    while (pool.size >= 2) {
+                        val fromPosition = (Math.random() * (pool.size)).toInt()
+                        val positionA: Int = pool.get(fromPosition)!!
+                        pool.removeAt(fromPosition)
+
+                        val toPosition = (Math.random() * (pool.size)).toInt()
+                        val positionB: Int = pool.get(toPosition)!!
+                        pool.removeAt(toPosition)
+
+                        Collections.swap(playerSongQueueAdapter!!.getItems(), positionA, positionB)
+                        bind!!
+                            .playerQueueRecyclerView.adapter!!
+                            .notifyItemMoved(positionA, positionB)
+                    }
+
+                    MediaManager.shuffle(
+                        mediaBrowserListenableFuture,
+                        playerSongQueueAdapter!!.getItems(),
+                        startPosition,
+                        endPosition,
+                    )
                 }
-
-                while (pool.size >= 2) {
-                    val fromPosition = (Math.random() * (pool.size)).toInt()
-                    val positionA: Int = pool.get(fromPosition)!!
-                    pool.removeAt(fromPosition)
-
-                    val toPosition = (Math.random() * (pool.size)).toInt()
-                    val positionB: Int = pool.get(toPosition)!!
-                    pool.removeAt(toPosition)
-
-                    Collections.swap(playerSongQueueAdapter!!.getItems(), positionA, positionB)
-                    bind!!.playerQueueRecyclerView.adapter!!
-                        .notifyItemMoved(positionA, positionB)
-                }
-
-                MediaManager.shuffle(
-                    mediaBrowserListenableFuture,
-                    playerSongQueueAdapter!!.getItems(),
-                    startPosition,
-                    endPosition
-                )
-            }
-        })
+            },
+        )
     }
 
     private fun initCleanButton(mediaBrowser: MediaBrowser) {
-        bind!!.playerCleanQueueButton.setOnClickListener(View.OnClickListener { view: View? ->
-            val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
-            val endPosition = playerSongQueueAdapter!!.getItems().size
+        bind!!.playerCleanQueueButton.setOnClickListener(
+            View.OnClickListener { view: View? ->
+                val startPosition = mediaBrowser.getCurrentMediaItemIndex() + 1
+                val endPosition = playerSongQueueAdapter!!.getItems().size
 
-            MediaManager.removeRange(
-                mediaBrowserListenableFuture,
-                playerSongQueueAdapter!!.getItems(),
-                startPosition,
-                endPosition
-            )
-            bind!!.playerQueueRecyclerView.adapter!!
-                .notifyItemRangeRemoved(startPosition, endPosition)
-        })
+                MediaManager.removeRange(
+                    mediaBrowserListenableFuture,
+                    playerSongQueueAdapter!!.getItems(),
+                    startPosition,
+                    endPosition,
+                )
+                bind!!
+                    .playerQueueRecyclerView.adapter!!
+                    .notifyItemRangeRemoved(startPosition, endPosition)
+            },
+        )
     }
 
     private fun updateNowPlayingItem() {
@@ -248,9 +270,11 @@ class PlayerQueueFragment : Fragment(), ClickCallback {
 
     override fun onMediaClick(bundle: Bundle) {
         MediaManager.startQueue(
-            mediaBrowserListenableFuture, bundle.getParcelableArrayList<Child?>(
-                Constants.TRACKS_OBJECT
-            ), bundle.getInt(Constants.ITEM_POSITION)
+            mediaBrowserListenableFuture,
+            bundle.getParcelableArrayList<Child?>(
+                Constants.TRACKS_OBJECT,
+            ),
+            bundle.getInt(Constants.ITEM_POSITION),
         )
     }
 

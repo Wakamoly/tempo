@@ -17,20 +17,23 @@ class ConnectionAlertDialog : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogConnectionAlertBinding.inflate(getLayoutInflater())
 
-        val builder = MaterialAlertDialogBuilder(activity!!)
-            .setView(bind.getRoot())
-            .setTitle(R.string.connection_alert_dialog_title)
-            .setPositiveButton(
-                R.string.connection_alert_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
-            .setNegativeButton(
-                R.string.connection_alert_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() })
+        val builder =
+            MaterialAlertDialogBuilder(activity!!)
+                .setView(bind.getRoot())
+                .setTitle(R.string.connection_alert_dialog_title)
+                .setPositiveButton(
+                    R.string.connection_alert_dialog_positive_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+                ).setNegativeButton(
+                    R.string.connection_alert_dialog_negative_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
+                )
 
         if (!isDataSavingMode()) {
             builder.setNeutralButton(
                 R.string.connection_alert_dialog_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+            )
         }
 
         return builder.create()
@@ -45,10 +48,13 @@ class ConnectionAlertDialog : DialogFragment() {
     private fun setButtonAction() {
         val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                setDataSavingMode(true)
-                Objects.requireNonNull<Dialog?>(dialog).dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setDataSavingMode(true)
+                    Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                },
+            )
     }
 }

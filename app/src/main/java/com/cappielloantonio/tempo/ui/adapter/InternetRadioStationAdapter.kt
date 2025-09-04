@@ -17,54 +17,59 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class InternetRadioStationAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<InternetRadioStationAdapter.ViewHolder?>() {
+class InternetRadioStationAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<InternetRadioStationAdapter.ViewHolder?>() {
     private var internetRadioStations: MutableList<InternetRadioStation>
 
     init {
         this.internetRadioStations = mutableListOf<InternetRadioStation?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemHomeInternetRadioStationBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemHomeInternetRadioStationBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return InternetRadioStationAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val internetRadioStation = internetRadioStations.get(position)
 
         holder.item.internetRadioStationTitleTextView.text = internetRadioStation.name
         holder.item.internetRadioStationSubtitleTextView.text = internetRadioStation.streamUrl
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            internetRadioStation.streamUrl,
-            CustomGlideRequest.ResourceType.Radio
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                internetRadioStation.streamUrl,
+                CustomGlideRequest.ResourceType.Radio,
+            ).build()
             .into(holder.item.internetRadioStationCoverImageView)
     }
 
-    override fun getItemCount(): Int {
-        return internetRadioStations.size
-    }
+    override fun getItemCount(): Int = internetRadioStations.size
 
     fun setItems(internetRadioStations: MutableList<InternetRadioStation>) {
         this.internetRadioStations = internetRadioStations
         notifyDataSetChanged()
     }
 
-    fun getItem(position: Int): InternetRadioStation? {
-        return internetRadioStations.get(position)
-    }
+    fun getItem(position: Int): InternetRadioStation? = internetRadioStations.get(position)
 
-    inner class ViewHolder internal constructor(var item: ItemHomeInternetRadioStationBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemHomeInternetRadioStationBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.internetRadioStationTitleTextView.setSelected(true)
@@ -80,7 +85,7 @@ class InternetRadioStationAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.INTERNET_RADIO_STATION_OBJECT,
-                internetRadioStations.get(getBindingAdapterPosition())
+                internetRadioStations.get(getBindingAdapterPosition()),
             )
 
             click.onInternetRadioStationClick(bundle)
@@ -90,7 +95,7 @@ class InternetRadioStationAdapter(private val click: ClickCallback) :
             val bundle = Bundle()
             bundle.putParcelable(
                 Constants.INTERNET_RADIO_STATION_OBJECT,
-                internetRadioStations.get(getBindingAdapterPosition())
+                internetRadioStations.get(getBindingAdapterPosition()),
             )
 
             click.onInternetRadioStationLongClick(bundle)

@@ -15,22 +15,26 @@ import com.cappielloantonio.tempo.util.Preferences.setTempoUpdateReminder
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import java.util.Objects
 
-class GithubTempoUpdateDialog(private val latestRelease: LatestRelease) : DialogFragment() {
+class GithubTempoUpdateDialog(
+    private val latestRelease: LatestRelease,
+) : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         val bind = DialogGithubTempoUpdateBinding.inflate(getLayoutInflater())
 
-        val builder = MaterialAlertDialogBuilder(requireActivity())
-            .setView(bind.getRoot())
-            .setTitle(R.string.github_update_dialog_title)
-            .setPositiveButton(
-                R.string.github_update_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNegativeButton(
-                R.string.github_update_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
-            .setNeutralButton(
-                R.string.github_update_dialog_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> })
+        val builder =
+            MaterialAlertDialogBuilder(requireActivity())
+                .setView(bind.getRoot())
+                .setTitle(R.string.github_update_dialog_title)
+                .setPositiveButton(
+                    R.string.github_update_dialog_positive_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+                ).setNegativeButton(
+                    R.string.github_update_dialog_negative_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+                ).setNeutralButton(
+                    R.string.github_update_dialog_neutral_button,
+                    DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
+                )
 
         return builder.create()
     }
@@ -44,23 +48,32 @@ class GithubTempoUpdateDialog(private val latestRelease: LatestRelease) : Dialog
     private fun setButtonAction() {
         val alertDialog = Objects.requireNonNull<Dialog?>(dialog) as AlertDialog
 
-        alertDialog.getButton(AlertDialog.BUTTON_POSITIVE)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                openLink(latestRelease.htmlUrl)
-                Objects.requireNonNull<Dialog?>(dialog).dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_POSITIVE)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    openLink(latestRelease.htmlUrl)
+                    Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                },
+            )
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEGATIVE)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                setTempoUpdateReminder()
-                Objects.requireNonNull<Dialog?>(dialog).dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEGATIVE)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    setTempoUpdateReminder()
+                    Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                },
+            )
 
-        alertDialog.getButton(AlertDialog.BUTTON_NEUTRAL)
-            .setOnClickListener(View.OnClickListener { v: View? ->
-                openLink(getString(R.string.support_url))
-                Objects.requireNonNull<Dialog?>(dialog).dismiss()
-            })
+        alertDialog
+            .getButton(AlertDialog.BUTTON_NEUTRAL)
+            .setOnClickListener(
+                View.OnClickListener { v: View? ->
+                    openLink(getString(R.string.support_url))
+                    Objects.requireNonNull<Dialog?>(dialog).dismiss()
+                },
+            )
     }
 
     private fun openLink(link: String?) {

@@ -17,57 +17,66 @@ import okhttp3.Request.Builder.build
 import okhttp3.Response.Builder.build
 
 @UnstableApi
-class MusicDirectoryAdapter(private val click: ClickCallback) :
-    RecyclerView.Adapter<MusicDirectoryAdapter.ViewHolder?>() {
+class MusicDirectoryAdapter(
+    private val click: ClickCallback,
+) : RecyclerView.Adapter<MusicDirectoryAdapter.ViewHolder?>() {
     private var children: MutableList<Child>
 
     init {
         this.children = mutableListOf<Child?>()
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = ItemLibraryMusicDirectoryBinding.inflate(
-            LayoutInflater.from(parent.context),
-            parent,
-            false
-        )
+    override fun onCreateViewHolder(
+        parent: ViewGroup,
+        viewType: Int,
+    ): ViewHolder {
+        val view =
+            ItemLibraryMusicDirectoryBinding.inflate(
+                LayoutInflater.from(parent.context),
+                parent,
+                false,
+            )
         return MusicDirectoryAdapter.ViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
+    override fun onBindViewHolder(
+        holder: ViewHolder,
+        position: Int,
+    ) {
         val child = children.get(position)
 
         holder.item.musicDirectoryTitleTextView.text = child.title
 
-        val type = if (child.isDir)
-            CustomGlideRequest.ResourceType.Directory
-        else
-            CustomGlideRequest.ResourceType.Song
+        val type =
+            if (child.isDir) {
+                CustomGlideRequest.ResourceType.Directory
+            } else {
+                CustomGlideRequest.ResourceType.Song
+            }
 
-        CustomGlideRequest.Builder.Companion.from(
-            holder.itemView.context,
-            child.coverArtId,
-            type
-        )
-            .build()
+        CustomGlideRequest.Builder.Companion
+            .from(
+                holder.itemView.context,
+                child.coverArtId,
+                type,
+            ).build()
             .into(holder.item.musicDirectoryCoverImageView)
 
         holder.item.musicDirectoryMoreButton.setVisibility(if (child.isDir) View.VISIBLE else View.INVISIBLE)
         holder.item.musicDirectoryPlayButton.setVisibility(if (child.isDir) View.INVISIBLE else View.VISIBLE)
     }
 
-    override fun getItemCount(): Int {
-        return children.size
-    }
+    override fun getItemCount(): Int = children.size
 
     fun setItems(children: MutableList<Child>?) {
         this.children = if (children != null) children else mutableListOf<Child?>()
         notifyDataSetChanged()
     }
 
-    inner class ViewHolder internal constructor(var item: ItemLibraryMusicDirectoryBinding) :
-        RecyclerView.ViewHolder(
-            item.getRoot()
+    inner class ViewHolder internal constructor(
+        var item: ItemLibraryMusicDirectoryBinding,
+    ) : RecyclerView.ViewHolder(
+            item.getRoot(),
         ) {
         init {
             item.musicDirectoryTitleTextView.setSelected(true)
@@ -84,7 +93,7 @@ class MusicDirectoryAdapter(private val click: ClickCallback) :
             if (children.get(getBindingAdapterPosition()).isDir) {
                 bundle.putString(
                     Constants.MUSIC_DIRECTORY_ID,
-                    children.get(getBindingAdapterPosition()).id
+                    children.get(getBindingAdapterPosition()).id,
                 )
                 click.onMusicDirectoryClick(bundle)
             } else {
@@ -99,7 +108,7 @@ class MusicDirectoryAdapter(private val click: ClickCallback) :
                 val bundle = Bundle()
                 bundle.putParcelable(
                     Constants.TRACK_OBJECT,
-                    children.get(getBindingAdapterPosition())
+                    children.get(getBindingAdapterPosition()),
                 )
 
                 click.onMediaLongClick(bundle)
