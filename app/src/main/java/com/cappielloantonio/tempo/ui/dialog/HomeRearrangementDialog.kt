@@ -36,14 +36,14 @@ class HomeRearrangementDialog : DialogFragment() {
             .setTitle(R.string.home_rearrangement_dialog_title)
             .setPositiveButton(
                 R.string.home_rearrangement_dialog_positive_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
-            ).setNeutralButton(
+            ) { dialog: DialogInterface?, id: Int -> }
+            .setNeutralButton(
                 R.string.home_rearrangement_dialog_neutral_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> },
-            ).setNegativeButton(
+            ) { dialog: DialogInterface?, id: Int -> }
+            .setNegativeButton(
                 R.string.home_rearrangement_dialog_negative_button,
-                DialogInterface.OnClickListener { dialog: DialogInterface?, id: Int -> dialog!!.cancel() },
-            ).create()
+            ) { dialog: DialogInterface?, id: Int -> dialog!!.cancel() }
+            .create()
     }
 
     override fun onStart() {
@@ -64,12 +64,10 @@ class HomeRearrangementDialog : DialogFragment() {
 
         alertDialog
             .getButton(AlertDialog.BUTTON_POSITIVE)
-            .setOnClickListener(
-                View.OnClickListener { v: View? ->
-                    homeRearrangementViewModel!!.saveHomeSectorList(homeSectorHorizontalAdapter!!.getItems())
-                    dismiss()
-                },
-            )
+            .setOnClickListener { v: View? ->
+                homeRearrangementViewModel!!.saveHomeSectorList(homeSectorHorizontalAdapter!!.items)
+                dismiss()
+            }
 
         alertDialog
             .getButton(AlertDialog.BUTTON_NEUTRAL)
@@ -87,7 +85,7 @@ class HomeRearrangementDialog : DialogFragment() {
 
         homeSectorHorizontalAdapter = HomeSectorHorizontalAdapter()
         bind!!.homeSectorItemRecyclerView.setAdapter(homeSectorHorizontalAdapter)
-        homeSectorHorizontalAdapter!!.setItems(homeRearrangementViewModel!!.getHomeSectorList())
+        homeSectorHorizontalAdapter!!.items = homeRearrangementViewModel!!.homeSectorList
 
         ItemTouchHelper(
             object :

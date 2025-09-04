@@ -12,11 +12,11 @@ class RadioRepository {
     val internetRadioStations: MutableLiveData<MutableList<InternetRadioStation>>
         get() {
             val radioStation =
-                MutableLiveData<MutableList<InternetRadioStation>>(ArrayList<InternetRadioStation?>())
+                MutableLiveData<MutableList<InternetRadioStation>>(ArrayList())
 
             getSubsonicClientInstance(false)
-                .getInternetRadioClient()
-                .getInternetRadioStations()
+                .internetRadioClient
+                .internetRadioStations
                 .enqueue(
                     object : Callback<ApiResponse?> {
                         override fun onResponse(
@@ -30,12 +30,14 @@ class RadioRepository {
                                     .subsonicResponse.internetRadioStations!!
                                     .internetRadioStations != null
                             ) {
-                                radioStation.setValue(
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.internetRadioStations!!
-                                        .internetRadioStations,
-                                )
+                                response
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.internetRadioStations
+                                    ?.internetRadioStations
+                                    ?.let {
+                                        radioStation.value = it.toMutableList()
+                                    }
                             }
                         }
 
@@ -56,7 +58,7 @@ class RadioRepository {
         homepageURL: String?,
     ) {
         getSubsonicClientInstance(false)
-            .getInternetRadioClient()
+            .internetRadioClient
             .createInternetRadioStation(streamURL, name, homepageURL)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -82,7 +84,7 @@ class RadioRepository {
         homepageURL: String?,
     ) {
         getSubsonicClientInstance(false)
-            .getInternetRadioClient()
+            .internetRadioClient
             .updateInternetRadioStation(id, streamURL, name, homepageURL)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -103,7 +105,7 @@ class RadioRepository {
 
     fun deleteInternetRadioStation(id: String?) {
         getSubsonicClientInstance(false)
-            .getInternetRadioClient()
+            .internetRadioClient
             .deleteInternetRadioStation(id)
             .enqueue(
                 object : Callback<ApiResponse?> {

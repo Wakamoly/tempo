@@ -12,7 +12,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
-import androidx.navigation.NavController.OnDestinationChangedListener
 import androidx.navigation.NavDestination
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.NavigationUI.setupWithNavController
@@ -165,15 +164,15 @@ class MainActivity : BaseActivity() {
 
     fun setBottomSheetVisibility(visibility: Boolean) {
         if (visibility) {
-            findViewById<View?>(R.id.player_bottom_sheet).visibility = View.VISIBLE
+            findViewById<View>(R.id.player_bottom_sheet).visibility = View.VISIBLE
         } else {
-            findViewById<View?>(R.id.player_bottom_sheet).visibility = View.GONE
+            findViewById<View>(R.id.player_bottom_sheet).visibility = View.GONE
         }
     }
 
     private fun checkBottomSheetAfterStateChanged() {
         val handler = Handler()
-        val runnable = Runnable { setBottomSheetInPeek(mainViewModel!!.isQueueLoaded()) }
+        val runnable = Runnable { setBottomSheetInPeek(mainViewModel!!.isQueueLoaded) }
         handler.postDelayed(runnable, 100)
     }
 
@@ -231,10 +230,12 @@ class MainActivity : BaseActivity() {
             supportFragmentManager.findFragmentByTag("PlayerBottomSheet") as PlayerBottomSheetFragment?
         if (playerBottomSheetFragment != null) {
             val condensedSlideOffset = max(0.0f, min(0.2f, slideOffset - 0.2f)) / 0.2f
-            playerBottomSheetFragment.getPlayerHeader().setAlpha(1 - condensedSlideOffset)
             playerBottomSheetFragment
-                .getPlayerHeader()
-                .setVisibility(if (condensedSlideOffset > 0.99) View.GONE else View.VISIBLE)
+                .playerHeader
+                ?.apply {
+                    setAlpha(1 - condensedSlideOffset)
+                    visibility = if (condensedSlideOffset > 0.99) View.GONE else View.VISIBLE
+                }
         }
     }
 
@@ -255,29 +256,29 @@ class MainActivity : BaseActivity() {
     }
 
     private fun initNavigation() {
-        bottomNavigationView = findViewById<BottomNavigationView>(R.id.bottom_navigation)
+        bottomNavigationView = findViewById(R.id.bottom_navigation)
         navHostFragment =
-            fragmentManager!!.findFragmentById(R.id.nav_host_fragment) as NavHostFragment?
-        navController = Objects.requireNonNull<NavHostFragment?>(navHostFragment).navController
+            fragmentManager?.findFragmentById(R.id.nav_host_fragment) as NavHostFragment
+        navController = navHostFragment?.navController
 
         /*
          * In questo modo intercetto il cambio schermata tramite navbar e se il bottom sheet è aperto,
          * lo chiudo
          */
-        navController!!.addOnDestinationChangedListener(
-            OnDestinationChangedListener { controller: NavController?, destination: NavDestination?, arguments: Bundle? ->
-                if (bottomSheetBehavior!!.getState() == BottomSheetBehavior.STATE_EXPANDED &&
-                    (
-                        destination!!.id == R.id.homeFragment || destination.id == R.id.libraryFragment ||
-                            destination.id == R.id.downloadFragment
-                    )
-                ) {
-                    bottomSheetBehavior!!.setState(BottomSheetBehavior.STATE_COLLAPSED)
-                }
-            },
-        )
+        navController?.addOnDestinationChangedListener { controller: NavController, destination: NavDestination?, arguments: Bundle? ->
+            if (bottomSheetBehavior?.getState() == BottomSheetBehavior.STATE_EXPANDED &&
+                (
+                        destination?.id == R.id.homeFragment || destination?.id == R.id.libraryFragment ||
+                                destination?.id == R.id.downloadFragment
+                        )
+            ) {
+                bottomSheetBehavior?.setState(BottomSheetBehavior.STATE_COLLAPSED)
+            }
+        }
 
-        setupWithNavController(bottomNavigationView!!, navController!!)
+        if (bottomNavigationView != null && navController != null) {
+            setupWithNavController(bottomNavigationView!!, navController!!)
+        }
     }
 
     fun setBottomNavigationBarVisibility(visibility: Boolean) {

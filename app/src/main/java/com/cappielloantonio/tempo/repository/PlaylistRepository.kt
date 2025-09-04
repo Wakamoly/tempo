@@ -26,36 +26,32 @@ class PlaylistRepository {
         random: Boolean,
         size: Int,
     ): MutableLiveData<MutableList<Playlist>> {
-        val listLivePlaylists = MutableLiveData<MutableList<Playlist>>(ArrayList<Playlist?>())
+        val listLivePlaylists = MutableLiveData<MutableList<Playlist>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
-            .getPlaylists()
+            .playlistClient
+            .playlists
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.playlists!!
-                                .playlists != null
-                        ) {
-                            val playlists: MutableList<Playlist?>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.playlists!!
-                                    .playlists
+                        if (response.isSuccessful) {
+                            val playlists: MutableList<Playlist> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.playlists
+                                            ?.playlists
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             if (random) {
-                                Collections.shuffle(playlists)
+                                playlists.shuffle()
                                 listLivePlaylists.value =
-                                    playlists!!.subList(
-                                        0,
-                                        min(playlists.size, size),
-                                    )
+                                    playlists.subList(0, min(playlists.size, size))
                             } else {
                                 listLivePlaylists.value = playlists
                             }
@@ -66,6 +62,7 @@ class PlaylistRepository {
                         call: Call<ApiResponse?>,
                         t: Throwable,
                     ) {
+                        listLivePlaylists.value = Collections.emptyList()
                     }
                 },
             )
@@ -77,7 +74,7 @@ class PlaylistRepository {
         val listLivePlaylistSongs = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .getPlaylist(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -85,12 +82,16 @@ class PlaylistRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null) {
-                            val songs: MutableList<Child?>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.playlist!!
-                                    .entries
+                        if (response.isSuccessful) {
+                            val songs: MutableList<Child> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.playlist
+                                            ?.entries
+                                            ?: emptyList()
+                                        ).toMutableList()
                             listLivePlaylistSongs.value = songs
                         }
                     }
@@ -108,10 +109,10 @@ class PlaylistRepository {
 
     fun addSongToPlaylist(
         playlistId: String?,
-        songsId: ArrayList<String?>?,
+        songsId: ArrayList<String>?,
     ) {
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .updatePlaylist(playlistId, null, true, songsId, null)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -145,10 +146,10 @@ class PlaylistRepository {
     fun createPlaylist(
         playlistId: String?,
         name: String?,
-        songsId: ArrayList<String?>?,
+        songsId: ArrayList<String>?,
     ) {
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .createPlaylist(playlistId, name, songsId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -170,10 +171,10 @@ class PlaylistRepository {
     fun updatePlaylist(
         playlistId: String?,
         name: String?,
-        songsId: ArrayList<String?>?,
+        songsId: ArrayList<String>?,
     ) {
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .deletePlaylist(playlistId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -197,11 +198,11 @@ class PlaylistRepository {
         playlistId: String?,
         name: String?,
         isPublic: Boolean,
-        songIdToAdd: ArrayList<String?>?,
-        songIndexToRemove: ArrayList<Int?>?,
+        songIdToAdd: ArrayList<String>?,
+        songIndexToRemove: ArrayList<Int>?,
     ) {
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .updatePlaylist(playlistId, name, isPublic, songIdToAdd, songIndexToRemove)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -222,7 +223,7 @@ class PlaylistRepository {
 
     fun deletePlaylist(playlistId: String?) {
         getSubsonicClientInstance(false)
-            .getPlaylistClient()
+            .playlistClient
             .deletePlaylist(playlistId)
             .enqueue(
                 object : Callback<ApiResponse?> {

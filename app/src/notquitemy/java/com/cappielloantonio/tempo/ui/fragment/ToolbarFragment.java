@@ -29,34 +29,34 @@ public class ToolbarFragment extends Fragment {
     }
 
     @Override
-    public void onCreate(@Nullable final Bundle savedInstanceState) {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        this.setHasOptionsMenu(true);
+        setHasOptionsMenu(true);
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull final Menu menu, @NonNull final MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.main_page_menu, menu);
     }
 
     @Override
-    public View onCreateView(@NonNull final LayoutInflater inflater, final ViewGroup container, final Bundle savedInstanceState) {
-        this.activity = (MainActivity) this.getActivity();
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        activity = (MainActivity) getActivity();
 
-        this.bind = FragmentToolbarBinding.inflate(inflater, container, false);
-        final View view = this.bind.getRoot();
+        bind = FragmentToolbarBinding.inflate(inflater, container, false);
+        View view = bind.getRoot();
 
         return view;
     }
 
     @Override
-    public boolean onOptionsItemSelected(@NonNull final MenuItem item) {
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         if (R.id.action_search == item.getItemId()) {
-            this.activity.navController.navigate(R.id.searchFragment);
+            activity.navController.navigate(R.id.searchFragment);
             return true;
         } else if (R.id.action_settings == item.getItemId()) {
-            this.activity.navController.navigate(R.id.settingsFragment);
+            activity.navController.navigate(R.id.settingsFragment);
             return true;
         }
 

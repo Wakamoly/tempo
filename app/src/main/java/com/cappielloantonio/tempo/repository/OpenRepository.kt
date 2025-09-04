@@ -13,7 +13,7 @@ class OpenRepository {
         val lyricsList = MutableLiveData<LyricsList?>()
 
         getSubsonicClientInstance(false)
-            .getOpenClient()
+            .openClient
             .getLyricsBySongId(id)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -21,8 +21,12 @@ class OpenRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.lyricsList != null) {
-                            lyricsList.value = response.body()!!.subsonicResponse.lyricsList
+                        if (response.isSuccessful) {
+                            lyricsList.value =
+                                response
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.lyricsList
                         }
                     }
 
@@ -30,6 +34,7 @@ class OpenRepository {
                         call: Call<ApiResponse?>,
                         t: Throwable,
                     ) {
+                        lyricsList.value = null
                     }
                 },
             )

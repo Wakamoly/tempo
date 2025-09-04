@@ -232,9 +232,9 @@ class QueueRepository {
 
             try {
                 thread.join()
-                val lastMediaPlayed =
-                    getLastPlayedMediaThreadSafe.queueItem
-                index = lastMediaPlayed.trackOrder
+                getLastPlayedMediaThreadSafe.queueItem?.let {
+                    index = it.trackOrder
+                }
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
@@ -253,9 +253,9 @@ class QueueRepository {
 
             try {
                 thread.join()
-                val lastMediaPlayed =
-                    getLastPlayedMediaThreadSafe.queueItem
-                timestamp = lastMediaPlayed.playingChanged
+                getLastPlayedMediaThreadSafe.queueItem?.let {
+                    timestamp = it.playingChanged
+                }
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }

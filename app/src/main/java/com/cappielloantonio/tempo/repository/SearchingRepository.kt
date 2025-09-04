@@ -1,6 +1,7 @@
 package com.cappielloantonio.tempo.repository
 
 import androidx.lifecycle.MutableLiveData
+import androidx.media3.common.util.UnstableApi
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.RecentSearchDao
@@ -12,6 +13,7 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
+@UnstableApi
 class SearchingRepository {
     private val recentSearchDao: RecentSearchDao =
         AppDatabase.Companion.instance.recentSearchDao()
@@ -20,7 +22,7 @@ class SearchingRepository {
         val result = MutableLiveData<SearchResult2?>()
 
         getSubsonicClientInstance(false)
-            .getSearchingClient()
+            .searchingClient
             .search3(query, 20, 20, 20)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -48,7 +50,7 @@ class SearchingRepository {
         val result = MutableLiveData<SearchResult3?>()
 
         getSubsonicClientInstance(false)
-            .getSearchingClient()
+            .searchingClient
             .search3(query, 20, 20, 20)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -76,7 +78,7 @@ class SearchingRepository {
         val suggestions = MutableLiveData<MutableList<String>>()
 
         getSubsonicClientInstance(false)
-            .getSearchingClient()
+            .searchingClient
             .search3(query, 5, 5, 5)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -84,13 +86,14 @@ class SearchingRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val newSuggestions: MutableList<String?> = ArrayList<Any?>()
+                        val newSuggestions: MutableList<String> = ArrayList()
 
                         if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
                             if (response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .artists != null
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.searchResult3
+                                    ?.artists != null
                             ) {
                                 for (artistID3 in response
                                     .body()!!
@@ -196,11 +199,11 @@ class SearchingRepository {
     private class RecentThreadSafe(
         private val recentSearchDao: RecentSearchDao,
     ) : Runnable {
-        var recent: MutableList<String?>? = ArrayList<String?>()
+        var recent: MutableList<String>? = ArrayList()
             private set
 
         override fun run() {
-            recent = recentSearchDao.getRecent()
+            recent = recentSearchDao.recent
         }
     }
 }

@@ -5,7 +5,7 @@ import android.content.Context;
 public enum Flavors {
     ;
 
-    public static void initializeCastContext(final Context context) {
+    public static void initializeCastContext(Context context) {
 
     }
 }

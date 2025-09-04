@@ -7,7 +7,6 @@ import com.cappielloantonio.tempo.subsonic.models.Genre
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.Collections
 import java.util.stream.Collectors
 import kotlin.math.min
 
@@ -27,20 +26,24 @@ class GenreRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.genres != null) {
-                            val genreList: MutableList<Genre?>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.genres!!
-                                    .genres
+                        if (response.isSuccessful) {
+                            val genreList: MutableList<Genre> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.genres
+                                            ?.genres
+                                            ?: emptyList()
+                                        ).toMutableList()
 
-                            if (genreList == null || genreList.isEmpty()) {
-                                genres.value = mutableListOf<Genre>()
+                            if (genreList.isEmpty()) {
+                                genres.value = mutableListOf()
                                 return
                             }
 
                             if (random) {
-                                Collections.shuffle(genreList)
+                                genreList.shuffle()
                             }
 
                             if (size != -1) {
@@ -49,8 +52,11 @@ class GenreRepository {
                                 genres.value =
                                     genreList
                                         .stream()
-                                        .sorted(Comparator.comparing<Genre?, String>(Genre::genre))
-                                        .collect(
+                                        .sorted { o1: Genre, o2: Genre ->
+                                            val g1 = o1.genre ?: ""
+                                            val g2 = o2.genre ?: ""
+                                            g1.compareTo(g2)
+                                        }.collect(
                                             Collectors.toList(),
                                         )
                             }
@@ -61,6 +67,8 @@ class GenreRepository {
                         call: Call<ApiResponse?>,
                         t: Throwable,
                     ) {
+                        // TODO (BA, 9/4/25)
+                        genres.value = mutableListOf()
                     }
                 },
             )

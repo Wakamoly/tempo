@@ -15,10 +15,10 @@ class PodcastRepository {
         channelId: String?,
     ): MutableLiveData<MutableList<PodcastChannel>> {
         val livePodcastChannel =
-            MutableLiveData<MutableList<PodcastChannel>>(ArrayList<PodcastChannel?>())
+            MutableLiveData<MutableList<PodcastChannel>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .getPodcasts(includeEpisodes, channelId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -26,13 +26,15 @@ class PodcastRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.podcasts != null) {
-                            livePodcastChannel.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.podcasts!!
-                                    .channels,
-                            )
+                        if (response.isSuccessful) {
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.podcasts
+                                ?.channels
+                                ?.let {
+                                    livePodcastChannel.value = it.toMutableList()
+                                }
                         }
                     }
 
@@ -49,10 +51,10 @@ class PodcastRepository {
 
     fun getNewestPodcastEpisodes(count: Int): MutableLiveData<MutableList<PodcastEpisode>> {
         val liveNewestPodcastEpisodes =
-            MutableLiveData<MutableList<PodcastEpisode>>(ArrayList<PodcastEpisode?>())
+            MutableLiveData<MutableList<PodcastEpisode>>(ArrayList())
 
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .getNewestPodcasts(count)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -61,12 +63,14 @@ class PodcastRepository {
                         response: Response<ApiResponse?>,
                     ) {
                         if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null) {
-                            liveNewestPodcastEpisodes.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.newestPodcasts!!
-                                    .episodes,
-                            )
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.newestPodcasts
+                                ?.episodes
+                                ?.let {
+                                    liveNewestPodcastEpisodes.value = it.toMutableList()
+                                }
                         }
                     }
 
@@ -83,7 +87,7 @@ class PodcastRepository {
 
     fun refreshPodcasts() {
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .refreshPodcasts()
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -104,7 +108,7 @@ class PodcastRepository {
 
     fun createPodcastChannel(url: String?) {
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .createPodcastChannel(url)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -125,7 +129,7 @@ class PodcastRepository {
 
     fun deletePodcastChannel(channelId: String?) {
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .deletePodcastChannel(channelId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -146,7 +150,7 @@ class PodcastRepository {
 
     fun deletePodcastEpisode(episodeId: String?) {
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .deletePodcastEpisode(episodeId)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -167,7 +171,7 @@ class PodcastRepository {
 
     fun downloadPodcastEpisode(episodeId: String?) {
         getSubsonicClientInstance(false)
-            .getPodcastClient()
+            .podcastClient
             .downloadPodcastEpisode(episodeId)
             .enqueue(
                 object : Callback<ApiResponse?> {

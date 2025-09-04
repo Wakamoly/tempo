@@ -10,7 +10,7 @@ import retrofit2.Response
 class ScanRepository {
     fun startScan(callback: ScanCallback) {
         getSubsonicClientInstance(false)
-            .getMediaLibraryScanningClient()
+            .mediaLibraryScanningClient
             .startScan()
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -18,8 +18,8 @@ class ScanRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
-                            if (response.body()!!.subsonicResponse.error != null) {
+                        if (response.isSuccessful) {
+                            if (response.body()?.subsonicResponse?.error != null) {
                                 callback.onError(
                                     Exception(
                                         response
@@ -28,7 +28,7 @@ class ScanRepository {
                                             .message,
                                     ),
                                 )
-                            } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                            } else if (response.body()?.subsonicResponse?.scanStatus != null) {
                                 callback.onSuccess(
                                     response
                                         .body()!!
@@ -55,7 +55,7 @@ class ScanRepository {
 
     fun getScanStatus(callback: ScanCallback) {
         getSubsonicClientInstance(false)
-            .getMediaLibraryScanningClient()
+            .mediaLibraryScanningClient
             .startScan()
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -63,8 +63,8 @@ class ScanRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse != null) {
-                            if (response.body()!!.subsonicResponse.error != null) {
+                        if (response.isSuccessful) {
+                            if (response.body()?.subsonicResponse?.error != null) {
                                 callback.onError(
                                     Exception(
                                         response
@@ -73,7 +73,7 @@ class ScanRepository {
                                             .message,
                                     ),
                                 )
-                            } else if (response.body()!!.subsonicResponse.scanStatus != null) {
+                            } else if (response.body()?.subsonicResponse?.scanStatus != null) {
                                 callback.onSuccess(
                                     response
                                         .body()!!

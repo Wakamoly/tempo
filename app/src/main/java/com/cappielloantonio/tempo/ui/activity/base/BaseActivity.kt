@@ -25,7 +25,7 @@ import com.google.common.util.concurrent.ListenableFuture
 
 @UnstableApi
 open class BaseActivity : AppCompatActivity() {
-    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>? = null
+    private var mediaBrowserListenableFuture: ListenableFuture<MediaBrowser>? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -99,7 +99,8 @@ open class BaseActivity : AppCompatActivity() {
         MediaBrowser.releaseFuture(mediaBrowserListenableFuture)
     }
 
-    fun getMediaBrowserListenableFuture(): ListenableFuture<MediaBrowser?> = mediaBrowserListenableFuture!!
+    fun getMediaBrowserListenableFuture(): ListenableFuture<MediaBrowser> =
+        mediaBrowserListenableFuture!!
 
     private fun initializeDownloader() {
         try {

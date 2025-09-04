@@ -12,11 +12,11 @@ class SharingRepository {
     val shares: MutableLiveData<MutableList<Share>>
         get() {
             val shares =
-                MutableLiveData<MutableList<Share>>(ArrayList<Share?>())
+                MutableLiveData<MutableList<Share>>(ArrayList())
 
             getSubsonicClientInstance(false)
-                .getSharingClient()
-                .getShares()
+                .sharingClient
+                .shares
                 .enqueue(
                     object : Callback<ApiResponse?> {
                         override fun onResponse(
@@ -57,7 +57,7 @@ class SharingRepository {
         val share = MutableLiveData<Share?>()
 
         getSubsonicClientInstance(false)
-            .getSharingClient()
+            .sharingClient
             .createShare(id, description, expires)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -103,7 +103,7 @@ class SharingRepository {
         expires: Long?,
     ) {
         getSubsonicClientInstance(false)
-            .getSharingClient()
+            .sharingClient
             .updateShare(id, description, expires)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -124,7 +124,7 @@ class SharingRepository {
 
     fun deleteShare(id: String?) {
         getSubsonicClientInstance(false)
-            .getSharingClient()
+            .sharingClient
             .deleteShare(id)
             .enqueue(
                 object : Callback<ApiResponse?> {

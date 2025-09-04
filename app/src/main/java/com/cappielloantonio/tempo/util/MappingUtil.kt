@@ -53,7 +53,7 @@ object MappingUtil {
                 putInt("bitrate", (if (media.bitrate != null) media.bitrate else 0)!!)
                 putInt(
                     "samplingRate",
-                    (if (media.samplingRate != null) media.samplingRate else 0)!!
+                    (if (media.samplingRate != null) media.samplingRate else 0)!!,
                 )
                 putInt("bitDepth", (if (media.bitDepth != null) media.bitDepth else 0)!!)
                 putString("path", media.path)

@@ -17,7 +17,6 @@ import androidx.media3.session.SessionToken
 import androidx.navigation.Navigation.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.room.RoomDatabase.Builder.build
 import com.cappielloantonio.tempo.R
 import com.cappielloantonio.tempo.databinding.FragmentArtistPageBinding
 import com.cappielloantonio.tempo.glide.CustomGlideRequest
@@ -38,8 +37,6 @@ import com.cappielloantonio.tempo.util.Constants
 import com.cappielloantonio.tempo.util.MusicUtil
 import com.cappielloantonio.tempo.viewmodel.ArtistPageViewModel
 import com.google.common.util.concurrent.ListenableFuture
-import okhttp3.Request.Builder.build
-import okhttp3.Response.Builder.build
 
 @UnstableApi
 class ArtistPageFragment :

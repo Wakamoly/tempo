@@ -15,11 +15,11 @@ class SongRepository {
         random: Boolean,
         size: Int,
     ): MutableLiveData<MutableList<Child>> {
-        val starredSongs = MutableLiveData<MutableList<Child>>(mutableListOf<Child?>())
+        val starredSongs = MutableLiveData<MutableList<Child>>(mutableListOf())
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
-            .getStarred2()
+            .albumSongListClient
+            .starred2
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
@@ -100,7 +100,7 @@ class SongRepository {
         val randomSongsSample = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getRandomSongs(number, fromYear, toYear)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -108,7 +108,7 @@ class SongRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val songs: MutableList<Child?> = ArrayList<Child?>()
+                        val songs: MutableList<Child?> = ArrayList()
 
                         if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.randomSongs != null &&
                             response
@@ -193,7 +193,7 @@ class SongRepository {
         val songsByGenre = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
-            .getAlbumSongListClient()
+            .albumSongListClient
             .getSongsByGenre(id, 100, 100 * page)
             .enqueue(
                 object : Callback<ApiResponse?> {
@@ -227,7 +227,7 @@ class SongRepository {
 
         for (id in genresId) {
             getSubsonicClientInstance(false)
-                .getAlbumSongListClient()
+                .albumSongListClient
                 .getSongsByGenre(id, 500, 0)
                 .enqueue(
                     object : Callback<ApiResponse?> {
@@ -235,7 +235,7 @@ class SongRepository {
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            val songs: MutableList<Child?> = ArrayList<Child?>()
+                            val songs: MutableList<Child?> = ArrayList()
 
                             if (response.isSuccessful && response.body() != null &&
                                 response.body()!!.subsonicResponse.songsByGenre != null
@@ -295,7 +295,7 @@ class SongRepository {
         val lyrics = MutableLiveData<String?>(null)
 
         getSubsonicClientInstance(false)
-            .getMediaRetrievalClient()
+            .mediaRetrievalClient
             .getLyrics(song.artist, song.title)
             .enqueue(
                 object : Callback<ApiResponse?> {

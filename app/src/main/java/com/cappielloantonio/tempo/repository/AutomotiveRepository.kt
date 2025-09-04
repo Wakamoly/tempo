@@ -1,6 +1,5 @@
 package com.cappielloantonio.tempo.repository
 
-import android.net.Uri
 import androidx.annotation.OptIn
 import androidx.core.net.toUri
 import androidx.lifecycle.Observer
@@ -18,11 +17,8 @@ import com.cappielloantonio.tempo.model.Chronology
 import com.cappielloantonio.tempo.model.SessionMediaItem
 import com.cappielloantonio.tempo.subsonic.base.ApiResponse
 import com.cappielloantonio.tempo.subsonic.models.AlbumID3
-import com.cappielloantonio.tempo.subsonic.models.ArtistID3
 import com.cappielloantonio.tempo.subsonic.models.Child
-import com.cappielloantonio.tempo.subsonic.models.Index
 import com.cappielloantonio.tempo.subsonic.models.InternetRadioStation
-import com.cappielloantonio.tempo.subsonic.models.MusicFolder
 import com.cappielloantonio.tempo.subsonic.models.Playlist
 import com.cappielloantonio.tempo.subsonic.models.PodcastEpisode
 import com.cappielloantonio.tempo.util.MappingUtil
@@ -300,21 +296,20 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.starred2!!
-                                .albums != null
-                        ) {
-                            val albums: MutableList<AlbumID3>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.starred2!!
-                                    .albums
+                        if (response.isSuccessful) {
+                            val albums: MutableList<AlbumID3> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.starred2
+                                            ?.albums
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            for (album in albums!!) {
+                            for (album in albums) {
                                 val artworkUri =
                                     CustomGlideRequest
                                         .createUrl(
@@ -346,10 +341,7 @@ class AutomotiveRepository {
                             }
 
                             val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
-                                LibraryResult.ofItemList(
-                                    mediaItems,
-                                    null,
-                                )
+                                LibraryResult.ofItemList(mediaItems, null)
 
                             listenableFuture.set(libraryResult)
                         } else {
@@ -390,17 +382,21 @@ class AutomotiveRepository {
                                 .subsonicResponse.starred2!!
                                 .artists != null
                         ) {
-                            val artists: MutableList<ArtistID3>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.starred2!!
-                                    .artists
+                            val artists =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.starred2
+                                            ?.artists
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             artists.shuffle()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            for (artist in artists!!) {
+                            for (artist in artists) {
                                 val artworkUri =
                                     CustomGlideRequest
                                         .createUrl(
@@ -469,21 +465,20 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.musicFolders != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.musicFolders!!
-                                .musicFolders != null
-                        ) {
-                            val musicFolders: MutableList<MusicFolder>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.musicFolders!!
-                                    .musicFolders
+                        if (response.isSuccessful) {
+                            val musicFolders =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.musicFolders
+                                            ?.musicFolders
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            for (musicFolder in musicFolders!!) {
+                            for (musicFolder in musicFolders) {
                                 val mediaMetadata =
                                     MediaMetadata
                                         .Builder()
@@ -547,91 +542,74 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.indexes != null) {
+                        if (response.isSuccessful) {
                             val mediaItems: MutableList<MediaItem> = ArrayList()
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.indexes
+                                ?.let {
+                                    if (it.indices != null) {
+                                        for (index in it.indices) {
+                                            if (index.artists != null) {
+                                                for (artist in index.artists) {
+                                                    val mediaMetadata =
+                                                        MediaMetadata
+                                                            .Builder()
+                                                            .setTitle(artist.name)
+                                                            .setIsBrowsable(true)
+                                                            .setIsPlayable(false)
+                                                            .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
+                                                            .build()
 
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.indexes!!
-                                    .indices != null
-                            ) {
-                                val indices: MutableList<Index>? =
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.indexes!!
-                                        .indices
+                                                    val mediaItem =
+                                                        MediaItem
+                                                            .Builder()
+                                                            .setMediaId(prefix + artist.id)
+                                                            .setMediaMetadata(mediaMetadata)
+                                                            .setUri("")
+                                                            .build()
 
-                                for (index in indices!!) {
-                                    if (index.artists != null) {
-                                        for (artist in index.artists) {
+                                                    mediaItems.add(mediaItem)
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    it.children?.let { children ->
+                                        for (song in children) {
+                                            val artworkUri =
+                                                CustomGlideRequest
+                                                    .createUrl(
+                                                        song.coverArtId,
+                                                        getImageSize(),
+                                                    ).toUri()
+
                                             val mediaMetadata =
                                                 MediaMetadata
                                                     .Builder()
-                                                    .setTitle(artist.name)
-                                                    .setIsBrowsable(true)
-                                                    .setIsPlayable(false)
-                                                    .setMediaType(MediaMetadata.MEDIA_TYPE_ARTIST)
+                                                    .setTitle(song.title)
+                                                    .setAlbumTitle(song.album)
+                                                    .setArtist(song.artist)
+                                                    .setIsBrowsable(false)
+                                                    .setIsPlayable(true)
+                                                    .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
+                                                    .setArtworkUri(artworkUri)
                                                     .build()
 
                                             val mediaItem =
                                                 MediaItem
                                                     .Builder()
-                                                    .setMediaId(prefix + artist.id)
+                                                    .setMediaId(prefix + song.id)
                                                     .setMediaMetadata(mediaMetadata)
-                                                    .setUri("")
+                                                    .setUri(MusicUtil.getStreamUri(song.id))
                                                     .build()
 
                                             mediaItems.add(mediaItem)
                                         }
+                                        setChildrenMetadata(children.toMutableList())
                                     }
                                 }
-                            }
-
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.indexes!!
-                                    .children != null
-                            ) {
-                                val children: MutableList<Child>? =
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.indexes!!
-                                        .children
-
-                                for (song in children!!) {
-                                    val artworkUri =
-                                        Uri.parse(
-                                            CustomGlideRequest.createUrl(
-                                                song.coverArtId,
-                                                getImageSize(),
-                                            ),
-                                        )
-
-                                    val mediaMetadata =
-                                        MediaMetadata
-                                            .Builder()
-                                            .setTitle(song.title)
-                                            .setAlbumTitle(song.album)
-                                            .setArtist(song.artist)
-                                            .setIsBrowsable(false)
-                                            .setIsPlayable(true)
-                                            .setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-                                            .setArtworkUri(artworkUri)
-                                            .build()
-
-                                    val mediaItem =
-                                        MediaItem
-                                            .Builder()
-                                            .setMediaId(prefix + song.id)
-                                            .setMediaMetadata(mediaMetadata)
-                                            .setUri(MusicUtil.getStreamUri(song.id))
-                                            .build()
-
-                                    mediaItems.add(mediaItem)
-                                }
-
-                                setChildrenMetadata(children)
-                            }
 
                             val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
                                 LibraryResult.ofItemList(
@@ -670,66 +648,58 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.directory != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.directory!!
-                                .children != null
-                        ) {
-                            val directory = response.body()!!.subsonicResponse.directory
+                        if (response.isSuccessful) {
+                            response.body()?.subsonicResponse?.directory?.children?.let { children ->
+                                val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            val mediaItems: MutableList<MediaItem> = ArrayList()
+                                for (child in children) {
+                                    val artworkUri =
+                                        CustomGlideRequest
+                                            .createUrl(
+                                                child.coverArtId,
+                                                getImageSize(),
+                                            ).toUri()
 
-                            for (child in directory!!.children!!) {
-                                val artworkUri =
-                                    CustomGlideRequest
-                                        .createUrl(
-                                            child.coverArtId,
-                                            getImageSize(),
-                                        ).toUri()
+                                    val mediaMetadata =
+                                        MediaMetadata
+                                            .Builder()
+                                            .setTitle(child.title)
+                                            .setIsBrowsable(child.isDir)
+                                            .setIsPlayable(!child.isDir)
+                                            .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
+                                            .setArtworkUri(artworkUri)
+                                            .build()
 
-                                val mediaMetadata =
-                                    MediaMetadata
-                                        .Builder()
-                                        .setTitle(child.title)
-                                        .setIsBrowsable(child.isDir)
-                                        .setIsPlayable(!child.isDir)
-                                        .setMediaType(MediaMetadata.MEDIA_TYPE_FOLDER_MIXED)
-                                        .setArtworkUri(artworkUri)
-                                        .build()
+                                    val mediaItem =
+                                        MediaItem
+                                            .Builder()
+                                            .setMediaId(if (child.isDir) prefix + child.id else child.id)
+                                            .setMediaMetadata(mediaMetadata)
+                                            .setUri(
+                                                if (!child.isDir) {
+                                                    MusicUtil.getStreamUri(child.id)
+                                                } else {
+                                                    "".toUri()
+                                                },
+                                            ).build()
 
-                                val mediaItem =
-                                    MediaItem
-                                        .Builder()
-                                        .setMediaId(if (child.isDir) prefix + child.id else child.id)
-                                        .setMediaMetadata(mediaMetadata)
-                                        .setUri(
-                                            if (!child.isDir) {
-                                                MusicUtil.getStreamUri(child.id)
-                                            } else {
-                                                "".toUri()
-                                            },
-                                        ).build()
+                                    mediaItems.add(mediaItem)
+                                }
 
-                                mediaItems.add(mediaItem)
-                            }
-
-                            setChildrenMetadata(
-                                directory.children!!
-                                    .stream()
-                                    .filter { child: Child? -> !child!!.isDir }
-                                    .collect(
-                                        Collectors.toList(),
-                                    ),
-                            )
-
-                            val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
-                                LibraryResult.ofItemList(
-                                    mediaItems,
-                                    null,
+                                setChildrenMetadata(
+                                    children
+                                        .stream()
+                                        .filter { child: Child -> !child.isDir }
+                                        .collect(
+                                            Collectors.toList(),
+                                        ),
                                 )
 
-                            listenableFuture.set(libraryResult)
+                                val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
+                                    LibraryResult.ofItemList(mediaItems, null)
+
+                                listenableFuture.set(libraryResult)
+                            }
                         }
                     }
 
@@ -757,21 +727,20 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlists != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.playlists!!
-                                .playlists != null
-                        ) {
-                            val playlists: MutableList<Playlist>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.playlists!!
-                                    .playlists
+                        if (response.isSuccessful) {
+                            val playlists: MutableList<Playlist> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.playlists
+                                            ?.playlists
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            for (playlist in playlists!!) {
+                            for (playlist in playlists) {
                                 val mediaMetadata =
                                     MediaMetadata
                                         .Builder()
@@ -793,10 +762,7 @@ class AutomotiveRepository {
                             }
 
                             val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
-                                LibraryResult.ofItemList(
-                                    mediaItems,
-                                    null,
-                                )
+                                LibraryResult.ofItemList(mediaItems, null)
 
                             listenableFuture.set(libraryResult)
                         } else {
@@ -832,17 +798,16 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.newestPodcasts != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.newestPodcasts!!
-                                .episodes != null
-                        ) {
+                        if (response.isSuccessful) {
                             val episodes: MutableList<PodcastEpisode>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.newestPodcasts!!
-                                    .episodes
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.newestPodcasts
+                                            ?.episodes
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
@@ -869,7 +834,7 @@ class AutomotiveRepository {
                                         .Builder()
                                         .setMediaId(episode.id!!)
                                         .setMediaMetadata(mediaMetadata)
-                                        .setUri(MusicUtil.getStreamUri(episode.streamId))
+                                        .setUri(MusicUtil.getStreamUri(episode.streamId!!))
                                         .build()
 
                                 mediaItems.add(mediaItem)
@@ -916,18 +881,16 @@ class AutomotiveRepository {
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            if (response.isSuccessful && response.body() != null &&
-                                response.body()!!.subsonicResponse.internetRadioStations != null &&
-                                response
-                                    .body()!!
-                                    .subsonicResponse.internetRadioStations!!
-                                    .internetRadioStations != null
-                            ) {
+                            if (response.isSuccessful) {
                                 val radioStations: MutableList<InternetRadioStation>? =
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.internetRadioStations!!
-                                        .internetRadioStations
+                                    (
+                                            response
+                                                .body()
+                                                ?.subsonicResponse
+                                                ?.internetRadioStations
+                                                ?.internetRadioStations
+                                                ?: emptyList()
+                                            ).toMutableList()
 
                                 val mediaItems: MutableList<MediaItem> = ArrayList()
 
@@ -955,10 +918,7 @@ class AutomotiveRepository {
                                 setInternetRadioStationsMetadata(radioStations)
 
                                 val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
-                                    LibraryResult.ofItemList(
-                                        mediaItems,
-                                        null,
-                                    )
+                                    LibraryResult.ofItemList(mediaItems, null)
 
                                 listenableFuture.set(libraryResult)
                             } else {
@@ -994,27 +954,23 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.album != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.album!!
-                                .songs != null
-                        ) {
-                            val tracks: MutableList<Child>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.album!!
-                                    .songs
+                        if (response.isSuccessful) {
+                            val tracks: MutableList<Child> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.album
+                                            ?.songs
+                                            ?: emptyList()
+                                        ).toMutableList()
 
-                            setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks)
 
                             val mediaItems = MappingUtil.mapMediaItems(tracks)
 
                             val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
-                                LibraryResult.ofItemList(
-                                    mediaItems,
-                                    null,
-                                )
+                                LibraryResult.ofItemList(mediaItems, null)
 
                             listenableFuture.set(libraryResult)
                         } else {
@@ -1053,21 +1009,20 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.artist!!
-                                .albums != null
-                        ) {
-                            val albums: MutableList<AlbumID3>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.artist!!
-                                    .albums
+                        if (response.isSuccessful) {
+                            val albums: MutableList<AlbumID3> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.artist
+                                            ?.albums
+                                            ?: emptyList()
+                                        ).toMutableList()
 
                             val mediaItems: MutableList<MediaItem> = ArrayList()
 
-                            for (album in albums!!) {
+                            for (album in albums) {
                                 val artworkUri =
                                     CustomGlideRequest
                                         .createUrl(
@@ -1130,19 +1085,18 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.playlist != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.playlist!!
-                                .entries != null
-                        ) {
-                            val tracks: MutableList<Child>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.playlist!!
-                                    .entries
+                        if (response.isSuccessful) {
+                            val tracks: MutableList<Child> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.playlist
+                                            ?.entries
+                                            ?: emptyList()
+                                        ).toMutableList()
 
-                            setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks)
 
                             val mediaItems = MappingUtil.mapMediaItems(tracks)
 
@@ -1186,13 +1140,17 @@ class AutomotiveRepository {
                                 .subsonicResponse.similarSongs2!!
                                 .songs != null
                         ) {
-                            val tracks: MutableList<Child>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.similarSongs2!!
-                                    .songs
+                            val tracks: MutableList<Child> =
+                                (
+                                        response
+                                            .body()
+                                            ?.subsonicResponse
+                                            ?.similarSongs2
+                                            ?.songs
+                                            ?: emptyList()
+                                        ).toMutableList()
 
-                            setChildrenMetadata(tracks!!)
+                            setChildrenMetadata(tracks)
 
                             val mediaItems = MappingUtil.mapMediaItems(tracks)
 
@@ -1231,101 +1189,84 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.searchResult3 != null) {
+                        if (response.isSuccessful) {
                             val mediaItems: MutableList<MediaItem> = ArrayList()
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.searchResult3
+                                ?.let { searchResults ->
+                                    searchResults.artists?.let { artistID3s ->
+                                        for (artist in artistID3s) {
+                                            val artworkUri =
+                                                CustomGlideRequest
+                                                    .createUrl(
+                                                        artist.coverArtId,
+                                                        getImageSize(),
+                                                    ).toUri()
 
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .artists != null
-                            ) {
-                                for (artist in response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .artists!!) {
-                                    val artworkUri =
-                                        CustomGlideRequest
-                                            .createUrl(
-                                                artist.coverArtId,
-                                                getImageSize(),
-                                            ).toUri()
+                                            val mediaMetadata =
+                                                MediaMetadata
+                                                    .Builder()
+                                                    .setTitle(artist.name)
+                                                    .setIsBrowsable(true)
+                                                    .setIsPlayable(false)
+                                                    .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
+                                                    .setArtworkUri(artworkUri)
+                                                    .build()
 
-                                    val mediaMetadata =
-                                        MediaMetadata
-                                            .Builder()
-                                            .setTitle(artist.name)
-                                            .setIsBrowsable(true)
-                                            .setIsPlayable(false)
-                                            .setMediaType(MediaMetadata.MEDIA_TYPE_PLAYLIST)
-                                            .setArtworkUri(artworkUri)
-                                            .build()
+                                            val mediaItem =
+                                                MediaItem
+                                                    .Builder()
+                                                    .setMediaId(artistPrefix + artist.id)
+                                                    .setMediaMetadata(mediaMetadata)
+                                                    .setUri("")
+                                                    .build()
 
-                                    val mediaItem =
-                                        MediaItem
-                                            .Builder()
-                                            .setMediaId(artistPrefix + artist.id)
-                                            .setMediaMetadata(mediaMetadata)
-                                            .setUri("")
-                                            .build()
+                                            mediaItems.add(mediaItem)
+                                        }
+                                    }
 
-                                    mediaItems.add(mediaItem)
+                                    searchResults.albums?.let { albumID3s ->
+                                        for (album in albumID3s) {
+                                            val artworkUri =
+                                                CustomGlideRequest
+                                                    .createUrl(
+                                                        album.coverArtId,
+                                                        getImageSize(),
+                                                    ).toUri()
+
+                                            val mediaMetadata =
+                                                MediaMetadata
+                                                    .Builder()
+                                                    .setTitle(album.name)
+                                                    .setAlbumTitle(album.name)
+                                                    .setArtist(album.artist)
+                                                    .setGenre(album.genre)
+                                                    .setIsBrowsable(true)
+                                                    .setIsPlayable(false)
+                                                    .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
+                                                    .setArtworkUri(artworkUri)
+                                                    .build()
+
+                                            val mediaItem =
+                                                MediaItem
+                                                    .Builder()
+                                                    .setMediaId(albumPrefix + album.id)
+                                                    .setMediaMetadata(mediaMetadata)
+                                                    .setUri("")
+                                                    .build()
+
+                                            mediaItems.add(mediaItem)
+                                        }
+                                    }
+
+                                    searchResults.songs?.let { songs ->
+                                        val tracks = songs.toMutableList()
+                                        setChildrenMetadata(tracks)
+                                        mediaItems.addAll(MappingUtil.mapMediaItems(tracks))
+                                    }
                                 }
-                            }
-
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .albums != null
-                            ) {
-                                for (album in response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .albums!!) {
-                                    val artworkUri =
-                                        CustomGlideRequest
-                                            .createUrl(
-                                                album.coverArtId,
-                                                getImageSize(),
-                                            ).toUri()
-
-                                    val mediaMetadata =
-                                        MediaMetadata
-                                            .Builder()
-                                            .setTitle(album.name)
-                                            .setAlbumTitle(album.name)
-                                            .setArtist(album.artist)
-                                            .setGenre(album.genre)
-                                            .setIsBrowsable(true)
-                                            .setIsPlayable(false)
-                                            .setMediaType(MediaMetadata.MEDIA_TYPE_ALBUM)
-                                            .setArtworkUri(artworkUri)
-                                            .build()
-
-                                    val mediaItem =
-                                        MediaItem
-                                            .Builder()
-                                            .setMediaId(albumPrefix + album.id)
-                                            .setMediaMetadata(mediaMetadata)
-                                            .setUri("")
-                                            .build()
-
-                                    mediaItems.add(mediaItem)
-                                }
-                            }
-
-                            if (response
-                                    .body()!!
-                                    .subsonicResponse.searchResult3!!
-                                    .songs != null
-                            ) {
-                                val tracks: MutableList<Child>? =
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.searchResult3!!
-                                        .songs
-                                setChildrenMetadata(tracks!!)
-                                mediaItems.addAll(MappingUtil.mapMediaItems(tracks))
-                            }
 
                             val libraryResult: LibraryResult<ImmutableList<MediaItem>> =
                                 LibraryResult.ofItemList(mediaItems, null)
