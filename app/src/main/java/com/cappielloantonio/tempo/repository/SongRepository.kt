@@ -7,7 +7,6 @@ import com.cappielloantonio.tempo.subsonic.models.Child
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.Collections
 import kotlin.math.min
 
 class SongRepository {
@@ -27,19 +26,20 @@ class SongRepository {
                         response: Response<ApiResponse?>,
                     ) {
                         if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.starred2 != null) {
-                            val songs: MutableList<Child?>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.starred2!!
-                                    .songs
+                            val songs =
+                                (response
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.starred2
+                                    ?.songs
+                                    ?: emptyList())
+                                    .toMutableList()
 
-                            if (songs != null) {
-                                if (!random) {
-                                    starredSongs.value = songs
-                                } else {
-                                    Collections.shuffle(songs)
-                                    starredSongs.value = songs.subList(0, min(size, songs.size))
-                                }
+                            if (!random) {
+                                starredSongs.value = songs
+                            } else {
+                                songs.shuffle()
+                                starredSongs.value = songs.subList(0, min(size, songs.size))
                             }
                         }
                     }
@@ -70,13 +70,15 @@ class SongRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.similarSongs2 != null) {
-                            instantMix.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.similarSongs2!!
-                                    .songs,
-                            )
+                        if (response.isSuccessful) {
+                            val instaMix = (response
+                                .body()
+                                ?.subsonicResponse
+                                ?.similarSongs2
+                                ?.songs
+                                ?: emptyList())
+                                .toMutableList()
+                            instantMix.value = instaMix
                         }
                     }
 
@@ -84,7 +86,7 @@ class SongRepository {
                         call: Call<ApiResponse?>,
                         t: Throwable,
                     ) {
-                        instantMix.value = null
+                        instantMix.value = mutableListOf()
                     }
                 },
             )
@@ -108,20 +110,16 @@ class SongRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        val songs: MutableList<Child?> = ArrayList()
+                        val songs: MutableList<Child> = ArrayList()
 
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.randomSongs != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.randomSongs!!
-                                .songs != null
-                        ) {
-                            songs.addAll(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.randomSongs!!
-                                    .songs!!,
-                            )
+                        if (response.isSuccessful) {
+                            val songList = response
+                                .body()
+                                ?.subsonicResponse
+                                ?.randomSongs
+                                ?.songs
+                                ?: emptyList()
+                            songs.addAll(songList)
                         }
 
                         randomSongsSample.value = songs
@@ -202,12 +200,14 @@ class SongRepository {
                         response: Response<ApiResponse?>,
                     ) {
                         if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.songsByGenre != null) {
-                            songsByGenre.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.songsByGenre!!
-                                    .songs,
-                            )
+                            val songs = (response
+                                .body()
+                                ?.subsonicResponse
+                                ?.songsByGenre
+                                ?.songs
+                                ?: emptyList())
+                                .toMutableList()
+                            songsByGenre.value = songs
                         }
                     }
 
@@ -235,7 +235,7 @@ class SongRepository {
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            val songs: MutableList<Child?> = ArrayList()
+                            val songs: MutableList<Child> = ArrayList()
 
                             if (response.isSuccessful && response.body() != null &&
                                 response.body()!!.subsonicResponse.songsByGenre != null

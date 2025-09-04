@@ -129,8 +129,8 @@ class SearchingRepository {
                                 }
                             }
 
-                            val hashSet = LinkedHashSet<String?>(newSuggestions)
-                            val suggestionsWithoutDuplicates = ArrayList<String?>(hashSet)
+                            val hashSet = LinkedHashSet<String>(newSuggestions)
+                            val suggestionsWithoutDuplicates = ArrayList(hashSet)
 
                             suggestions.value = suggestionsWithoutDuplicates
                         }
@@ -159,10 +159,9 @@ class SearchingRepository {
         thread.start()
     }
 
-    val recentSearchSuggestion: MutableList<String?>?
+    val recentSearchSuggestion: MutableList<String>
         get() {
-            var recent: MutableList<String?>? =
-                ArrayList<String?>()
+            val recent: MutableList<String> = ArrayList()
 
             val suggestionsThread = RecentThreadSafe(recentSearchDao)
             val thread = Thread(suggestionsThread)
@@ -170,7 +169,9 @@ class SearchingRepository {
 
             try {
                 thread.join()
-                recent = suggestionsThread.recent
+                suggestionsThread.recent?.let {
+                    recent.addAll(it)
+                }
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }

@@ -79,10 +79,9 @@ class FavoriteRepository {
             )
     }
 
-    val favorites: MutableList<Favorite?>?
+    val favorites: MutableList<Favorite>
         get() {
-            var favorites: MutableList<Favorite?>? =
-                ArrayList<Favorite?>()
+            val favorites: MutableList<Favorite> = ArrayList()
 
             val getAllThreadSafe = GetAllThreadSafe(favoriteDao)
             val thread = Thread(getAllThreadSafe)
@@ -90,7 +89,9 @@ class FavoriteRepository {
 
             try {
                 thread.join()
-                favorites = getAllThreadSafe.favorites
+                getAllThreadSafe.favorites?.let {
+                    favorites.addAll(it)
+                }
             } catch (e: InterruptedException) {
                 e.printStackTrace()
             }
@@ -101,7 +102,7 @@ class FavoriteRepository {
     private class GetAllThreadSafe(
         private val favoriteDao: FavoriteDao,
     ) : Runnable {
-        var favorites: MutableList<Favorite?>? = ArrayList()
+        var favorites: MutableList<Favorite>? = ArrayList()
             private set
 
         override fun run() {
@@ -126,14 +127,14 @@ class FavoriteRepository {
 
     private class InsertThreadSafe(
         private val favoriteDao: FavoriteDao,
-        private val favorite: Favorite?,
+        private val favorite: Favorite,
     ) : Runnable {
         override fun run() {
             favoriteDao.insert(favorite)
         }
     }
 
-    fun delete(favorite: Favorite?) {
+    fun delete(favorite: Favorite) {
         val delete = DeleteThreadSafe(favoriteDao, favorite)
         val thread = Thread(delete)
         thread.start()
@@ -141,7 +142,7 @@ class FavoriteRepository {
 
     private class DeleteThreadSafe(
         private val favoriteDao: FavoriteDao,
-        private val favorite: Favorite?,
+        private val favorite: Favorite,
     ) : Runnable {
         override fun run() {
             favoriteDao.delete(favorite)

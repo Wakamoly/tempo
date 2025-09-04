@@ -23,18 +23,15 @@ class SharingRepository {
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.shares != null &&
+                            if (response.isSuccessful) {
                                 response
-                                    .body()!!
-                                    .subsonicResponse.shares!!
-                                    .shares != null
-                            ) {
-                                shares.setValue(
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.shares!!
-                                        .shares,
-                                )
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.shares
+                                    ?.shares
+                                    ?.let {
+                                        shares.value = it.toMutableList()
+                                    }
                             }
                         }
 
