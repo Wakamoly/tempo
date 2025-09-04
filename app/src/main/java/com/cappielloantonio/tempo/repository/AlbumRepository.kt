@@ -46,7 +46,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -91,7 +91,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -111,13 +111,13 @@ class AlbumRepository {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -152,7 +152,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -190,7 +190,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -220,7 +220,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -248,7 +248,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -284,7 +284,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )
@@ -351,7 +351,7 @@ class AlbumRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) { // TODO
                     }
                 },
             )

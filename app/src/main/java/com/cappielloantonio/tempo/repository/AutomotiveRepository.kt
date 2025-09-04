@@ -8,6 +8,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.LibraryResult
+import androidx.media3.session.SessionError
 import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.database.AppDatabase
 import com.cappielloantonio.tempo.database.dao.ChronologyDao
@@ -40,14 +41,15 @@ import java.util.stream.Collectors
 class AutomotiveRepository {
     private val sessionMediaItemDao: SessionMediaItemDao =
         AppDatabase.Companion.instance.sessionMediaItemDao()
-    private val chronologyDao: ChronologyDao = AppDatabase.Companion.instance.chronologyDao()
+    private val chronologyDao: ChronologyDao =
+        AppDatabase.Companion.instance.chronologyDao()
 
     fun getAlbums(
         prefix: String?,
         type: String?,
         size: Int,
-    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem?>?>?> {
-        val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem?>?>?>()
+    ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> {
+        val listenableFuture = SettableFuture.create<LibraryResult<ImmutableList<MediaItem>>>()
 
         getSubsonicClientInstance(false)
             .albumSongListClient
@@ -58,19 +60,16 @@ class AutomotiveRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.albumList2 != null &&
-                            response
-                                .body()!!
-                                .subsonicResponse.albumList2!!
-                                .albums != null
-                        ) {
+                        if (response.isSuccessful) {
                             val albums: MutableList<AlbumID3>? =
                                 response
-                                    .body()!!
-                                    .subsonicResponse.albumList2!!
-                                    .albums
+                                    .body()
+                                    ?.subsonicResponse
+                                    ?.albumList2
+                                    ?.albums
+                                    ?.toMutableList()
 
-                            val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+                            val mediaItems: MutableList<MediaItem?> = ArrayList()
 
                             for (album in albums!!) {
                                 val artworkUri =
@@ -104,17 +103,17 @@ class AutomotiveRepository {
                                 mediaItems.add(mediaItem)
                             }
 
-                            val libraryResult: LibraryResult<ImmutableList<MediaItem?>?> =
+                            val libraryResult =
                                 LibraryResult.ofItemList(
-                                    ImmutableList.copyOf<MediaItem?>(mediaItems),
+                                    ImmutableList.copyOf<MediaItem>(mediaItems),
                                     null,
                                 )
 
                             listenableFuture.set(libraryResult)
                         } else {
                             listenableFuture.set(
-                                LibraryResult.ofError<ImmutableList<MediaItem?>?>(
-                                    LibraryResult.RESULT_ERROR_BAD_VALUE,
+                                LibraryResult.ofError<ImmutableList<MediaItem>>(
+                                    SessionError.ERROR_BAD_VALUE,
                                 ),
                             )
                         }
@@ -152,13 +151,17 @@ class AutomotiveRepository {
                                     .subsonicResponse.starred2!!
                                     .songs != null
                             ) {
-                                val songs: MutableList<Child>? =
-                                    response
-                                        .body()!!
-                                        .subsonicResponse.starred2!!
-                                        .songs
+                                val songs =
+                                    (
+                                            response
+                                                .body()
+                                                ?.subsonicResponse
+                                                ?.starred2
+                                                ?.songs
+                                                ?: emptyList()
+                                            ).toMutableList()
 
-                                setChildrenMetadata(songs!!)
+                                setChildrenMetadata(songs)
 
                                 val mediaItems =
                                     MappingUtil.mapMediaItems(songs)
@@ -1475,19 +1478,19 @@ class AutomotiveRepository {
         }
     }
 
-    @OptIn(markerClass = UnstableApi::class)
+    @OptIn(markerClass = [UnstableApi::class])
     private class GetMediaItemsThreadSafe(
         private val sessionMediaItemDao: SessionMediaItemDao,
         private val timestamp: Long,
     ) : Runnable {
-        val mediaItems: MutableList<MediaItem?> = ArrayList<MediaItem?>()
+        val mediaItems: MutableList<MediaItem?> = ArrayList()
 
         override fun run() {
             val sessionMediaItems = sessionMediaItemDao.get(timestamp)
-            sessionMediaItems.forEach(
-                Consumer { sessionMediaItem: SessionMediaItem? ->
+            sessionMediaItems?.forEach(
+                Consumer { sessionMediaItem: SessionMediaItem ->
                     mediaItems.add(
-                        sessionMediaItem!!.getMediaItem(),
+                        sessionMediaItem.getMediaItem(),
                     )
                 },
             )

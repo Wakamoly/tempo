@@ -167,46 +167,42 @@ object MediaManager {
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
         internetRadioStation: InternetRadioStation
     ) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
-                        mediaBrowserListenableFuture.get()!!
-                            .setMediaItem(MappingUtil.mapInternetRadioStation(internetRadioStation))
-                        mediaBrowserListenableFuture.get()!!.prepare()
-                        mediaBrowserListenableFuture.get()!!.play()
-                    }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+        mediaBrowserListenableFuture?.addListener(Runnable {
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                    mediaBrowserListenableFuture.get()!!
+                        .setMediaItem(MappingUtil.mapInternetRadioStation(internetRadioStation))
+                    mediaBrowserListenableFuture.get()!!.prepare()
+                    mediaBrowserListenableFuture.get()!!.play()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun startPodcast(
         mediaBrowserListenableFuture: ListenableFuture<MediaBrowser?>?,
-        podcastEpisode: PodcastEpisode?
+        podcastEpisode: PodcastEpisode,
     ) {
-        if (mediaBrowserListenableFuture != null) {
-            mediaBrowserListenableFuture.addListener(Runnable {
-                try {
-                    if (mediaBrowserListenableFuture.isDone) {
-                        mediaBrowserListenableFuture.get()!!.clearMediaItems()
-                        mediaBrowserListenableFuture.get()!!
-                            .setMediaItem(MappingUtil.mapMediaItem(podcastEpisode))
-                        mediaBrowserListenableFuture.get()!!.prepare()
-                        mediaBrowserListenableFuture.get()!!.play()
-                    }
-                } catch (e: ExecutionException) {
-                    e.printStackTrace()
-                } catch (e: InterruptedException) {
-                    e.printStackTrace()
+        mediaBrowserListenableFuture?.addListener(Runnable {
+            try {
+                if (mediaBrowserListenableFuture.isDone) {
+                    mediaBrowserListenableFuture.get()!!.clearMediaItems()
+                    mediaBrowserListenableFuture.get()!!
+                        .setMediaItem(MappingUtil.mapMediaItem(podcastEpisode))
+                    mediaBrowserListenableFuture.get()!!.prepare()
+                    mediaBrowserListenableFuture.get()!!.play()
                 }
-            }, MoreExecutors.directExecutor())
-        }
+            } catch (e: ExecutionException) {
+                e.printStackTrace()
+            } catch (e: InterruptedException) {
+                e.printStackTrace()
+            }
+        }, MoreExecutors.directExecutor())
     }
 
     fun enqueue(

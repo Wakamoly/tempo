@@ -13,7 +13,6 @@ import com.cappielloantonio.tempo.App.Companion.getSubsonicClientInstance
 import com.cappielloantonio.tempo.R
 import com.cappielloantonio.tempo.repository.DownloadRepository
 import com.cappielloantonio.tempo.subsonic.models.Child
-import com.cappielloantonio.tempo.util.MusicUtil.getReadableDurationString
 import com.cappielloantonio.tempo.util.Preferences.askForEstimateContentLength
 import com.cappielloantonio.tempo.util.Preferences.getAudioTranscodeFormatMobile
 import com.cappielloantonio.tempo.util.Preferences.getAudioTranscodeFormatTranscodedDownload
@@ -25,34 +24,20 @@ import com.cappielloantonio.tempo.util.Preferences.getMinStarRatingAccepted
 import com.cappielloantonio.tempo.util.Preferences.isServerPrioritized
 import com.cappielloantonio.tempo.util.Preferences.isServerPrioritizedInTranscodedDownload
 import com.cappielloantonio.tempo.util.Preferences.showAudioQuality
-import java.lang.Long
 import java.text.CharacterIterator
 import java.text.DecimalFormat
 import java.text.StringCharacterIterator
 import java.util.Locale
 import java.util.function.IntFunction
 import java.util.stream.Collectors
-import kotlin.Boolean
-import kotlin.Int
-import kotlin.String
-import kotlin.compareTo
-import kotlin.div
 import kotlin.math.abs
 import kotlin.math.min
-import kotlin.rem
-import kotlin.shr
-import kotlin.text.StringBuilder
-import kotlin.text.format
-import kotlin.text.isEmpty
-import kotlin.text.replace
-import kotlin.text.toRegex
-import kotlin.times
-import kotlin.toString
 
+@Suppress("D")
 object MusicUtil {
     private const val TAG = "MusicUtil"
 
-    fun getStreamUri(id: String?): Uri {
+    fun getStreamUri(id: String): Uri {
         val params = getSubsonicClientInstance(false).params
 
         val uri = StringBuilder()
@@ -105,12 +90,12 @@ object MusicUtil {
 
         uri.append("&id=").append(id)
 
-        Log.d(TAG, "getStreamUri: " + uri)
+        Log.d(TAG, "getStreamUri: $uri")
 
         return uri.toString().toUri()
     }
 
-    fun getDownloadUri(id: String?): Uri? {
+    fun getDownloadUri(id: String): Uri {
         val uri = StringBuilder()
 
         val download = DownloadRepository().getDownload(id)
@@ -157,7 +142,7 @@ object MusicUtil {
             uri.append(download.downloadUri)
         }
 
-        Log.d(TAG, "getDownloadUri: " + uri)
+        Log.d(TAG, "getDownloadUri: $uri")
 
         return uri.toString().toUri()
     }
@@ -214,7 +199,7 @@ object MusicUtil {
 
         uri.append("&id=").append(id)
 
-        Log.d(TAG, "getTranscodedDownloadUri: " + uri)
+        Log.d(TAG, "getTranscodedDownloadUri: $uri")
 
         return uri.toString().toUri()
     }
@@ -223,17 +208,17 @@ object MusicUtil {
         duration: Long?,
         millis: Boolean,
     ): String {
-        val lenght = if (duration != null) duration else 0
+        val lengthInMillis: Long = duration ?: 0L
 
         var minutes: Long
         val seconds: Long
 
         if (millis) {
-            minutes = (lenght / 1000) / 60
-            seconds = (lenght / 1000) % 60
+            minutes = (lengthInMillis / 1000L) / 60
+            seconds = (lengthInMillis / 1000) % 60
         } else {
-            minutes = lenght / 60
-            seconds = lenght % 60
+            minutes = lengthInMillis / 60
+            seconds = lengthInMillis % 60
         }
 
         if (minutes < 60) {
@@ -249,7 +234,7 @@ object MusicUtil {
         duration: Int?,
         millis: Boolean,
     ): String {
-        val lenght = (if (duration != null) duration else 0).toLong()
+        val lenght = (duration ?: 0).toLong()
         return getReadableDurationString(lenght, millis)
     }
 
@@ -263,15 +248,11 @@ object MusicUtil {
             " • " +
             (
                 if (child.bitDepth != null && child.bitDepth != 0) {
-                    child.bitDepth.toString() + "/" + (if (child.samplingRate != null) child.samplingRate!! / 1000 else "")
+                    child.bitDepth.toString() + "/" + (child.samplingRate?.let { it / 1000 } ?: "")
                 } else {
-                    (
-                        if (child.samplingRate != null) {
-                            DecimalFormat("0.#").format(child.samplingRate!! / 1000.0) + "kHz"
-                        } else {
-                            ""
-                        }
-                    )
+                    child.samplingRate?.let {
+                        DecimalFormat("0.#").format(it / 1000.0) + "kHz"
+                    } ?: ""
                 }
             ) +
             " " +
@@ -337,7 +318,7 @@ object MusicUtil {
         val absB = if (bytes == Long.Companion.MIN_VALUE) Long.Companion.MAX_VALUE else abs(bytes)
 
         if (absB < 1024) {
-            return bytes.toString() + " B"
+            return "$bytes B"
         }
 
         var value = absB
@@ -351,16 +332,19 @@ object MusicUtil {
             i -= 10
         }
 
-        value *= Long.signum(bytes).toLong()
+        value *=
+            java.lang.Long
+                .signum(bytes)
+                .toLong()
 
-        return String.format("%.1f %ciB", value / 1024.0, ci.current())
+        return String.format(Locale.getDefault(), "%.1f %ciB", value / 1024.0, ci.current())
     }
 
     fun passwordHexEncoding(plainPassword: String): String =
         "enc:" +
             plainPassword
                 .chars()
-                .mapToObj<String?>(IntFunction { i: Int -> Integer.toHexString(i) })
+                .mapToObj(IntFunction { i: Int -> Integer.toHexString(i) })
                 .collect(Collectors.joining())
 
     val bitratePreference: String

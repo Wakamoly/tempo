@@ -3,6 +3,7 @@ package com.cappielloantonio.tempo.model
 import android.net.Uri
 import android.os.Bundle
 import androidx.annotation.Keep
+import androidx.core.net.toUri
 import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaItem.RequestMetadata
 import androidx.media3.common.MediaMetadata
@@ -194,9 +195,10 @@ class SessionMediaItem() {
         type = Constants.MEDIA_TYPE_RADIO
     }
 
-    fun getMediaItem(): MediaItem {
-        val uri: Uri = getStreamUri()
-        val artworkUri = Uri.parse(CustomGlideRequest.createUrl(coverArtId, getImageSize()))
+    fun getMediaItem(): MediaItem? {
+        val uri = getStreamUri()
+        if (uri == null || id == null) return null
+        val artworkUri = CustomGlideRequest.createUrl(coverArtId, getImageSize()).toUri()
 
         val bundle = Bundle()
         bundle.putString("id", id)
@@ -233,7 +235,7 @@ class SessionMediaItem() {
         bundle.putString("uri", uri.toString())
 
         return MediaItem.Builder()
-            .setMediaId(id!!)
+            .setMediaId(requireNotNull(id))
             .setMediaMetadata(
                 MediaMetadata.Builder()
                     .setTitle(title)
@@ -259,22 +261,22 @@ class SessionMediaItem() {
             .build()
     }
 
-    private fun getStreamUri(): Uri {
+    private fun getStreamUri(): Uri? {
         return when (type) {
             Constants.MEDIA_TYPE_MUSIC -> {
-                MusicUtil.getStreamUri(id)
+                id?.let { id -> MusicUtil.getStreamUri(id) }
             }
 
             Constants.MEDIA_TYPE_PODCAST -> {
-                MusicUtil.getStreamUri(streamId)
+                streamId?.let { streamId -> MusicUtil.getStreamUri(streamId) }
             }
 
             Constants.MEDIA_TYPE_RADIO -> {
-                Uri.parse(streamUrl)
+                streamUrl?.toUri()
             }
 
             else -> {
-                MusicUtil.getStreamUri(id)
+                id?.let { id -> MusicUtil.getStreamUri(id) }
             }
         }
     }

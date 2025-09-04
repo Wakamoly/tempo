@@ -6,7 +6,6 @@ import androidx.media3.common.util.Assertions
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
-import androidx.media3.datasource.DataSource
 import androidx.media3.exoplayer.offline.Download
 import androidx.media3.exoplayer.offline.DownloadHelper
 import androidx.media3.exoplayer.offline.DownloadIndex
@@ -20,30 +19,27 @@ import java.io.IOException
 @UnstableApi
 class DownloaderManager(
     context: Context,
-    private val dataSourceFactory: DataSource.Factory?,
-    downloadManager: DownloadManager
+//    private val dataSourceFactory: DataSource.Factory?,
+    downloadManager: DownloadManager,
 ) {
-    private val context: Context
-    private val downloadIndex: DownloadIndex
+    private val context: Context = context.applicationContext
+    private val downloadIndex: DownloadIndex = downloadManager.downloadIndex
 
     init {
-        this.context = context.applicationContext
-
-        downloads = HashMap<String?, Download?>()
-        downloadIndex = downloadManager.downloadIndex
-
         loadDownloads()
     }
 
     private fun buildDownloadRequest(mediaItem: MediaItem): DownloadRequest {
         return DownloadHelper
-            .forMediaItem(
-                context,
-                mediaItem,
-                DownloadUtil.buildRenderersFactory(context, false),
-                dataSourceFactory
-            )
-            .getDownloadRequest(Util.getUtf8Bytes(Assertions.checkNotNull<String?>(mediaItem.mediaId)))
+            .Factory()
+            .create(mediaItem)
+//            .forMediaItem(
+//                context,
+//                mediaItem,
+//                DownloadUtil.buildRenderersFactory(context, false),
+//                dataSourceFactory
+//            )
+            .getDownloadRequest(Util.getUtf8Bytes(Assertions.checkNotNull<String>(mediaItem.mediaId)))
             .copyWithId(mediaItem.mediaId)
     }
 
@@ -124,12 +120,12 @@ class DownloaderManager(
     companion object {
         private const val TAG = "DownloaderManager"
 
-        private val downloads: HashMap<String?, Download?>
+        private val downloads = HashMap<String, Download>()
 
         fun getDownloadNotificationMessage(id: String?): String? {
             val download: com.cappielloantonio.tempo.model.Download? =
                 downloadRepository.getDownload(id)
-            return if (download != null) download.title else null
+            return download?.title
         }
 
         fun updateRequestDownload(download: Download) {

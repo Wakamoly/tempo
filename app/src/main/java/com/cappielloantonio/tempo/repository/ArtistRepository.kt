@@ -9,9 +9,9 @@ import com.cappielloantonio.tempo.subsonic.models.Child
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
-import java.util.Collections
 import kotlin.math.min
 
+@Suppress("TooManyFunctions")
 class ArtistRepository {
     fun getStarredArtists(
         random: Boolean,
@@ -54,7 +54,8 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -62,15 +63,16 @@ class ArtistRepository {
         return starredArtists
     }
 
+    @Suppress("D")
     fun getArtists(
         random: Boolean,
         size: Int,
-    ): MutableLiveData<MutableList<ArtistID3?>?> {
-        val listLiveArtists = MutableLiveData<MutableList<ArtistID3?>?>()
+    ): MutableLiveData<MutableList<ArtistID3>> {
+        val listLiveArtists = MutableLiveData<MutableList<ArtistID3>>()
 
         getSubsonicClientInstance(false)
             .browsingClient
-            .getArtists()
+            .artists
             .enqueue(
                 object : Callback<ApiResponse?> {
                     override fun onResponse(
@@ -78,35 +80,25 @@ class ArtistRepository {
                         response: Response<ApiResponse?>,
                     ) {
                         if (response.isSuccessful && response.body() != null) {
-                            val artists: MutableList<ArtistID3> = ArrayList<ArtistID3>()
-
-                            if (response.body()!!.subsonicResponse.artists != null &&
-                                response
-                                    .body()!!
-                                    .subsonicResponse.artists!!
-                                    .indices != null
-                            ) {
-                                for (index in response
-                                    .body()!!
-                                    .subsonicResponse.artists!!
-                                    .indices!!) {
-                                    if (index != null && index.artists != null) {
-                                        artists.addAll(index.artists!!)
+                            val artists: MutableList<ArtistID3> = ArrayList()
+                            response.body()?.subsonicResponse?.artists?.let { artistID3s ->
+                                artistID3s.indices?.let { indexID3s ->
+                                    for (indexID3 in indexID3s) {
+                                        indexID3.artists?.run {
+                                            artists.addAll(this)
+                                        }
                                     }
                                 }
-                            }
 
-                            if (random) {
-                                Collections.shuffle(artists)
-                                getArtistInfo(
-                                    artists.subList(
-                                        0,
-                                        if (artists.size / size > 0) size else artists.size,
-                                    ),
-                                    listLiveArtists,
-                                )
-                            } else {
-                                listLiveArtists.setValue(artists)
+                                if (random) {
+                                    artists.shuffle()
+                                    val artistSubListSize =
+                                        if (artists.size / size > 0) size else artists.size
+                                    val artistSubList = artists.subList(0, artistSubListSize)
+                                    getArtistInfo(artistSubList, listLiveArtists)
+                                } else {
+                                    listLiveArtists.value = artists
+                                }
                             }
                         }
                     }
@@ -114,7 +106,8 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -130,7 +123,7 @@ class ArtistRepository {
         list: MutableLiveData<MutableList<ArtistID3>>,
     ) {
         var liveArtists = list.getValue()
-        if (liveArtists == null) liveArtists = ArrayList<ArtistID3>()
+        if (liveArtists == null) liveArtists = ArrayList()
         list.value = liveArtists
 
         for (artist in artists) {
@@ -143,15 +136,18 @@ class ArtistRepository {
                             call: Call<ApiResponse?>,
                             response: Response<ApiResponse?>,
                         ) {
-                            if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null) {
-                                addToMutableLiveData(list, response.body()!!.subsonicResponse.artist)
+                            if (response.isSuccessful) {
+                                response.body()?.subsonicResponse?.artist?.let {
+                                    addToMutableLiveData(list, it)
+                                }
                             }
                         }
 
                         override fun onFailure(
                             call: Call<ApiResponse?>,
                             t: Throwable,
-                        ) { /*TODO*/
+                        ) {
+                            // TODO
                         }
                     },
                 )
@@ -170,15 +166,22 @@ class ArtistRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.artist != null) {
-                            artist.value = response.body()!!.subsonicResponse.artist
+                        if (response.isSuccessful) {
+                            response
+                                .body()
+                                ?.subsonicResponse
+                                ?.artist
+                                ?.let {
+                                    artist.value = it
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -206,7 +209,8 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -226,13 +230,15 @@ class ArtistRepository {
                     override fun onResponse(
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
-                    ) { /* TODO */
+                    ) {
+                        // TODO
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -258,7 +264,8 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -296,7 +303,8 @@ class ArtistRepository {
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -307,8 +315,8 @@ class ArtistRepository {
     fun getRandomSong(
         artist: ArtistID3,
         count: Int,
-    ): MutableLiveData<MutableList<Child?>?> {
-        val randomSongs = MutableLiveData<MutableList<Child?>?>()
+    ): MutableLiveData<MutableList<Child>> {
+        val randomSongs = MutableLiveData<MutableList<Child>>()
 
         getSubsonicClientInstance(false)
             .browsingClient
@@ -319,30 +327,26 @@ class ArtistRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.topSongs != null &&
+                        if (response.isSuccessful) {
                             response
                                 .body()!!
                                 .subsonicResponse.topSongs!!
-                                .songs != null
-                        ) {
-                            val songs: MutableList<Child>? =
-                                response
-                                    .body()!!
-                                    .subsonicResponse.topSongs!!
-                                    .songs
-
-                            if (songs != null && !songs.isEmpty()) {
-                                Collections.shuffle(songs)
-                            }
-
-                            randomSongs.setValue(songs)
+                                .songs
+                                ?.let {
+                                    val songs = it.toMutableList()
+                                    if (songs.isNotEmpty()) {
+                                        songs.shuffle()
+                                    }
+                                    randomSongs.value = songs
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -365,25 +369,23 @@ class ArtistRepository {
                         call: Call<ApiResponse?>,
                         response: Response<ApiResponse?>,
                     ) {
-                        if (response.isSuccessful && response.body() != null && response.body()!!.subsonicResponse.topSongs != null &&
+                        if (response.isSuccessful) {
                             response
-                                .body()!!
-                                .subsonicResponse.topSongs!!
-                                .songs != null
-                        ) {
-                            topSongs.setValue(
-                                response
-                                    .body()!!
-                                    .subsonicResponse.topSongs!!
-                                    .songs,
-                            )
+                                .body()
+                                ?.subsonicResponse
+                                ?.topSongs
+                                ?.songs
+                                ?.let {
+                                    topSongs.value = it.toMutableList()
+                                }
                         }
                     }
 
                     override fun onFailure(
                         call: Call<ApiResponse?>,
                         t: Throwable,
-                    ) { /*TODO*/
+                    ) {
+                        // TODO
                     }
                 },
             )
@@ -392,8 +394,8 @@ class ArtistRepository {
     }
 
     private fun addToMutableLiveData(
-        liveData: MutableLiveData<MutableList<ArtistID3?>?>,
-        artist: ArtistID3?,
+        liveData: MutableLiveData<MutableList<ArtistID3>>,
+        artist: ArtistID3,
     ) {
         val liveArtists = liveData.getValue()
         liveArtists?.add(artist)
